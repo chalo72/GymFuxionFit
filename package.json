@@ -1,0 +1,26 @@
+{
+  "name": "gymfuxionfit",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "GymFuxionFit — Ecosistema Fitness de Nueva Generación",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.0",
+    "recharts": "^2.15.0",
+    "lucide-react": "^0.468.0",
+    "framer-motion": "^11.15.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "typescript": "~5.7.0",
+    "vite": "^6.2.0"
+  }
+}
