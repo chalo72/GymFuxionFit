@@ -15,7 +15,7 @@ git add .
 git commit -m "🚀 DEPLOY: GymFuxionFit v5.1.0 - Worldwide Release [GLOBAL_FUSION]"
 
 echo [3/3] Desplegando a Vercel/GitHub...
-git push
+git push -u origin master
 echo ----------------------------------------------------
 echo 🎉 PROCESO COMPLETADO. Tu app esta ahora en camino al mundo.
 echo Revisa tu dashboard de Vercel para confirmar el estado live.
