@@ -1302,9 +1302,23 @@ img {
   }
 
   /* Fix de desbordamiento general */
+  .app-layout {
+    height: auto !important;
+    min-height: 100vh;
+    overflow-x: hidden !important;
+  }
+
+  .main-content {
+    height: auto !important;
+    min-height: 100vh;
+    overflow-x: hidden !important;
+  }
+
   .page-content {
     padding: 12px !important;
-    overflow-x: hidden;
+    height: auto !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
   }
 
   .glass-card {
@@ -1353,8 +1367,20 @@ img {
     display: none !important;
   }
 
-  .stack-on-mobile {
+  .stack-on-mobile,
+  .reception-grid,
+  .dashboard-grid,
+  .kpi-row {
+    display: flex !important;
     flex-direction: column !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  /* Evitar que las cajas se ensanchen */
+  div {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 }
 
