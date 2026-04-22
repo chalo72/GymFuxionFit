@@ -130,7 +130,7 @@ const aiAssistants: AiAssistant[] = [
    COMPONENTE PRINCIPAL
 ══════════════════════════════════════ */
 export default function TrainerDashboard() {
-  const { members } = useGymData();
+  const { members, updateMemberStatus } = useGymData();
   const [selectedClient, setSelectedClient] = useState<Member | null>(members[0] || null);
   
   // Sincronizar el cliente seleccionado si cambia la lista de miembros
@@ -157,7 +157,55 @@ export default function TrainerDashboard() {
     { name: 'Sled Push', sets: '1', reps: '50m', weight: '102kg', notes: '' },
   ]);
   const [noteText, setNoteText] = useState('');
-  const [showFlashBuilder, setShowFlashBuilder] = useState(false);
+const [showFlashBuilder, setShowFlashBuilder] = useState(false);
+  const [showMeasuresModal, setShowMeasuresModal] = useState(false);
+
+  const handleSaveMeasures = (data: any) => {
+    if (!selectedClient) return;
+    updateMemberStatus(selectedClient.id, { 
+      ...data, 
+      biometricStatus: 'completed',
+      lastScan: new Date().toISOString().split('T')[0]
+    });
+    setShowMeasuresModal(false);
+  };
+
+function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: () => void, onSave: (data: any) => void }) {
+  const [w, setW] = useState(client.weight || 0);
+  const [h, setH] = useState(70); // Default placeholder
+  const [f, setF] = useState(client.bodyFat || 0);
+  
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:3000, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(10px)' }}>
+      <div className="glass-card" style={{ width: 400, padding: 30, border: '1px solid var(--neon-green)', boxShadow: '0 0 40px rgba(0,255,136,0.1)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+           <h3 style={{ fontSize: 16, fontWeight: 950, color: '#fff' }}>ACTUALIZACIÓN BIOMÉTRICA</h3>
+           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20}/></button>
+        </div>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+           <div>
+              <label style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8, display: 'block', letterSpacing: 1 }}>PESO ACTUAL (KG)</label>
+              <input type="number" value={w} onChange={e => setW(Number(e.target.value))} className="input-field" style={{ width: '100%', padding: 14, fontSize: 16, fontWeight: 800 }} />
+           </div>
+           <div>
+              <label style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8, display: 'block', letterSpacing: 1 }}>ALTURA (CM)</label>
+              <input type="number" value={h} onChange={e => setH(Number(e.target.value))} className="input-field" style={{ width: '100%', padding: 14, fontSize: 16, fontWeight: 800 }} />
+           </div>
+           <div>
+              <label style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8, display: 'block', letterSpacing: 1 }}>GRASA CORPORAL (%)</label>
+              <input type="number" value={f} onChange={e => setF(Number(e.target.value))} className="input-field" style={{ width: '100%', padding: 14, fontSize: 16, fontWeight: 800 }} />
+           </div>
+        </div>
+
+        <div style={{ marginTop: 32, display: 'flex', gap: 12 }}>
+           <button onClick={onClose} style={{ flex: 1, padding: 16, borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}>DESCARTAR</button>
+           <button onClick={() => onSave({ weight: w, height: h, bodyFat: f })} style={{ flex: 1, padding: 16, borderRadius: 12, background: 'var(--neon-green)', color: '#000', border: 'none', fontWeight: 950, boxShadow: '0 0 20px rgba(0,255,136,0.3)', cursor: 'pointer' }}>GUARDAR DATOS</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   // Timer de sesión
   useEffect(() => {
@@ -194,10 +242,10 @@ export default function TrainerDashboard() {
   const attentionCount = members.filter(m => m.status === 'suspended' || (m.alerts && m.alerts.length > 0)).length;
 
   return (
-    <div style={{ display: 'flex', gap: 0, height: 'calc(100vh - var(--navbar-height) - 56px)', minHeight: 600 }}>
+    <div className="trainer-dashboard-container" style={{ display: 'flex', gap: 0, height: 'calc(100vh - var(--navbar-height) - 56px)', minHeight: 600 }}>
 
       {/* ══════════ LEFT — LISTA DE CLIENTES ══════════ */}
-      <div style={{
+      <div className="sidebar-trainer-list" style={{
         width: 280,
         flexShrink: 0,
         background: 'var(--space-dark)',
@@ -272,6 +320,9 @@ export default function TrainerDashboard() {
                   <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</span>
                     {member.alerts && member.alerts.length > 0 && <AlertTriangle size={12} style={{ color: 'var(--danger-red)', flexShrink: 0 }} />}
+                    {(!member.weight || member.biometricStatus !== 'completed') && (
+                      <div title="Perfil Incompleto" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger-red)', boxShadow: '0 0 5px var(--danger-red)' }} />
+                    )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{
@@ -339,6 +390,20 @@ export default function TrainerDashboard() {
                   <span>⏰ Última: {selectedClient.lastVisit}</span>
                   <span style={{ color: 'var(--neon-green)' }}>🔥 {selectedClient.streak || 0} días racha</span>
                 </div>
+                {(!selectedClient.weight || selectedClient.biometricStatus !== 'completed') && (
+                  <div style={{ marginTop: 10, padding: '10px 16px', background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.3)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <AlertTriangle size={14} color="var(--danger-red)" />
+                      <span style={{ fontSize: 10, fontWeight: 950, color: 'var(--danger-red)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Atleta con Perfil Incompleto</span>
+                    </div>
+                    <button 
+                      onClick={() => setShowMeasuresModal(true)}
+                      style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--danger-red)', color: '#000', border: 'none', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
+                    >
+                      TOMAR MEDIDAS AHORA
+                    </button>
+                  </div>
+                )}
               </div>
               {/* Acciones rápidas */}
               <div style={{ display: 'flex', gap: 8 }}>
@@ -450,11 +515,11 @@ export default function TrainerDashboard() {
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{selectedClient.goal}</div>
                   </div>
                   <div style={{ fontSize: 'var(--text-3xl)', fontWeight: 800, color: 'var(--neon-green)' }}>
-                    {selectedClient.progress}%
+                    {selectedClient.progress || 0}%
                   </div>
                 </div>
                 <div className="progress-bar" style={{ height: 12 }}>
-                  <div className="progress-bar-fill" style={{ width: `${selectedClient.progress}%` }} />
+                  <div className="progress-bar-fill" style={{ width: `${selectedClient.progress || 0}%` }} />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
                   <span>Inicio</span>
@@ -906,6 +971,14 @@ export default function TrainerDashboard() {
         <FlashProgramBuilder 
           onClose={() => setShowFlashBuilder(false)} 
           athleteName={selectedClient.name} 
+        />
+      )}
+      {/* ══ MODAL: MEASURES ══ */}
+      {showMeasuresModal && selectedClient && (
+        <MeasuresModal 
+          client={selectedClient} 
+          onClose={() => setShowMeasuresModal(false)} 
+          onSave={handleSaveMeasures} 
         />
       )}
     </div>

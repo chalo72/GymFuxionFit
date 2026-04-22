@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, CalendarDays, BarChart3, Settings,
   Dumbbell, Zap, Scan, Kanban, Apple, Brain, Trophy, CreditCard,
   Watch, CalendarRange, UserCheck, LogOut, ShieldCheck, Radio, Smartphone,
-  TrendingUp, Package, X,
+  TrendingUp, Package, X, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -61,8 +61,11 @@ const receptionNav = [
     { to: '/schedule',  icon: CalendarRange,  label: 'Horarios' },
     { to: '/classes',   icon: CalendarDays,   label: 'Clases' },
   ]},
-  { section: 'Caja', items: [
-    { to: '/payments', icon: CreditCard, label: 'Pagos' },
+  { section: 'Negocio', items: [
+    { to: '/finances',  icon: TrendingUp, label: 'Finanzas' },
+    { to: '/inventory', icon: Package,    label: 'Inventario' },
+    { to: '/crm',       icon: Kanban,     label: 'CRM Ventas' },
+    { to: '/payments',  icon: CreditCard, label: 'Pagos' },
   ]},
 ];
 
@@ -80,7 +83,17 @@ const roleLabels: Record<string, string> = {
   receptionist: 'Recepcionista',
 };
 
-export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) {
+export default function Sidebar({ 
+  isOpen, 
+  onClose,
+  isCollapsed,
+  onToggleCollapse
+}: { 
+  isOpen?: boolean, 
+  onClose?: () => void,
+  isCollapsed: boolean,
+  onToggleCollapse: () => void
+}) {
   const location   = useLocation();
   const navigate   = useNavigate();
   const { user, logout } = useAuth();
@@ -95,7 +108,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose
   };
 
   return (
-    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+    <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
       {/* ─── HEADER ─── */}
       <div className="sidebar-header">
         <div className="sidebar-logo">
@@ -104,6 +117,12 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose
         <div className="sidebar-brand">
           Gym<span>Fuxion</span>Fit
         </div>
+
+        {/* Botón colapsar desktop */}
+        <button className="sidebar-toggle-btn" onClick={onToggleCollapse}>
+          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
+
         {/* Botón cerrar móvil */}
         <button className="mobile-close-btn" onClick={onClose}>
           <X size={20} />
@@ -111,7 +130,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose
       </div>
 
       {/* Rol badge */}
-      <div style={{ padding: '8px 16px 4px' }}>
+      <div className="sidebar-role-badge" style={{ padding: '8px 16px 4px' }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: '4px 10px', borderRadius: 'var(--radius-full)',

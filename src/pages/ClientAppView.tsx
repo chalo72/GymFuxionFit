@@ -3,7 +3,7 @@ import {
   ScanFace, Dumbbell, Trophy, Apple, User, Play, Pause,
   Check, ChevronRight, Zap, Flame, Target, Star,
   TrendingUp, Clock, Shield, Award, Activity, Heart,
-  ZapOff, Lock
+  ZapOff, Lock, CreditCard
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -14,7 +14,7 @@ import {
    TIPOS Y CORE ARCHITECTURE
    Client Performance HUD V.2.6
 ══════════════════════════════════════════ */
-type Tab       = 'scan' | 'workout' | 'leaderboard' | 'nutrition' | 'profile';
+type Tab       = 'scan' | 'workout' | 'leaderboard' | 'nutrition' | 'wallet' | 'profile';
 type ScanPhase = 'scanning' | 'found' | 'verified';
 
 const EXERCISES = [
@@ -147,6 +147,57 @@ function PanelNutrition() {
   );
 }
 
+function PanelWallet() {
+  const history = [
+    { id: 1, date: '15 Abr 2026', amount: 120000, method: 'Nequi', status: 'VERIFIED', ref: 'NQ-883492' },
+    { id: 2, date: '15 Mar 2026', amount: 120000, method: 'Efectivo', status: 'VERIFIED', ref: 'CASH-001' },
+    { id: 3, date: '15 Feb 2026', amount: 120000, method: 'Transferencia', status: 'VERIFIED', ref: 'TR-112233' },
+  ];
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, height: '100%' }}>
+       <div className="glass-card" style={{ padding: 24, border: '1px solid var(--neon-green)20' }}>
+          <h3 style={{ fontSize: 14, fontWeight: 950, color: '#fff', marginBottom: 20 }}>BÓVEDA_DE_PAGOS</h3>
+          <div style={{ padding: 24, borderRadius: 20, background: 'linear-gradient(135deg, #FF00FF20 0%, transparent 100%)', border: '1px solid #FF00FF40', textAlign: 'center', marginBottom: 24 }}>
+             <div style={{ fontSize: 10, fontWeight: 900, color: '#FF00FF', letterSpacing: 2, marginBottom: 8 }}>PRÓXIMO_COBRO</div>
+             <div style={{ fontSize: 32, fontWeight: 950, color: '#fff' }}>15_MAY_2026</div>
+             <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', marginTop: 4 }}>VALOR: $120.000</div>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+             <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--text-muted)' }}>ENVIAR_NUEVO_COMPROBANTE</div>
+             <button style={{ 
+               width: '100%', padding: 16, borderRadius: 14, 
+               background: 'rgba(255, 0, 255, 0.1)', border: '1px solid #FF00FF40', 
+               color: '#FF00FF', fontSize: 11, fontWeight: 950, cursor: 'pointer',
+               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10
+             }}>
+                <Zap size={16} /> SUBIR VOUCHER NEQUI / PSE
+             </button>
+          </div>
+       </div>
+
+       <div className="glass-card" style={{ padding: 24, overflowY: 'auto' }}>
+          <h3 style={{ fontSize: 13, fontWeight: 950, color: '#fff', marginBottom: 20 }}>HISTORIAL_AUDITADO</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+             {history.map(item => (
+               <div key={item.id} style={{ padding: 16, background: 'rgba(255,255,255,0.02)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.04)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <div>
+                     <div style={{ fontSize: 11, fontWeight: 950, color: '#fff' }}>${item.amount.toLocaleString()}</div>
+                     <div style={{ fontSize: 8, color: 'var(--text-muted)', fontWeight: 800 }}>{item.date} • {item.method}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                     <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)' }}>{item.status}</div>
+                     <div style={{ fontSize: 8, color: 'var(--text-muted)' }}>{item.ref}</div>
+                  </div>
+               </div>
+             ))}
+          </div>
+       </div>
+    </div>
+  );
+}
+
 function PanelProfile() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 20, height: '100%' }}>
@@ -239,6 +290,7 @@ export default function ClientAppView() {
            { id: 'workout', l: 'TACTICAL_PLAN', i: <Dumbbell /> },
            { id: 'leaderboard', l: 'ZONE_RANK', i: <Trophy /> },
            { id: 'nutrition', l: 'BIO_FUEL', i: <Zap /> },
+           { id: 'wallet', l: 'BILLETERA', i: <CreditCard /> },
            { id: 'profile', l: 'BIO_STATUS', i: <User /> }
          ].map(t => (
            <button 
@@ -323,6 +375,7 @@ export default function ClientAppView() {
 
          {tab === 'leaderboard' && <PanelLeaderboard />}
          {tab === 'nutrition' && <PanelNutrition />}
+         {tab === 'wallet' && <PanelWallet />}
          {tab === 'profile' && <PanelProfile />}
 
       </div>

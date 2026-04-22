@@ -4,13 +4,14 @@ import {
   ArrowDownRight, Plus, Filter, X, Check,
   CreditCard, Activity, ShieldCheck, BarChart2, Zap,
   Settings, PenTool, Database, Wallet, Package, Users,
-  Search, Receipt, Smartphone, Banknote, Printer
+  Search, Receipt, Smartphone, Banknote, Printer, Send
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { useGymData, Member } from '../hooks/useGymData';
+import NequiRadar from '../components/payments/NequiRadar';
 
 /* ══════════════════════════════════════════
    TIPOS Y CONFIGURACIÓN
@@ -79,9 +80,10 @@ export default function Finances() {
     transactions: txList, members, injectTransaction, 
     goals, addGoal, updateGoal, deleteGoal,
     obligations, addObligation, updateObligation, deleteObligation, payObligation,
-    staff, addStaff, updateStaff, deleteStaff, generateMonthlyPayroll
+    staff, addStaff, updateStaff, deleteStaff, generateMonthlyPayroll,
+    waterConfig, updateWaterConfig, withdrawFromGoal
   } = useGymData();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expense' | 'payroll' | 'goals'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expense' | 'payroll' | 'goals' | 'agua'>('dashboard');
   
   const [showGoalModal, setShowGoalModal] = useState<boolean>(false);
   const [editingGoal, setEditingGoal] = useState<any | null>(null);
@@ -92,7 +94,7 @@ export default function Finances() {
   
   const [goalForm, setGoalForm] = useState({ name: '', target: 0, category: 'savings' as any });
   const [obForm, setObForm] = useState({ name:'', amount:0, dueDate:'', category:'utilities' as any });
-  const [staffForm, setStaffForm] = useState({ name:'', role:'', salary:0, status:'active' as any });
+  const [staffForm, setStaffForm] = useState({ name:'', role:'', salary:0, phone:'', email:'', tempPassword:'', status:'active' as any });
 
   const [receivedAmount, setReceivedAmount] = useState<number>(0);
   const [amount, setAmount] = useState(0);
@@ -101,6 +103,12 @@ export default function Finances() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [showVoucher, setShowVoucher] = useState<any | null>(null);
+  const [isExpectingNequi, setIsExpectingNequi] = useState(false);
+
+  // Estados Agua
+  const [withdrawAmount, setWithdrawAmount] = useState(0);
+  const [withdrawReason, setWithdrawReason] = useState('');
+  const [waterEvidence, setWaterEvidence] = useState<string | null>(null);
 
   const changeAmount = useMemo(() => Math.max(0, receivedAmount - amount), [receivedAmount, amount]);
 
@@ -116,6 +124,13 @@ export default function Finances() {
     return { income, expense, net: income - expense, savings };
   }, [txList]);
 
+  const notifyViaWhatsApp = (clientName: string, phone: string, amt: number, cat: string) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    const concept = cat === 'daypass' ? 'Día de Entrenamiento (Rutina)' : cat === 'membership' ? 'Mensualidad' : 'Producto/Suplemento';
+    const msg = encodeURIComponent(`Hola ${clientName}, hemos recibido tu pago de $${amt.toLocaleString()} por concepto de ${concept}. ✅ ¡Gracias por tu sesión de hoy en GymFuxionFit! Nos vemos pronto para seguir superando límites. 💪🔥`);
+    window.open(`https://wa.me/57${cleanPhone}?text=${msg}`, '_blank');
+  };
+
   const handleProcessPayment = () => {
     if (amount <= 0 || !selectedMember) return;
     const newTx = injectTransaction({
@@ -128,11 +143,46 @@ export default function Finances() {
       method: method,
       client: selectedMember.name
     });
+    
+    // Notificación Automática WhatsApp (Adaptada a Gym de Barrio)
+    if (selectedMember.phone) {
+      notifyViaWhatsApp(selectedMember.name, selectedMember.phone, amount, category);
+    }
+
     setShowVoucher(newTx);
     setSelectedMember(null);
     setSearchTerm('');
     setAmount(0);
     setReceivedAmount(0);
+  };
+
+  const handleWaterWithdraw = () => {
+    const waterGoal = goals.find(g => g.name.toLowerCase().includes('agua'));
+    if (!waterGoal || withdrawAmount <= 0) return alert('No hay meta de agua o monto inválido');
+    
+    withdrawFromGoal(waterGoal.id, withdrawAmount, withdrawReason);
+    setWithdrawAmount(0);
+    setWithdrawReason('');
+    setWaterEvidence(null);
+  };
+
+  const handleCloseWaterWeek = () => {
+    const waterGoal = goals.find(g => g.name.toLowerCase().includes('agua'));
+    if (!waterGoal) return alert('Debes crear una meta llamada "Ahorro Agua" primero');
+    
+    const waterTxs = txList.filter(t => t.description.toLowerCase().includes('agua') && !t.goalId);
+    const totalCollected = waterTxs.reduce((a, t) => a + t.amount, 0);
+    const bagsSold = totalCollected / waterConfig.bagPrice;
+    const pacasToRestock = Math.floor(bagsSold / waterConfig.bagsPerPaca);
+    const costOfPacas = pacasToRestock * waterConfig.pacaCost; 
+    const profit = totalCollected - costOfPacas;
+
+    if (profit > 0) {
+      updateGoal(waterGoal.id, { current: waterGoal.current + profit });
+      alert(`Semana Cerrada. Reposición: ${pacasToRestock} pacas ($${costOfPacas}). Ahorrado: $${profit}`);
+    } else {
+      alert('No hay ganancias suficientes para cerrar la semana.');
+    }
   };
 
   return (
@@ -151,6 +201,7 @@ export default function Finances() {
              { id: 'income',    label: 'COBROS (+)' },
              { id: 'expense',   label: 'OBLIGACIONES (-)' },
              { id: 'payroll',   label: 'NÓMINA' },
+             { id: 'agua',      label: 'AGUA 💧' },
              { id: 'goals',     label: 'METAS' },
            ].map(tab => (
              <button 
@@ -165,7 +216,7 @@ export default function Finances() {
 
       {activeTab === 'dashboard' ? (
         <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:16 }}>
+        <div className="kpi-row" style={{ gap:16 }}>
              {[
                { l: 'INGRESOS TOTALES', v: stats.income, c: 'var(--neon-green)' },
                { l: 'TOTAL GASTOS', v: stats.expense, c: '#ff4d4d' },
@@ -178,7 +229,7 @@ export default function Finances() {
                 </div>
              ))}
           </div>
-          <div style={{ display:'grid', gridTemplateColumns:'1.6fr 1fr', gap:20 }}>
+          <div style={{ display:'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap:20 }}>
              <div className="glass-card" style={{ padding: 24 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
                    <h3 style={{ fontSize: 13, fontWeight: 950 }}>FLUJO_DE_CAPITAL_TIEMPO_REAL</h3>
@@ -270,19 +321,43 @@ export default function Finances() {
                        </div>
                     </div>
                  </div>
-                 <button onClick={handleProcessPayment} style={{ padding:20, borderRadius:16, background:'var(--neon-green)', color:'#000', border:'none', fontSize:14, fontWeight:950, cursor:'pointer' }}>EJECUTAR COBRO [SYNC]</button>
+                 <div style={{ display: 'flex', gap: 12 }}>
+                    <button 
+                      onClick={() => setIsExpectingNequi(true)}
+                      disabled={!selectedMember || method !== 'Nequi'}
+                      style={{ flex: 1, padding:16, borderRadius:16, background:'rgba(255, 0, 255, 0.1)', color:'#FF00FF', border:'1px solid #FF00FF30', fontSize:12, fontWeight:950, cursor: (!selectedMember || method !== 'Nequi') ? 'not-allowed' : 'pointer', opacity: (!selectedMember || method !== 'Nequi') ? 0.3 : 1 }}
+                    >
+                       ESPERAR NEQUI
+                    </button>
+                    <button onClick={handleProcessPayment} style={{ flex: 2, padding:20, borderRadius:16, background:'var(--neon-green)', color:'#000', border:'none', fontSize:14, fontWeight:950, cursor:'pointer' }}>EJECUTAR COBRO [SYNC]</button>
+                 </div>
               </div>
            </div>
-           <div className="glass-card" style={{ padding:32 }}>
-              <h3 style={{ fontSize:12, fontWeight:950, marginBottom:20 }}>INGRESOS_RECIENTES</h3>
-              {txList.filter(t => t.type === 'income').slice(0, 6).map(t => (
-                  <div key={t.id} style={{ display:'flex', justifyContent:'space-between', padding:12, background:'rgba(0,255,136,0.03)', borderRadius:12, marginBottom:10 }}>
-                     <div style={{ fontSize:11, fontWeight:800 }}>{t.client}</div>
-                     <div style={{ color:'var(--neon-green)', fontWeight:950 }}>+${t.amount?.toLocaleString()}</div>
-                  </div>
-              ))}
-           </div>
-        </div>
+           <div className="glass-card" style={{ padding:32, display: 'flex', flexDirection: 'column', gap: 24 }}>
+               <NequiRadar 
+                  isExpecting={isExpectingNequi && !!selectedMember && method === 'Nequi'}
+                  expectedMemberName={selectedMember?.name}
+                  onCancelExpectation={() => setIsExpectingNequi(false)}
+                  onLinkPayment={(amt, ref) => {
+                    setAmount(amt);
+                    setMethod('Nequi');
+                    setCategory('membership');
+                    setIsExpectingNequi(false);
+                    alert(`Pago Nequi Detectado: $${amt.toLocaleString()} [REF: ${ref}]. Procede a seleccionar al socio para finalizar.`);
+                  }} 
+               />
+               
+               <div>
+                  <h3 style={{ fontSize:12, fontWeight:950, marginBottom:20 }}>INGRESOS_RECIENTES</h3>
+                  {txList.filter(t => t.type === 'income').slice(0, 6).map(t => (
+                      <div key={t.id} style={{ display:'flex', justifyContent:'space-between', padding:12, background:'rgba(0,255,136,0.03)', borderRadius:12, marginBottom:10 }}>
+                         <div style={{ fontSize:11, fontWeight:800 }}>{t.client}</div>
+                         <div style={{ color:'var(--neon-green)', fontWeight:950 }}>+${t.amount?.toLocaleString()}</div>
+                      </div>
+                  ))}
+               </div>
+            </div>
+         </div>
       ) : activeTab === 'expense' ? (
         <div style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:24, flex:1 }}>
            <div className="glass-card" style={{ padding:32, border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -359,7 +434,7 @@ export default function Finances() {
                    ⚡ GENERAR NÓMINA DEL MES
                  </button>
                  <button 
-                    onClick={() => { setEditingStaff(null); setStaffForm({name:'', role:'', salary:0, status:'active'}); setShowStaffModal(true); }}
+                    onClick={() => { setEditingStaff(null); setStaffForm({name:'', role:'', salary:0, phone:'', email:'', tempPassword: 'Gym' + Math.floor(Math.random()*1000), status:'active'}); setShowStaffModal(true); }}
                     style={{ background:'var(--neon-green)', border:'none', color:'#000', padding:'10px 20px', borderRadius:12, fontSize:11, fontWeight:950, cursor:'pointer' }}
                  >
                     + AÑADIR STAFF
@@ -381,7 +456,17 @@ export default function Finances() {
                        </div>
                     </div>
                     <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                       <button onClick={() => { setEditingStaff(s); setStaffForm({...s}); setShowStaffModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', padding:8, borderRadius:8, color:'#fff', cursor:'pointer' }}><PenTool size={14}/></button>
+                       <button 
+                          onClick={() => {
+                            const msg = `Hola ${s.name}! Bienvenido al equipo de GymFuxionFit. 🚀%0A%0AAquí tienes tus credenciales de acceso:%0A👤 Usuario: ${s.email}%0A🔑 Clave: ${s.tempPassword || 'fuxion123'}%0A🔗 Acceso: ${window.location.origin}%0A%0A¡Nos vemos en el entrenamiento! 💪`;
+                            window.open(`https://wa.me/57${s.phone}?text=${msg}`, '_blank');
+                          }}
+                          style={{ background:'rgba(0,255,136,0.1)', border:'none', padding:8, borderRadius:8, color:'var(--neon-green)', cursor:'pointer' }}
+                          title="Enviar Credenciales"
+                        >
+                          <Send size={14}/>
+                        </button>
+                        <button onClick={() => { setEditingStaff(s); setStaffForm({ ...s, tempPassword: s.tempPassword || '' }); setShowStaffModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', padding:8, borderRadius:8, color:'#fff', cursor:'pointer' }}><PenTool size={14}/></button>
                        <button onClick={() => deleteStaff(s.id)} style={{ background:'rgba(255,77,77,0.1)', border:'none', padding:8, borderRadius:8, color:'#ff4d4d', cursor:'pointer' }}><X size={14}/></button>
                     </div>
                  </div>
@@ -392,6 +477,111 @@ export default function Finances() {
               <p style={{ fontSize:11, color:'#00E5FF', fontWeight:800 }}>
                  <span style={{ fontWeight:950 }}>ASISTENTE FUXION:</span> Al hacer clic en "Generar Nómina", el sistema detecta a tus empleados activos y crea automáticamente las facturas de pago en la pestaña de OBLIGACIONES.
               </p>
+           </div>
+        </div>
+      ) : activeTab === 'agua' ? (
+        <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+           <div style={{ display:'justify-content', justifyContent:'space-between', alignItems:'center' }}>
+              <div>
+                 <h3 style={{ fontSize:18, fontWeight:950 }}>OMNI_AQUA: CONTROL_DE_AHORRO</h3>
+                 <p style={{ fontSize:10, color:'var(--text-muted)', fontWeight:800 }}>REPOSICIÓN DE PACAS (50 UND) Y UTILIDAD NETA</p>
+              </div>
+              <div className="glass-card" style={{ padding:'8px 16px', background:'rgba(0,229,255,0.05)', border:'1px solid #00E5FF30', color:'#00E5FF', fontWeight:950, fontSize:11 }}>
+                 META ACTIVA: AHORRO AGUA
+              </div>
+           </div>
+
+           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:20 }}>
+              {/* PANEL DE CONFIGURACIÓN */}
+              <div className="glass-card" style={{ padding:24, border:'1px solid var(--neon-green)10', background:'rgba(0,255,136,0.02)' }}>
+                 <div style={{ fontSize:10, fontWeight:950, color:'var(--neon-green)', marginBottom:20, display:'flex', alignItems:'center', gap:8 }}><Settings size={14}/> AJUSTES DE COSTOS</div>
+                 <div style={{ display:'flex', flexDirection:'column', gap:15 }}>
+                    <div>
+                       <label style={{ fontSize:9, color:'var(--text-muted)', display:'block', marginBottom:4 }}>PRECIO POR BOLSA ($)</label>
+                       <input type="number" value={waterConfig.bagPrice} onChange={e => updateWaterConfig({ bagPrice: Number(e.target.value) })} style={{ width:'100%', padding:10, borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontWeight:800 }} />
+                    </div>
+                    <div>
+                       <label style={{ fontSize:9, color:'var(--text-muted)', display:'block', marginBottom:4 }}>BOLSAS POR PACA</label>
+                       <input type="number" value={waterConfig.bagsPerPaca} onChange={e => updateWaterConfig({ bagsPerPaca: Number(e.target.value) })} style={{ width:'100%', padding:10, borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontWeight:800 }} />
+                    </div>
+                    <div>
+                       <label style={{ fontSize:9, color:'var(--text-muted)', display:'block', marginBottom:4 }}>COSTO DE 1 PACA ($)</label>
+                       <input type="number" value={waterConfig.pacaCost} onChange={e => updateWaterConfig({ pacaCost: Number(e.target.value) })} style={{ width:'100%', padding:10, borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--neon-green)', fontWeight:950 }} />
+                    </div>
+                 </div>
+              </div>
+              <div className="glass-card" style={{ padding:32, border:'1px solid var(--neon-green)20' }}>
+                 <div style={{ fontSize:10, fontWeight:950, color:'var(--neon-green)', marginBottom:20 }}>CALCULADORA DE CIERRE</div>
+                 <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between' }}>
+                       <div style={{ fontSize:12, color:'var(--text-muted)' }}>Bolsas vendidas:</div>
+                       <span style={{ fontSize:14, fontWeight:950 }}>{Math.floor(txList.filter(t => t.description.includes('Agua')).reduce((a, t) => a + t.amount, 0) / (waterConfig.bagPrice || 1))} UND</span>
+                    </div>
+                    <div style={{ display:'flex', justifyContent:'space-between' }}>
+                       <span style={{ fontSize:12, color:'var(--text-muted)' }}>Dinero Recaudado:</span>
+                       <span style={{ fontSize:14, fontWeight:950, color:'var(--neon-green)' }}>${txList.filter(t => t.description.includes('Agua')).reduce((a, t) => a + t.amount, 0).toLocaleString()}</span>
+                    </div>
+                    <div style={{ borderTop:'1px solid rgba(255,255,255,0.05)', paddingTop:15 }}>
+                       <div style={{ fontSize:9, color:'var(--text-muted)', marginBottom:10 }}>ESTIMACIÓN DE REPOSICIÓN</div>
+                       <button onClick={handleCloseWaterWeek} style={{ width:'100%', padding:16, borderRadius:12, background:'var(--neon-green)', color:'#000', border:'none', fontWeight:950, cursor:'pointer' }}>
+                          CERRAR SEMANA Y AHORRAR
+                       </button>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="glass-card" style={{ padding:32 }}>
+                 <div style={{ fontSize:10, fontWeight:950, color:'#ff4d4d', marginBottom:20 }}>RETIRO DE EMERGENCIA</div>
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                    <input 
+                      type="number" placeholder="Monto a retirar..." 
+                      value={withdrawAmount || ''} onChange={e => setWithdrawAmount(Number(e.target.value))}
+                      style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#ff4d4d', fontWeight:950 }} 
+                    />
+                    <input 
+                      type="text" placeholder="Motivo del retiro..." 
+                      value={withdrawReason} onChange={e => setWithdrawReason(e.target.value)}
+                      style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} 
+                    />
+                    <div style={{ display: 'flex', gap: 10 }}>
+                       <label style={{ flex: 1, cursor: 'pointer', padding: 12, borderRadius: 12, background: waterEvidence ? 'rgba(0,255,136,0.1)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 10, fontWeight: 900, color: waterEvidence ? 'var(--neon-green)' : '#fff' }}>
+                          <PenTool size={14}/> {waterEvidence ? 'FACTURA LISTA ✓' : 'SUBIR FACTURA'}
+                          <input type="file" style={{ display: 'none' }} onChange={() => setWaterEvidence('factura_cargada.jpg')} />
+                       </label>
+                       <button onClick={handleWaterWithdraw} style={{ flex:1, padding:12, borderRadius:12, background:'#ff4d4d', color:'#fff', border:'none', fontWeight:950, cursor:'pointer' }}>CONFIRMAR</button>
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+           <div className="glass-card" style={{ padding:32 }}>
+              <h3 style={{ fontSize:12, fontWeight:950, marginBottom:20 }}>HISTORIAL_FACTURAS_Y_MOVIMIENTOS</h3>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:15 }}>
+                 {txList.filter(t => t.goalId && goals.find(g => g.id === t.goalId)?.name.toLowerCase().includes('agua')).map(t => (
+                    <div key={t.id} style={{ borderRadius:12, border:'1px solid rgba(255,255,255,0.05)', overflow:'hidden', background:'rgba(0,0,0,0.2)', position:'relative' }}>
+                       <button 
+                         onClick={() => { alert('Para eliminar, usa el historial general de transacciones'); }}
+                         style={{ position:'absolute', top:8, right:8, background:'rgba(255,77,77,0.2)', border:'none', color:'#ff4d4d', borderRadius:6, padding:4, cursor:'pointer', zIndex:10 }}
+                       >
+                         <X size={12}/>
+                       </button>
+                       <div style={{ height:120, background:'rgba(255,255,255,0.02)', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                          <Database size={32} style={{ opacity:0.1 }} />
+                          <div style={{ position:'absolute', color:'var(--neon-green)', fontSize:10, fontWeight:950 }}>VER FACTURA</div>
+                       </div>
+                       <div style={{ padding:10 }}>
+                          <div style={{ fontSize:10, fontWeight:800 }}>{t.description}</div>
+                          <div style={{ fontSize:11, color:'#ff4d4d', fontWeight:950 }}>-${t.amount.toLocaleString()}</div>
+                          <div style={{ fontSize:9, color:'var(--text-muted)', marginTop:4 }}>{t.date}</div>
+                       </div>
+                    </div>
+                 ))}
+                 {txList.filter(t => t.goalId && goals.find(g => g.id === t.goalId)?.name.toLowerCase().includes('agua')).length === 0 && (
+                    <div style={{ gridColumn:'1/-1', textAlign:'center', padding:40, color:'var(--text-muted)', fontSize:12 }}>
+                       No hay movimientos registrados en el ahorro de agua.
+                    </div>
+                 )}
+              </div>
            </div>
         </div>
       ) : (
@@ -413,10 +603,10 @@ export default function Finances() {
                 <div style={{ fontSize:22, fontWeight:950 }}>${g.current.toLocaleString()}</div>
                 <div style={{ fontSize:10, color:'var(--text-muted)', marginBottom:12 }}>Meta: ${g.target.toLocaleString()}</div>
                 <div style={{ height:6, background:'rgba(255,255,255,0.05)', borderRadius:3, overflow:'hidden' }}>
-                   <div style={{ height:'100%', width:`${Math.min((g.current/g.target)*100, 100)}%`, background:'var(--neon-green)', boxShadow:'0 0 10px var(--neon-green)' }} />
+                   <div style={{ height:'100%', width:`${Math.min((g.target > 0 ? (g.current/g.target)*100 : 0), 100)}%`, background:'var(--neon-green)', boxShadow:'0 0 10px var(--neon-green)' }} />
                 </div>
                 <div style={{ display:'flex', justifyContent:'space-between', marginTop:8 }}>
-                   <div style={{ fontSize:9, fontWeight:900, color:'var(--neon-green)' }}>{Math.round((g.current/g.target)*100)}%</div>
+                   <div style={{ fontSize:9, fontWeight:900, color:'var(--neon-green)' }}>{g.target > 0 ? Math.round((g.current/g.target)*100) : 0}%</div>
                    <button onClick={() => updateGoal(g.id, { current: g.current + 500000 })} style={{ padding:'2px 8px', borderRadius:4, background:'rgba(0,255,136,0.1)', border:'none', color:'var(--neon-green)', fontSize:9, fontWeight:950, cursor:'pointer' }}>+500K</button>
                 </div>
              </div>
@@ -489,6 +679,20 @@ export default function Finances() {
                  <div>
                     <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>SALARIO BASE ($)</label>
                     <input type="number" className="input-field" value={staffForm.salary} onChange={e => setStaffForm({...staffForm, salary: Number(e.target.value)})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--neon-green)', fontWeight:950 }} />
+                 </div>
+                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                    <div>
+                       <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>TELÉFONO (WA)</label>
+                       <input className="input-field" value={staffForm.phone} onChange={e => setStaffForm({...staffForm, phone: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
+                    </div>
+                    <div>
+                       <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>CONTRASEÑA TEMP</label>
+                       <input className="input-field" value={staffForm.tempPassword} onChange={e => setStaffForm({...staffForm, tempPassword: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--neon-green)', fontWeight:950 }} />
+                    </div>
+                 </div>
+                 <div>
+                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>EMAIL DE ACCESO</label>
+                    <input className="input-field" value={staffForm.email} onChange={e => setStaffForm({...staffForm, email: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
                  </div>
                  <div style={{ display:'flex', gap:10, marginTop:10 }}>
                     <button onClick={() => setShowStaffModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:950, cursor:'pointer' }}>CANCELAR</button>

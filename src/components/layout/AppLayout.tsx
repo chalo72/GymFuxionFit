@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Bell, Search, Moon, Menu, X } from 'lucide-react';
 import Sidebar from './Sidebar';
+import versionData from '../../../version.json';
+import { useAutoUpdate } from '../../hooks/useAutoUpdate';
 
 const pageTitles: Record<string, string> = {
   '/dashboard':    'Dashboard',
@@ -26,9 +28,18 @@ const pageTitles: Record<string, string> = {
 };
 
 export default function AppLayout() {
+  useAutoUpdate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    return localStorage.getItem('sidebar-collapsed') === 'true';
+  });
   const title = pageTitles[location.pathname] || 'GymFuxionFit';
+
+  // Persistir estado
+  useEffect(() => {
+    localStorage.setItem('sidebar-collapsed', isCollapsed.toString());
+  }, [isCollapsed]);
 
   // Cerrar menu al cambiar de ruta
   useEffect(() => {
@@ -36,8 +47,13 @@ export default function AppLayout() {
   }, [location.pathname]);
 
   return (
-    <div className={`app-layout ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
-      <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+    <div className={`app-layout ${mobileMenuOpen ? 'mobile-menu-open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
+      <Sidebar 
+        isOpen={mobileMenuOpen} 
+        onClose={() => setMobileMenuOpen(false)} 
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+      />
 
       {/* Overlay para móvil */}
       {mobileMenuOpen && (
@@ -59,6 +75,8 @@ export default function AppLayout() {
             </button>
             <h1 className="navbar-title">{title}</h1>
             <div className="navbar-breadcrumb">
+              <span style={{ color: 'var(--neon-green)', fontSize: 8, fontWeight: 950, background: 'var(--green-10)', padding: '2px 6px', borderRadius: 4, marginRight: 8, border: '1px solid var(--green-20)' }}>SISTEMA_OK</span>
+              <span style={{ color: '#fff', fontSize: 8, fontWeight: 950, background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, marginRight: 8, border: '1px solid rgba(255,255,255,0.1)' }}>v{versionData.version}</span>
               <span>Gym Admin</span>
               <span>/</span>
               <span style={{ color: 'var(--neon-green)' }}>{title}</span>

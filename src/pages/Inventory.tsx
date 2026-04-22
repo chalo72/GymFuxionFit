@@ -33,7 +33,7 @@ export default function Inventory() {
       const operational = assets.filter(a => a.status === 'OPERATIONAL').length;
       return {
         total: assets.length,
-        health: `${((operational / assets.length) * 100).toFixed(1)}%`,
+        health: assets.length > 0 ? `${((operational / assets.length) * 100).toFixed(1)}%` : '0%',
         alerts: assets.filter(a => a.status === 'MAINTENANCE' || a.status === 'DEFECTIVE').length,
         label: 'EQUIPOS_SALA'
       };
@@ -50,10 +50,11 @@ export default function Inventory() {
   }, [activeTab, assets, products]);
 
   const filteredItems = useMemo(() => {
-    const list = activeTab === 'assets' ? assets : products;
+    const list = activeTab === 'assets' ? (assets || []) : (products || []);
     return list.filter(item => 
+      item &&
       (filter === 'all' || (item as any).category === filter) &&
-      (item.name.toLowerCase().includes(searchTerm.toLowerCase()) || (item as any).id.toLowerCase().includes(searchTerm.toLowerCase()))
+      (item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || (item as any).id?.toString().toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [activeTab, assets, products, filter, searchTerm]);
 

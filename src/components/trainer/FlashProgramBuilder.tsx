@@ -57,8 +57,8 @@ export default function FlashProgramBuilder({ onClose, athleteName }: FlashProgr
       background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
     }}>
-      <div style={{
-        width: '100%', maxWidth: 1000, height: '85vh',
+      <div className="flash-builder-modal" style={{
+        width: '100%', maxWidth: 1000, minHeight: '85vh',
         background: 'var(--space-dark)', borderRadius: 24, border: '1px solid var(--green-20)',
         display: 'grid', gridTemplateColumns: '320px 1fr', overflow: 'hidden',
         boxShadow: '0 0 80px rgba(0,255,136,0.15)'

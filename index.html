@@ -9,6 +9,34 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      // 🕵️‍♂️ NUCLEAR CACHE PURGE V3 (Antigravity Anti-Cache Shield)
+      // Este script se ejecuta antes que cualquier otra cosa para limpiar el "Ghost Build"
+      (function() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(registrations => {
+            for (let registration of registrations) {
+              registration.unregister().then(() => {
+                console.log("🧹 Service Worker Expulsado");
+              });
+            }
+          });
+        }
+        
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            for (let name of names) caches.delete(name);
+          });
+          console.log("🧼 Memoria Caché Pulverizada");
+        }
+
+        // Si venimos de una versión vieja, forzamos recarga limpia una sola vez
+        if (!sessionStorage.getItem('reloaded_for_sync')) {
+          sessionStorage.setItem('reloaded_for_sync', 'true');
+          window.location.reload(true);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -157,6 +157,10 @@ export default function Reception() {
       setProgress(0); 
       stopCamera(); 
       setSearch('');
+      // Si fue manual y no encontró, no cerramos
+      if (!masterMember && method === 'manual') {
+         setStatus('error');
+      }
     }, 1500);
   };
 
@@ -178,17 +182,17 @@ export default function Reception() {
      setCart(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleFinalizeSale = () => {
+  const handleFinalizeSale = async () => {
     if (!selectedMember || cart.length === 0) return;
     
     // Procesar cada item del carrito
-    cart.forEach(item => {
+    for (const item of cart) {
        if (item.category !== 'Servicio') {
           // Es un producto del inventario -> Registrar venta y descontar stock
-          registerProductSale(item.id, item.qty, selectedMember.name, paymentMethod);
+          await registerProductSale(item.id, item.qty, selectedMember.name, paymentMethod);
        } else {
           // Es un servicio (Membresía/Dia) -> Inyectar transacción directamente
-          injectTransaction({
+          await injectTransaction({
             date: new Date().toISOString().split('T')[0],
             time: new Date().toLocaleTimeString().slice(0, 5),
             description: `Servicio: ${item.name}`,
@@ -208,19 +212,19 @@ export default function Reception() {
              const startDate = currentExpiry > now ? currentExpiry : now;
              startDate.setDate(startDate.getDate() + daysToAdd);
              
-             updateMemberStatus(selectedMember.id, { 
+             await updateMemberStatus(selectedMember.id, { 
                 status: 'active', 
                 expiryDate: startDate.toISOString().split('T')[0],
                 debt: 0 
              });
           }
        }
-    });
+    }
 
     // Lógica de Crédito (Si el método es Crédito, registramos deuda extra)
     if (paymentMethod === 'Crédito') {
        const total = cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
-       updateMemberStatus(selectedMember.id, { 
+       await updateMemberStatus(selectedMember.id, { 
          debt: selectedMember.debt + total 
        });
     }
@@ -239,9 +243,27 @@ export default function Reception() {
     setPaymentType('Venta Producto');
   };
 
-  const handleClearDebt = () => {
-    if (alertMember) {
-      clearMemberDebt(alertMember.id);
+  const handleClearDebt = async (amount?: number) => {
+    if (selectedMember) {
+      if (amount && amount > 0) {
+        // Es un abono parcial
+        await updateMemberStatus(selectedMember.id, { 
+          debt: Math.max(0, selectedMember.debt - amount) 
+        });
+        await injectTransaction({
+          date: new Date().toISOString().split('T')[0],
+          time: new Date().toLocaleTimeString().slice(0, 5),
+          description: `Abono a deuda: ${selectedMember.name}`,
+          category: 'membership',
+          type: 'income',
+          amount: amount,
+          method: paymentMethod,
+          client: selectedMember.name
+        });
+      } else {
+        // Liquidación total
+        await clearMemberDebt(selectedMember.id);
+      }
       setAlertMember(null);
     }
   };
@@ -291,7 +313,7 @@ export default function Reception() {
                   SOLO REGISTRAR
                 </button>
                 <button 
-                  onClick={handleClearDebt}
+                  onClick={() => handleClearDebt()}
                   style={{ padding: '16px', borderRadius: 12, background: 'var(--neon-green)', color: '#000', border: 'none', fontSize: 12, fontWeight: 950, boxShadow: '0 0 25px rgba(0,255,136,0.4)', cursor: 'pointer' }}
                 >
                   {alertMember.debt > 0 ? 'LIQUIDAR DEUDA' : 'RENOVAR MEMBRESÍA'}
@@ -319,10 +341,10 @@ export default function Reception() {
       </div>
 
       {/* ── MAIN LAYOUT FUSION (v3.9 - QUADRANT GRID) ── */}
-      <div className="reception-grid" style={{ display: 'grid', gridTemplateColumns: '120px 1fr 340px', gap: 20, flex: 1, overflow: 'hidden' }}>
+      <div className="reception-layout-grid">
         
         {/* COL 1: SELECTOR DE SENSORES */}
-        <div className="sensor-selector-mobile" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="sensor-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
            {[
              { id: 'manual', icon: <User size={20}/>, label: 'MANUAL' },
              { id: 'qr', icon: <QrCode size={20}/>, label: 'LEER QR' },
@@ -331,7 +353,7 @@ export default function Reception() {
            ].map(t => (
              <button 
                key={t.id}
-               className="sensor-btn-mobile"
+               className="sensor-btn"
                onClick={() => { startScanning(t.id as any); setSelectedMember(null); setPosMode(false); }}
                style={{ 
                  height: 85, borderRadius: 16, background: activeTab === t.id ? 'var(--green-10)' : 'rgba(255,255,255,0.03)',
@@ -339,7 +361,6 @@ export default function Reception() {
                  color: activeTab === t.id ? 'var(--neon-green)' : 'var(--text-muted)',
                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, transition: '0.3s', cursor: 'pointer'
                }}
-
              >
                {t.icon}
                <span style={{ fontSize: 9, fontWeight: 950 }}>{t.label}</span>
@@ -352,7 +373,7 @@ export default function Reception() {
            
            {/* Active Scanner Zone */}
            {!selectedMember ? (
-             <div className="glass-card" style={{ minHeight: 400, padding: 0, position: 'relative', overflow: 'hidden', border: '1px solid var(--green-10)', background: '#000' }}>
+             <div className="glass-card" style={{ minHeight: 400, padding: 0, position: 'relative', overflow: 'hidden', border: '1px solid var(--green-10)', background: 'radial-gradient(circle at center, #0a0f0d, #000)' }}>
                 {activeTab === 'manual' ? (
                   <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, minHeight: 400 }}>
                     <Activity size={80} style={{ color: 'var(--neon-green)', opacity: 0.1, marginBottom: 30 }} />
@@ -364,8 +385,14 @@ export default function Reception() {
                           value={search}
                           onChange={e => setSearch(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && handleSuccess(search, 'manual')}
-                          style={{ width: '100%', padding: '24px 24px 24px 60px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, color: '#fff', fontSize: 18, fontWeight: 700, outline: 'none' }}
+                          style={{ width: '100%', padding: '24px 80px 24px 60px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, color: '#fff', fontSize: 18, fontWeight: 700, outline: 'none' }}
                         />
+                        <button 
+                          onClick={() => handleSuccess(search, 'manual')}
+                          style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'var(--neon-green)', color: '#000', padding: '12px 20px', borderRadius: 16, fontWeight: 950, fontSize: 12, cursor: 'pointer', boxShadow: '0 0 15px rgba(0,255,136,0.3)' }}
+                        >
+                          BUSCAR
+                        </button>
                     </div>
                   </div>
                 ) : (
@@ -373,7 +400,10 @@ export default function Reception() {
                     {cameraStream ? (
                         <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
                     ) : (
-                        <div style={{ height: '100%', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--neon-green)', fontWeight:950, minHeight: 400 }}>INCALIZANDO CÁMARA...</div>
+                        <div style={{ height: '100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'var(--neon-green)', fontWeight:950, minHeight: 400, gap: 20 }}>
+                           <RefreshCcw className="spinning" size={40} style={{ opacity: 0.5 }} />
+                           <div style={{ letterSpacing: 2 }}>INICIALIZANDO CÁMARA...</div>
+                        </div>
                     )}
                     
                     <div style={{ position: 'absolute', inset: 40, border: '1px solid rgba(0,255,136,0.3)', pointerEvents:'none' }}>
@@ -409,8 +439,8 @@ export default function Reception() {
                    <button onClick={() => { setSelectedMember(null); setPosMode(false); }} style={{ background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', padding: '8px 16px', borderRadius: 12, fontSize: 10, fontWeight: 950, cursor: 'pointer' }}>CERRAR FICHA</button>
                 </div>
 
-                {/* Dashboard de Estado (4 Mini-Cards) */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 25 }}>
+                {/* Dashboard de Estado (6 Mini-Cards) */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 25 }}>
                     <div style={{ padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
                        <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)' }}>VENCIMIENTO</div>
                        <div style={{ fontSize: 13, fontWeight: 950 }}>{selectedMember.expiryDate}</div>
@@ -419,6 +449,16 @@ export default function Reception() {
                        <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)' }}>DEUDA</div>
                        <div style={{ fontSize: 13, fontWeight: 950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' }}>${selectedMember.debt.toLocaleString()}</div>
                     </div>
+                    <div style={{ padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                        <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)' }}>BIOMETRÍA</div>
+                        <div style={{ fontSize: 13, fontWeight: 950, color: selectedMember.biometricStatus === 'completed' ? 'var(--neon-green)' : 'var(--danger-red)' }}>
+                           {selectedMember.biometricStatus === 'completed' ? 'AL DÍA ✓' : 'FALTANTE ⚠'}
+                        </div>
+                     </div>
+                     <div style={{ padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                        <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)' }}>PESO / ALTURA</div>
+                        <div style={{ fontSize: 13, fontWeight: 950 }}>{selectedMember.weight || '--'}kg / {selectedMember.height || '--'}cm</div>
+                     </div>
                     {activeMembers.find(m => m.id.toString() === selectedMember.id || m.name === selectedMember.name) && (
                       <>
                         <div style={{ padding: 12, background: 'rgba(0,255,136,0.03)', borderRadius: 12, border: '1px solid rgba(0,255,136,0.1)', textAlign: 'center' }}>
@@ -462,6 +502,17 @@ export default function Reception() {
                                <span>💎 MENSUALIDAD</span>
                                <span style={{ opacity: 0.6 }}>$80.000</span>
                              </button>
+                             {selectedMember.debt > 0 && (
+                               <button 
+                                 onClick={() => {
+                                   const amt = prompt('¿Cuánto va a abonar el cliente?', selectedMember.debt.toString());
+                                   if (amt) handleClearDebt(Number(amt));
+                                 }}
+                                 style={{ padding: 18, borderRadius: 16, background: 'rgba(255,214,0,0.1)', border: '1px solid var(--warning-yellow)', color: 'var(--warning-yellow)', fontWeight: 950, textAlign: 'center', cursor:'pointer' }}
+                               >
+                                 💰 REALIZAR ABONO A DEUDA
+                               </button>
+                             )}
                           </div>
                        </div>
 
@@ -518,7 +569,15 @@ export default function Reception() {
                           </button>
                        </div>
                        <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                          <button onClick={() => alert('Mensaje: Notificación enviada al atleta.')} style={{ padding: 14, borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', fontSize: 10, fontWeight: 950, cursor: 'pointer' }}>NOTIFICAR AL ATLETA</button>
+                          <button 
+                            onClick={() => {
+                              const msg = `Hola ${selectedMember.name}! Te recordamos que tu membresía en GymFuxionFit está próxima a vencer o tienes un saldo pendiente. 💪%0A%0APuedes pagar en recepción o vía Nequi. ¡Te esperamos!`;
+                              window.open(`https://wa.me/57${selectedMember.phone}?text=${msg}`, '_blank');
+                            }} 
+                            style={{ padding: 14, borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', fontSize: 10, fontWeight: 950, cursor: 'pointer' }}
+                          >
+                            NOTIFICAR AL ATLETA
+                          </button>
                           <button 
                             onClick={() => setShowProfile(true)} 
                             style={{ padding: 14, borderRadius: 12, border: '2px solid var(--neon-green)', background: 'var(--green-10)', color: 'var(--neon-green)', fontSize: 10, fontWeight: 950, cursor: 'pointer', boxShadow: '0 0 15px rgba(0,255,136,0.2)' }}
@@ -578,14 +637,14 @@ export default function Reception() {
 
                    <div style={{ background:'rgba(0,255,136,0.05)', padding: 20, borderRadius: 20, border: '1px solid rgba(0,255,136,0.1)', marginBottom: 25, position: 'relative' }}>
                       <button 
-                        onClick={() => window.open(`https://wa.me/573000000000?text=Hola ${selectedMember.name}, te saludamos de GymFuxionFit!`, '_blank')}
+                        onClick={() => window.open(`https://wa.me/57${selectedMember.phone}?text=Hola ${selectedMember.name}, te saludamos de GymFuxionFit!`, '_blank')}
                         style={{ position: 'absolute', top: 20, right: 20, padding: '10px 15px', borderRadius: 12, background: '#25D366', color: '#fff', border: 'none', fontSize: 10, fontWeight: 950, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
                       >
                          <Phone size={14} /> WHATSAPP
                       </button>
                       <div style={{ display:'flex', alignItems:'center', gap: 15, marginBottom: 12 }}>
                          <Phone size={16} style={{ color:'var(--neon-green)' }} />
-                         <span style={{ fontSize: 13 }}>WhatsApp: +57 300 000 0000</span>
+                         <span style={{ fontSize: 13 }}>WhatsApp: +57 {selectedMember.phone}</span>
                       </div>
                       <div style={{ display:'flex', alignItems:'center', gap: 15, marginBottom: 12 }}>
                          <HeartPulse size={16} style={{ color:'var(--danger-red)' }} />
@@ -608,13 +667,12 @@ export default function Reception() {
                 <div 
                   key={m.id} 
                   onClick={() => {
-                    // Vinculación por ID (más rápida y segura) o Nombre
-                    const master = members.find(master => 
-                      master.id === m.id.toString() || 
-                      master.name.trim().toLowerCase() === m.name.trim().toLowerCase()
-                    );
-                    if (master) setSelectedMember(master);
-                  }}
+                     const master = members?.find(mMaster => 
+                       String(mMaster.id) === String(m.id) || 
+                       mMaster.name?.trim().toLowerCase() === m.name?.trim().toLowerCase()
+                     );
+                     if (master) setSelectedMember(master);
+                   }}
                   className="glass-card" 
                   style={{ minWidth: 220, padding: 20, border: `1px solid ${m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'var(--green-10)'}`, background: `linear-gradient(135deg, ${m.color}08, transparent)`, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer' }}
                 >
@@ -639,10 +697,33 @@ export default function Reception() {
                                setPosMode(true);
                              }
                            }}
+                           title="Cobrar / Carrito"
                            style={{ background: 'var(--green-10)', border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-green)', cursor: 'pointer' }}
                          >
                            <ShoppingBag size={14} />
                          </button>
+                         
+                         <button 
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             if (window.confirm(`¿Marcar salida de ${m.name}?`)) {
+                               setActiveMembers(prev => prev.filter(am => am.id !== m.id));
+                               setLogs(prev => [{ 
+                                 id: Date.now(), 
+                                 name: m.name, 
+                                 action: 'SALIDA', 
+                                 time: new Date().toLocaleTimeString().slice(0,5), 
+                                 method: m.checkInMethod || 'manual', 
+                                 color: '#ff4d4d' 
+                                }, ...prev]);
+                             }
+                           }}
+                           title="Marcar Salida (Eliminar de Sala)"
+                           style={{ background: 'rgba(255,61,87,0.1)', border: 'none', borderRadius: 8, width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--danger-red)', cursor: 'pointer' }}
+                         >
+                           <LogOut size={14} />
+                         </button>
+
                          {m.checkInMethod === 'qr' && <QrCode size={14} style={{ color: 'var(--text-muted)' }} />}
                          {m.checkInMethod === 'facial' && <ScanEye size={14} style={{ color: 'var(--text-muted)' }} />}
                          {m.membershipStatus !== 'active' && <AlertCircle size={14} style={{ color: 'var(--danger-red)' }} />}
@@ -651,7 +732,10 @@ export default function Reception() {
                 </div>
               ))}
               {activeMembers.length === 0 && (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 24, color: 'var(--text-muted)', fontSize: 12, fontWeight: 900, letterSpacing: 2 }}>ESPERANDO INGRESOS...</div>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 24, color: 'var(--neon-green)', fontSize: 12, fontWeight: 900, letterSpacing: 2, opacity: 0.4, gap: 10 }}>
+                   <Users size={32} />
+                   <span>ESPERANDO INGRESOS...</span>
+                </div>
               )}
            </div>
         </div>
@@ -667,11 +751,11 @@ export default function Reception() {
                  {logs.map(l => (
                    <div key={l.id} style={{ padding: '12px 14px', fontSize: 10, borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', gap: 14 }}>
                       <span style={{ color: 'var(--text-muted)' }}>{l.time}</span>
-                      <span style={{ color: l.color, fontWeight: 950 }}>{l.action === 'IN' ? 'ENTRADA' : 'SALIDA'}</span>
+                      <span style={{ color: l.color, fontWeight: 950 }}>{l.action}</span>
                       <span style={{ color: '#fff', fontWeight: 800 }}>{l.name.toUpperCase()}</span>
                    </div>
                  ))}
-                 {logs.length === 0 && <div style={{ padding: 30, textAlign:'center', color:'var(--text-muted)', fontSize:11, letterSpacing:1 }}>ESPERANDO EVENTOS...</div>}
+                 {logs.length === 0 && <div style={{ padding: 30, textAlign:'center', color:'var(--neon-green)', fontSize:10, letterSpacing:1, opacity:0.3 }}>ESPERANDO EVENTOS DEL SISTEMA...</div>}
               </div>
            </div>
 
@@ -692,6 +776,13 @@ export default function Reception() {
       </div>
 
       <style>{`
+        @keyframes spinning {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .spinning {
+          animation: spinning 2s linear infinite;
+        }
         @keyframes slideIn {
           from { transform: translateY(30px) scale(0.95); opacity: 0; }
           to { transform: translateY(0) scale(1); opacity: 1; }

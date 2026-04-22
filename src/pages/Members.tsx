@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useGymData } from '../hooks/useGymData';
 import {
   Search, Plus, Filter, Edit2, Trash2, Eye,
   UserCheck, UserX, RefreshCw, Phone, Mail,
@@ -9,33 +10,38 @@ import {
 /* ══════════════════════════════════════════
    TIPOS
 ══════════════════════════════════════════ */
-type PlanId  = 'basic' | 'pro' | 'hyrox';
+type PlanId  = 'basic' | 'pro' | 'hyrox' | 'hyrox pro';
 type Status  = 'active' | 'expiring' | 'expired' | 'suspended';
 type PayMethod = 'efectivo' | 'tarjeta' | 'nequi' | 'transferencia';
 
 interface Client {
-  id: number;
+  id: any;
   name: string;
-  email: string;
-  phone: string;
-  plan: PlanId;
-  status: Status;
-  joined: string;
-  expiry: string;
-  nextPayment: string;
-  payMethod: PayMethod;
-  trainer: string;
-  emergency: string;
-  emergencyPhone: string;
-  address: string;
-  notes: string;
-  visits: number;
-  lastVisit: string;
-  color: string;
+  email?: string;
+  phone?: string;
+  plan?: string;
+  status?: Status;
+  joined?: string;
+  expiry?: string;
+  nextPayment?: string;
+  payMethod?: string;
+  trainer?: string;
+  emergency?: string;
+  emergencyPhone?: string;
+  address?: string;
+  notes?: string;
+  visits?: number;
+  lastVisit?: string;
+  color?: string;
   objective?: string;
   injuries?: string;
   nutrition?: string;
   emergencyContact?: string;
+  // Métricas Biométricas
+  weight?: number;
+  height?: number;
+  biometricStatus?: 'pending' | 'completed';
+  lastScan?: string;
 }
 
 /* ══════════════════════════════════════════
@@ -43,20 +49,14 @@ interface Client {
 ══════════════════════════════════════════ */
 const COLORS = ['#00FF88','#FF6B35','#A78BFA','#00E5FF','#FFD600','#FF4FA3','#4CAF50','#2196F3'];
 
-const PLANS: Record<PlanId, { label: string; price: number; color: string; desc: string }> = {
+const PLANS: Record<string, { label: string; price: number; color: string; desc: string }> = {
   basic: { label: 'Básico',    price: 45000,  color: '#8A948A', desc: 'Acceso gimnasio · L-V · Sin clases' },
   pro:   { label: 'Pro',       price: 75000,  color: '#00FF88', desc: 'Acceso completo · Clases incluidas' },
   hyrox: { label: 'HYROX Pro', price: 120000, color: '#FF6B35', desc: 'Elite · HYROX · Trainer asignado' },
+  'hyrox pro': { label: 'HYROX Pro', price: 120000, color: '#FF6B35', desc: 'Elite · HYROX · Trainer asignado' },
 };
 
 const TRAINERS = ['Sin entrenador','Coach Alex','Coach María','Coach Andrés','Coach Sofia'];
-
-const initialClients: Client[] = [
-  { id:1, name:'Alex Guerrero',     email:'alex@email.com',      phone:'310-555-0101', plan:'hyrox', status:'active',   joined:'2026-01-15', expiry:'2026-05-15', nextPayment:'2026-05-15', payMethod:'nequi',        trainer:'Coach Alex',  emergency:'Carmen G.',  emergencyPhone:'310-555-0200', address:'Cra 5 #12-30', notes:'Atleta HYROX competitivo', visits:47, lastVisit:'Hoy',      color:'#FF6B35', objective: 'musculación', injuries: 'Ninguna', nutrition: 'Dieta hiperproteica', emergencyContact: 'Esposa: 300 000 1111' },
-  { id:2, name:'Valentina Torres',  email:'vale@email.com',      phone:'311-555-0202', plan:'hyrox', status:'active',   joined:'2025-12-12', expiry:'2026-05-01', nextPayment:'2026-05-01', payMethod:'tarjeta',      trainer:'Coach Alex',  emergency:'Luis T.',    emergencyPhone:'311-555-0203', address:'Cl 8 #4-22',   notes:'',                          visits:38, lastVisit:'Ayer',     color:'#A78BFA', objective: 'rebajar', injuries: 'Escurrimiento rodilla izq', emergencyContact: 'Mamá: 311 222 3333' },
-  { id:3, name:'María López',       email:'maria@email.com',     phone:'312-555-0303', plan:'pro',   status:'expiring', joined:'2026-03-01', expiry:'2026-04-20', nextPayment:'2026-04-20', payMethod:'efectivo',     trainer:'Coach María', emergency:'Pedro L.',   emergencyPhone:'312-555-0304', address:'Av 3 #10-15',  notes:'Avisarle 5 días antes',    visits:22, lastVisit:'Hoy',      color:'#00FF88', objective: 'mantenimiento', injuries: 'Lumbalgia crónica' },
-  { id:4, name:'Carlos Rivas',      email:'carlos@email.com',    phone:'313-555-0404', plan:'basic', status:'expired',  joined:'2025-11-08', expiry:'2026-04-10', nextPayment:'Vencida',    payMethod:'efectivo',     trainer:'',            emergency:'Ana R.',     emergencyPhone:'313-555-0405', address:'Cl 15 #2-8',   notes:'Debe renovar',              visits:15, lastVisit:'Hoy',      color:'#FFD600', objective: 'musculación' },
-];
 
 const emptyForm = (): Omit<Client,'id'|'visits'|'lastVisit'|'color'> => ({
   name:'', email:'', phone:'', plan:'pro', status:'active',
@@ -88,8 +88,8 @@ function StatusBadge({ s }: { s: Status }) {
   );
 }
 
-function PlanBadge({ p }: { p: PlanId }) {
-  const c = PLANS[p];
+function PlanBadge({ p }: { p: string }) {
+  const c = PLANS[p.toLowerCase()] || PLANS.pro;
   return (
     <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, color:c.color, background:`${c.color}15`, border:`1px solid ${c.color}30` }}>
       {c.label}
@@ -104,10 +104,10 @@ function ClientModal({
   initial, onSave, onClose,
 }: {
   initial: Partial<Client> | null;
-  onSave: (data: Omit<Client,'id'|'visits'|'lastVisit'|'color'>) => void;
+  onSave: (data: any) => void;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState<Omit<Client,'id'|'visits'|'lastVisit'|'color'>>(
+  const [form, setForm] = useState<any>(
     initial ? { 
       name:initial.name??'', email:initial.email??'', phone:initial.phone??'', plan:initial.plan??'pro', 
       status:initial.status??'active', joined:initial.joined??'', expiry:initial.expiry??'', 
@@ -121,10 +121,10 @@ function ClientModal({
   const [tab, setTab] = useState<'info'|'plan'|'técnica'>('info');
   const isEdit = !!initial?.id;
 
-  const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: keyof typeof form, v: string) => setForm((f: any) => ({ ...f, [k]: v }));
 
   // Auto-calcular expiración al cambiar plan y fecha de inicio
-  const handlePlanChange = (p: PlanId) => {
+  const handlePlanChange = (p: string) => {
     set('plan', p);
     if (form.joined) {
       const d = new Date(form.joined);
@@ -245,7 +245,7 @@ function ClientModal({
               <div>
                 <label style={labelStyle}>Plan de Membresía *</label>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
-                  {(Object.entries(PLANS) as [PlanId, typeof PLANS[PlanId]][]).map(([id, p]) => (
+                  {(Object.entries(PLANS) as [string, typeof PLANS[string]][]).map(([id, p]) => (
                     <div key={id} onClick={() => handlePlanChange(id)} style={{
                       padding:'14px 12px', borderRadius:'var(--radius-lg)', cursor:'pointer',
                       background: form.plan===id ? `${p.color}15` : 'rgba(255,255,255,.03)',
@@ -366,10 +366,10 @@ function ClientModal({
    PANEL DETALLE CLIENTE
 ══════════════════════════════════════════ */
 function DetailPanel({ client, onClose, onEdit, onDelete }: {
-  client: Client; onClose: () => void;
+  client: any; onClose: () => void;
   onEdit: () => void; onDelete: () => void;
 }) {
-  const status = STATUS_CFG[client.status];
+  const status = STATUS_CFG[client.status as Status] || STATUS_CFG.active;
   return (
     <div style={{
       position:'fixed', inset:0, background:'rgba(0,0,0,.85)',
@@ -381,6 +381,13 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
         background:'var(--space-dark)', border:'1px solid var(--green-20)',
         boxShadow:'var(--shadow-elevated)', overflow:'hidden', position: 'relative'
       }}>
+        {/* Banner de Integridad de Datos */}
+        {(!client.weight || !client.height || client.biometricStatus !== 'completed') && (
+          <div style={{ padding: '8px 12px', background: 'var(--danger-red)', color: '#000', textAlign: 'center', fontSize: 10, fontWeight: 950, letterSpacing: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+             <AlertTriangle size={14} /> PERFIL INCOMPLETO: FALTA ACTUALIZAR PESO, MEDIDAS O BIOMETRÍA
+          </div>
+        )}
+
         {/* Banner Salud */}
         <div style={{ height: 60, background: client.injuries && client.injuries !== 'Ninguna' && client.injuries !== '' ? 'rgba(255,61,87,0.1)' : 'rgba(0,255,136,0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
            <div style={{ fontSize: 10, fontWeight: 950, color: client.injuries && client.injuries !== 'Ninguna' && client.injuries !== '' ? 'var(--danger-red)' : 'var(--neon-green)', letterSpacing: 2 }}>
@@ -403,8 +410,8 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
               <div>
                  <h2 style={{ fontSize: 32, fontWeight:950, color:'#fff', marginBottom: 6 }}>{client.name}</h2>
                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    <StatusBadge s={client.status}/>
-                    <div style={{ color:'var(--text-muted)', fontSize: 13, fontWeight: 800 }}>ID: #{client.id.toString().slice(-4)}</div>
+                    <StatusBadge s={client.status as Status}/>
+                    <div style={{ color:'var(--text-muted)', fontSize: 13, fontWeight: 800 }}>ID: #{String(client.id).slice(-4)}</div>
                  </div>
               </div>
            </div>
@@ -421,7 +428,7 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
               </div>
               <div style={{ background:'rgba(255,255,255,0.02)', padding: 15, borderRadius: 20, textAlign:'center', border: '1px solid rgba(255,255,255,0.05)' }}>
                  <div style={{ fontSize: 8, color:'var(--text-muted)', marginBottom: 4, letterSpacing: 1 }}>PLAN ACTIVO</div>
-                 <div style={{ fontSize: 11, fontWeight: 900 }}>{client.plan.toUpperCase()}</div>
+                 <div style={{ fontSize: 11, fontWeight: 900 }}>{String(client.plan).toUpperCase()}</div>
               </div>
            </div>
 
@@ -437,7 +444,29 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
               </div>
            </div>
 
-           {/* Direct Access Bar */}
+            {/* Bóveda de Pagos del Socio */}
+            <div className="glass-card" style={{ padding: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 20 }}>
+               <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 15, letterSpacing: 1 }}>HISTORIAL_DE_TRANSACCIONES_RECIENTES</div>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {[
+                    { d: '15 Abr 2026', a: 120000, m: 'Nequi', r: 'NQ-883492' },
+                    { d: '15 Mar 2026', a: 120000, m: 'Efectivo', r: 'MANUAL' }
+                  ].map((p, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 }}>
+                       <div>
+                          <div style={{ fontSize: 12, fontWeight: 800 }}>${p.a.toLocaleString()}</div>
+                          <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{p.d} • {p.m}</div>
+                       </div>
+                       <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)' }}>VERIFICADO</div>
+                          <div style={{ fontSize: 8, color: 'var(--text-muted)' }}>{p.r}</div>
+                       </div>
+                    </div>
+                  ))}
+               </div>
+            </div>
+
+            {/* Direct Access Bar */}
            <div style={{ background:'rgba(0,255,136,0.05)', padding: 25, borderRadius: 24, border: '1px solid rgba(0,255,136,0.1)', position: 'relative' }}>
               <button 
                 onClick={() => window.open(`https://wa.me/57${client.phone.replace(/-/g,'')}?text=Hola ${client.name}, te saludamos de GymFuxionFit!`, '_blank')}
@@ -451,7 +480,7 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
               </div>
               <div style={{ display:'flex', alignItems:'center', gap: 15, marginBottom: 15 }}>
                  <CreditCard size={16} style={{ color:'var(--neon-green)' }} />
-                 <span style={{ fontSize: 14 }}>Pago: {client.payMethod.toUpperCase()} (Vence: {client.expiry})</span>
+                 <span style={{ fontSize: 14 }}>Pago: {client.payMethod?.toUpperCase()} (Vence: {client.expiry})</span>
               </div>
               <div style={{ display:'flex', alignItems:'center', gap: 15 }}>
                  <AlertTriangle size={16} style={{ color:'var(--danger-red)' }} />
@@ -474,9 +503,9 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
    PÁGINA PRINCIPAL
 ══════════════════════════════════════════ */
 export default function Members() {
-  const [clients, setClients]       = useState<Client[]>(initialClients);
+  const { members: clients, updateMemberStatus, setMembers } = useGymData();
   const [search,  setSearch]        = useState('');
-  const [filterPlan, setFilterPlan] = useState<PlanId | 'all'>('all');
+  const [filterPlan, setFilterPlan] = useState<string | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all');
   const [showModal, setShowModal]   = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
@@ -491,7 +520,7 @@ export default function Members() {
   /* Filtro */
   const filtered = useMemo(() => clients.filter(c => {
     const q = search.toLowerCase();
-    const matchSearch = c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.phone.includes(q);
+    const matchSearch = c.name.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q) || c.phone?.includes(q);
     const matchPlan   = filterPlan === 'all'   || c.plan   === filterPlan;
     const matchStatus = filterStatus === 'all' || c.status === filterStatus;
     return matchSearch && matchPlan && matchStatus;
@@ -503,21 +532,33 @@ export default function Members() {
     active:   clients.filter(c => c.status === 'active').length,
     expiring: clients.filter(c => c.status === 'expiring').length,
     expired:  clients.filter(c => c.status === 'expired').length,
-    revenue:  clients.filter(c => c.status !== 'suspended').reduce((a, c) => a + PLANS[c.plan].price, 0),
+    revenue:  clients.filter(c => c.status !== 'suspended').reduce((a, c) => a + (PLANS[c.plan?.toLowerCase()]?.price || 0), 0),
   };
 
   /* Guardar nuevo/editar */
-  const handleSave = (data: Omit<Client,'id'|'visits'|'lastVisit'|'color'>) => {
+  const handleSave = async (data: any) => {
     if (editClient) {
-      setClients(prev => prev.map(c => c.id === editClient.id ? { ...c, ...data } : c));
+      await updateMemberStatus(editClient.id, data);
       showToast(`✅ Cliente "${data.name}" actualizado`);
     } else {
-      const newClient: Client = {
-        ...data, id: Date.now(), visits: 0,
+      const newId = 'm_' + Date.now();
+      const newClient: any = {
+        ...data, 
+        id: newId, 
+        visits: 0,
         lastVisit: 'Nunca',
         color: COLORS[clients.length % COLORS.length],
       };
-      setClients(prev => [newClient, ...prev]);
+      
+      // Cloud Sync
+      const { supabase } = await import('../lib/supabase');
+      await supabase.from('members').insert([{
+        ...newClient,
+        expiry_date: newClient.expiry,
+        biometric_status: newClient.biometricStatus || 'pending'
+      }]);
+
+      setMembers(prev => [newClient, ...prev]);
       showToast(`✅ Cliente "${data.name}" registrado exitosamente`);
     }
     setShowModal(false);
@@ -525,14 +566,16 @@ export default function Members() {
   };
 
   /* Cambio de estado rápido */
-  const toggleStatus = (id: number, newStatus: Status) => {
-    setClients(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c));
+  const toggleStatus = async (id: any, newStatus: Status) => {
+    await updateMemberStatus(id, { status: newStatus });
     showToast(`✅ Estado actualizado`);
   };
 
-  const deleteClient = (id: number) => {
+  const deleteClient = async (id: any) => {
     const name = clients.find(c => c.id === id)?.name;
-    setClients(prev => prev.filter(c => c.id !== id));
+    const { supabase } = await import('../lib/supabase');
+    await supabase.from('members').delete().eq('id', id);
+    setMembers(prev => prev.filter(c => c.id !== id));
     setViewClient(null);
     showToast(`🗑️ Cliente "${name}" eliminado`);
   };
@@ -657,7 +700,12 @@ export default function Members() {
                         {c.name.charAt(0)}
                       </div>
                       <div>
-                        <div style={{ fontSize:13.5, fontWeight:700, color:'var(--text-primary)' }}>{c.name}</div>
+                        <div style={{ fontSize:13.5, fontWeight:700, color:'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {c.name}
+                          {(!c.weight || !c.height || c.biometricStatus !== 'completed') && (
+                            <AlertTriangle size={12} color="var(--danger-red)" />
+                          )}
+                        </div>
                         <div style={{ fontSize:11, color:'var(--text-muted)' }}>{c.phone}</div>
                       </div>
                     </div>
