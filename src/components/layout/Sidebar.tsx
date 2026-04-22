@@ -118,11 +118,6 @@ export default function Sidebar({
           Gym<span>Fuxion</span>Fit
         </div>
 
-        {/* Botón colapsar desktop */}
-        <button className="sidebar-toggle-btn" onClick={onToggleCollapse}>
-          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
-
         {/* Botón cerrar móvil */}
         <button className="mobile-close-btn" onClick={onClose}>
           <X size={20} />
@@ -165,6 +160,11 @@ export default function Sidebar({
 
       {/* ─── FOOTER ─── */}
       <div className="sidebar-footer">
+        <button className="sidebar-toggle-btn" onClick={onToggleCollapse}>
+          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {!isCollapsed && <span>COLAPSAR MENÚ</span>}
+        </button>
+
         <div className="sidebar-user">
           <div className="sidebar-avatar" style={{ background: `linear-gradient(135deg, ${roleColor}, ${roleColor}88)` }}>
             <Zap size={16} />
