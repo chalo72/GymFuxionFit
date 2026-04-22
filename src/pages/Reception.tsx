@@ -446,7 +446,10 @@ export default function Reception() {
                          <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--neon-green)' }}>{selectedMember.plan.toUpperCase()} · ID: #{selectedMember.id}</div>
                       </div>
                    </div>
-                   <button onClick={() => { setSelectedMember(null); setPosMode(false); }} style={{ background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer' }}>CERRAR</button>
+                   <div style={{ display: 'flex', gap: 10 }}>
+                      <button onClick={() => setShowProfile(true)} style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer' }}>PERFIL</button>
+                      <button onClick={() => { setSelectedMember(null); setPosMode(false); }} style={{ background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer' }}>CERRAR</button>
+                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 15 }}>
@@ -578,8 +581,33 @@ export default function Reception() {
                       </div>
                    </div>
                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedMember(members?.find(master => master.id === m.id.toString()) || null); }} style={{ flex: 1, padding: 8, borderRadius: 8, background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}>ABRIR FICHA</button>
-                      <button onClick={(e) => { e.stopPropagation(); if (window.confirm(`¿Marcar salida de ${m.name}?`)) setActiveMembers(prev => prev.filter(am => am.id !== m.id)); }} style={{ padding: 8, borderRadius: 8, background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}><LogOut size={12} /></button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setSelectedMember(members?.find(master => master.id === m.id.toString()) || null); }}
+                        style={{ flex: 1, padding: 8, borderRadius: 8, background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
+                      >
+                         ABRIR FICHA
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const obs = prompt(`¿Por qué marcas salida de ${m.name}? (Sin cobro)`, 'Error de registro');
+                          if (obs !== null) {
+                            setActiveMembers(prev => prev.filter(am => am.id !== m.id));
+                            setLogs(prev => [{ 
+                              id: Date.now(), 
+                              name: m.name, 
+                              action: 'SALIDA (S.C)', 
+                              time: new Date().toLocaleTimeString().slice(0,5), 
+                              method: 'manual', 
+                              color: 'var(--danger-red)',
+                              note: obs 
+                            }, ...prev]);
+                          }
+                        }}
+                        style={{ padding: 8, borderRadius: 8, background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
+                      >
+                         <LogOut size={12} />
+                      </button>
                    </div>
                 </div>
               ))}
@@ -594,10 +622,17 @@ export default function Reception() {
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: 12, fontFamily: 'monospace' }}>
                  {logs.map(l => (
-                   <div key={l.id} style={{ padding: '12px 14px', fontSize: 10, borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', gap: 14 }}>
-                      <span style={{ color: 'var(--text-muted)' }}>{l.time}</span>
-                      <span style={{ color: l.color, fontWeight: 950 }}>{l.action}</span>
-                      <span style={{ color: '#fff', fontWeight: 800 }}>{l.name.toUpperCase()}</span>
+                   <div key={l.id} style={{ padding: '12px 14px', fontSize: 10, borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', gap: 14 }}>
+                         <span style={{ color: 'var(--text-muted)' }}>{l.time}</span>
+                         <span style={{ color: l.color, fontWeight: 950 }}>{l.action}</span>
+                         <span style={{ color: '#fff', fontWeight: 800 }}>{l.name.toUpperCase()}</span>
+                      </div>
+                      {l.note && (
+                        <div style={{ fontSize: 9, color: 'var(--text-muted)', fontStyle: 'italic', paddingLeft: 50 }}>
+                           📌 Obs: {l.note}
+                        </div>
+                      )}
                    </div>
                  ))}
               </div>

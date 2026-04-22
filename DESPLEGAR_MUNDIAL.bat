@@ -1,5 +1,5 @@
 @echo off
-echo 🚀 INICIANDO DESPLIEGUE MUNDIAL - GymFuxionFit v5.5.7-UX-REFRESH
+echo 🚀 INICIANDO DESPLIEGUE MUNDIAL - GymFuxionFit v5.5.8-AUDIT-READY
 echo ----------------------------------------------------
 echo [1/3] Verificando integridad (Build)...
 call npm run build
@@ -12,7 +12,7 @@ echo ✅ Build exitoso.
 
 echo [2/3] Preparando Commit de Seguridad...
 git add .
-git commit -m "🚀 DEPLOY: GymFuxionFit v5.5.7-UX-REFRESH - Ficha Compacta y Flujo de Atletas Mejorado"
+git commit -m "🚀 DEPLOY: v5.5.8 - Salida Supervisada y Acceso a Expedientes"
 
 echo [3/3] Desplegando a Vercel/GitHub...
 git push -u origin master
