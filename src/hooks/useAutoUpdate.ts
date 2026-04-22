@@ -16,13 +16,18 @@ export const useAutoUpdate = () => {
         const serverVersion = await response.json();
 
         if (serverVersion.version !== versionData.version) {
-          console.log(`🚀 Nueva versión detectada: ${serverVersion.version}. Actualizando...`);
-          // Limpiamos caché y recargamos
+          console.log(`🚀 Nueva versión detectada: ${serverVersion.version}. Forzando sincronización...`);
+          
+          // 1. Limpiar caches de navegador
           if ('caches' in window) {
             const names = await caches.keys();
             await Promise.all(names.map(name => caches.delete(name)));
           }
-          window.location.reload();
+
+          // 2. Redirigir con parámetro de versión para romper la caché de red/ISP
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.set('v', serverVersion.version);
+          window.location.href = newUrl.toString();
         }
       } catch (error) {
         console.error('Error al verificar versión:', error);

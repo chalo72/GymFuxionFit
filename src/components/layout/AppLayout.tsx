@@ -83,6 +83,16 @@ export default function AppLayout() {
               >
                 {isCollapsed ? 'VISTA AMPLIADA »' : '« VISTA COMPACTA'}
               </button>
+              <button 
+                onClick={() => {
+                   if ('caches' in window) caches.keys().then(names => { for (let n of names) caches.delete(n); });
+                   window.location.href = `/?v=${Date.now()}`;
+                }}
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 950, cursor: 'pointer', marginRight: 10 }}
+                title="Forzar actualización de versión"
+              >
+                🔄 SINCRONIZAR
+              </button>
               <span>Gym Admin</span>
               <span>/</span>
               <span style={{ color: 'var(--neon-green)' }}>{title}</span>
