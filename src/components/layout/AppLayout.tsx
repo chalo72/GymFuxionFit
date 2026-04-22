@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Bell, Search, Moon } from 'lucide-react';
+import { Bell, Search, Moon, Menu, X } from 'lucide-react';
 import Sidebar from './Sidebar';
 
 const pageTitles: Record<string, string> = {
@@ -26,16 +27,36 @@ const pageTitles: Record<string, string> = {
 
 export default function AppLayout() {
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const title = pageTitles[location.pathname] || 'GymFuxionFit';
 
+  // Cerrar menu al cambiar de ruta
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   return (
-    <div className="app-layout">
-      <Sidebar />
+    <div className={`app-layout ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
+      <Sidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+
+      {/* Overlay para móvil */}
+      {mobileMenuOpen && (
+        <div 
+          className="mobile-overlay" 
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
 
       <main className="main-content">
         {/* ─── NAVBAR ─── */}
         <header className="navbar">
           <div className="navbar-left">
+            <button 
+              className="mobile-menu-btn"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
             <h1 className="navbar-title">{title}</h1>
             <div className="navbar-breadcrumb">
               <span>Gym Admin</span>

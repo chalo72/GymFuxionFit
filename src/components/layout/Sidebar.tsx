@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, CalendarDays, BarChart3, Settings,
   Dumbbell, Zap, Scan, Kanban, Apple, Brain, Trophy, CreditCard,
   Watch, CalendarRange, UserCheck, LogOut, ShieldCheck, Radio, Smartphone,
-  TrendingUp, Package,
+  TrendingUp, Package, X,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -80,7 +80,7 @@ const roleLabels: Record<string, string> = {
   receptionist: 'Recepcionista',
 };
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose?: () => void }) {
   const location   = useLocation();
   const navigate   = useNavigate();
   const { user, logout } = useAuth();
@@ -104,6 +104,10 @@ export default function Sidebar() {
         <div className="sidebar-brand">
           Gym<span>Fuxion</span>Fit
         </div>
+        {/* Botón cerrar móvil */}
+        <button className="mobile-close-btn" onClick={onClose}>
+          <X size={20} />
+        </button>
       </div>
 
       {/* Rol badge */}

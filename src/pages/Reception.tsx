@@ -319,10 +319,10 @@ export default function Reception() {
       </div>
 
       {/* ── MAIN LAYOUT FUSION (v3.9 - QUADRANT GRID) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 340px', gap: 20, flex: 1, overflow: 'hidden' }}>
+      <div className="reception-grid" style={{ display: 'grid', gridTemplateColumns: '120px 1fr 340px', gap: 20, flex: 1, overflow: 'hidden' }}>
         
         {/* COL 1: SELECTOR DE SENSORES */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="sensor-selector-mobile" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
            {[
              { id: 'manual', icon: <User size={20}/>, label: 'MANUAL' },
              { id: 'qr', icon: <QrCode size={20}/>, label: 'LEER QR' },
@@ -331,6 +331,7 @@ export default function Reception() {
            ].map(t => (
              <button 
                key={t.id}
+               className="sensor-btn-mobile"
                onClick={() => { startScanning(t.id as any); setSelectedMember(null); setPosMode(false); }}
                style={{ 
                  height: 85, borderRadius: 16, background: activeTab === t.id ? 'var(--green-10)' : 'rgba(255,255,255,0.03)',
@@ -338,6 +339,7 @@ export default function Reception() {
                  color: activeTab === t.id ? 'var(--neon-green)' : 'var(--text-muted)',
                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, transition: '0.3s', cursor: 'pointer'
                }}
+
              >
                {t.icon}
                <span style={{ fontSize: 9, fontWeight: 950 }}>{t.label}</span>
