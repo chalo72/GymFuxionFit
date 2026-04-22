@@ -160,9 +160,9 @@ export default function Sidebar({
 
       {/* ─── FOOTER ─── */}
       <div className="sidebar-footer">
-        <button className="sidebar-toggle-btn" onClick={onToggleCollapse}>
+        <button className="sidebar-toggle-btn" onClick={onToggleCollapse} title={isCollapsed ? 'Expandir Navegación' : 'Colapsar Navegación'}>
           {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          {!isCollapsed && <span>COLAPSAR MENÚ</span>}
+          {!isCollapsed && <span>VISTA COMPACTA</span>}
         </button>
 
         <div className="sidebar-user">

@@ -180,8 +180,9 @@ img {
   border-right: 1px solid rgba(0, 255, 136, 0.08);
   display: flex;
   flex-direction: column;
-  transition: width var(--transition-spring);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+  will-change: width;
 }
 
 .sidebar.collapsed {

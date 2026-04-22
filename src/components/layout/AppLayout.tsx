@@ -79,9 +79,9 @@ export default function AppLayout() {
               <span style={{ color: '#fff', fontSize: 8, fontWeight: 950, background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, marginRight: 8, border: '1px solid rgba(255,255,255,0.1)' }}>v{versionData.version}</span>
               <button 
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '4px 8px', borderRadius: 6, fontSize: 9, fontWeight: 950, cursor: 'pointer', marginRight: 8 }}
+                style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 950, cursor: 'pointer', marginRight: 10, transition: '0.2s' }}
               >
-                {isCollapsed ? 'ABRIR MENÚ »' : '« CERRAR MENÚ'}
+                {isCollapsed ? 'VISTA AMPLIADA »' : '« VISTA COMPACTA'}
               </button>
               <span>Gym Admin</span>
               <span>/</span>
