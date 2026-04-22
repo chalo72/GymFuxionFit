@@ -569,7 +569,7 @@ export default function Members() {
       </div>
 
       {/* KPIs */}
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:12, marginBottom:20 }}>
+      <div className="kpi-row" style={{ marginBottom:20 }}>
         {[
           { label:'Total Clientes',  val:stats.total,                  color:'var(--text-primary)',  icon:'👥' },
           { label:'Activos',         val:stats.active,                 color:'var(--neon-green)',    icon:'✅' },
@@ -577,7 +577,7 @@ export default function Members() {
           { label:'Vencidos',        val:stats.expired,                color:'var(--danger-red)',    icon:'❌' },
           { label:'Ingresos/mes',    val:`$${(stats.revenue/1000).toFixed(0)}K`, color:'var(--neon-green)', icon:'💰' },
         ].map(k => (
-          <div key={k.label} className="glass-card" style={{ padding:'16px 18px' }}>
+          <div key={k.label} className="kpi-card" style={{ padding:'16px 18px', border: 'var(--glass-border)' }}>
             <div style={{ fontSize:20, marginBottom:6 }}>{k.icon}</div>
             <div style={{ fontSize:22, fontWeight:900, color:k.color }}>{k.val}</div>
             <div style={{ fontSize:11, color:'var(--text-muted)', marginTop:3 }}>{k.label}</div>
@@ -634,7 +634,7 @@ export default function Members() {
 
       {/* Tabla */}
       <div className="glass-card" style={{ padding:0, overflow:'hidden', flex:1 }}>
-        <div style={{ overflowY:'auto', maxHeight:'100%' }}>
+        <div className="data-table-container" style={{ overflowY:'auto', maxHeight:'100%' }}>
           <table style={{ width:'100%', borderCollapse:'collapse' }}>
             <thead>
               <tr style={{ background:'rgba(255,255,255,.03)', borderBottom:'1px solid rgba(255,255,255,.07)' }}>

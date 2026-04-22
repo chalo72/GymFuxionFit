@@ -1251,7 +1251,8 @@ img {
     box-shadow: 20px 0 50px rgba(0,0,0,0.8);
   }
   
-  .app-layout.mobile-menu-open .sidebar {
+  .app-layout.mobile-menu-open .sidebar,
+  .sidebar.open {
     transform: translateX(0);
   }
 
@@ -1275,6 +1276,7 @@ img {
     border-radius: var(--radius-md);
     color: var(--neon-green);
     margin-right: 12px;
+    box-shadow: 0 0 15px var(--green-15);
   }
 
   .mobile-close-btn {
@@ -1297,6 +1299,36 @@ img {
   }
   .navbar-breadcrumb, .navbar-right .search-input {
     display: none !important;
+  }
+
+  /* Fix de desbordamiento general */
+  .page-content {
+    padding: 12px !important;
+    overflow-x: hidden;
+  }
+
+  .glass-card {
+    padding: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden;
+  }
+
+  /* Tablas Responsivas */
+  .data-table-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 20px;
+  }
+
+  .data-table {
+    min-width: 600px; /* Forzar scroll si es muy ancha */
+  }
+
+  /* KPI Cards en móvil */
+  .kpi-value {
+    font-size: var(--text-2xl) !important;
   }
 
   /* Utilidades para Recepción en Móvil */

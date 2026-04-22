@@ -139,7 +139,7 @@ export default function Payments() {
             ))}
           </div>
 
-          <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div className="data-table-container">
             <table className="data-table">
               <thead>
                 <tr>
@@ -226,7 +226,7 @@ export default function Payments() {
       )}
 
       {activeTab === 'plans' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+        <div className="dashboard-grid" style={{ gap: 20 }}>
           {[
             { name: 'Plan Básico', price: 40, members: 520, color: '#00FF88', features: ['Acceso sala principal', 'Vestuarios', 'App básica'] },
             { name: 'Plan Pro', price: 75, members: 450, color: '#FF6B35', features: ['Todo Plan Básico', 'Clases grupales', 'AI Coach básico', 'Nutrición básica'] },

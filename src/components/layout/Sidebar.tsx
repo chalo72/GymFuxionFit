@@ -95,7 +95,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean, onClose
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* ─── HEADER ─── */}
       <div className="sidebar-header">
         <div className="sidebar-logo">

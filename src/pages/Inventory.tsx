@@ -87,7 +87,7 @@ export default function Inventory() {
       </div>
 
       {/* ── KPI TELEMETRY ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div className="kpi-row" style={{ gap: 16 }}>
          <div className="glass-card" style={{ padding: 16 }}>
             <div style={{ fontSize: 8, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8 }}>ITEMS_REGISTRADOS</div>
             <div style={{ fontSize: 24, fontWeight: 950, color: '#fff' }}>{inventoryStats.total} <span style={{ fontSize: 10, opacity:0.5 }}>SKU</span></div>
@@ -179,7 +179,7 @@ export default function Inventory() {
             </div>
          ) : (
             /* PRODUCT LOGISTICS (Optimizado para el usuario) */
-            <div className="glass-card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div className="data-table-container">
                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
                       <tr>
