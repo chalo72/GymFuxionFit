@@ -7,7 +7,7 @@ import {
   Calendar, BarChart2, Trash2, MinusCircle,
   QrCode, ScanEye, Camera, ShieldCheck, Activity,
   Zap, Database, Map as MapIcon, RefreshCcw, User,
-  AlertCircle, HeartPulse
+  AlertCircle, HeartPulse, ChevronRight
 } from 'lucide-react';
 import { useGymData, Member } from '../hooks/useGymData';
 
@@ -46,6 +46,7 @@ export default function Reception() {
   const [logs, setLogs] = useState<any[]>([]);
   const [tick, setTick] = useState(0);
   const [search, setSearch] = useState('');
+  const [suggestions, setSuggestions] = useState<Member[]>([]);
   const [posMode, setPosMode] = useState(false);
   
   // Estados del Scanner Inteligente (Fusión v2.6 + v3.0)
@@ -69,6 +70,15 @@ export default function Reception() {
     const t = setInterval(() => setTick(x => x + 1), 1000);
     return () => { clearInterval(t); stopCamera(); };
   }, [cameraStream]);
+
+  useEffect(() => {
+    if (search.length > 1 && activeTab === 'manual') {
+      const filtered = members.filter(m => m.name.toLowerCase().includes(search.toLowerCase())).slice(0, 5);
+      setSuggestions(filtered);
+    } else {
+      setSuggestions([]);
+    }
+  }, [search, members, activeTab]);
 
   const startScanning = async (type: CheckInMethod) => {
     setActiveTab(type);
@@ -116,12 +126,23 @@ export default function Reception() {
     }
   };
 
-  const handleSuccess = (name: string, method: CheckInMethod) => {
-    const masterMember = members.find(m => m.name.toLowerCase().includes(name.toLowerCase()));
+  const handleSuccess = (nameOrMember: string | Member, method: CheckInMethod) => {
+    let masterMember: Member | undefined;
+    
+    if (typeof nameOrMember === 'string') {
+      masterMember = members.find(m => m.name.toLowerCase() === nameOrMember.toLowerCase());
+      if (!masterMember && method === 'manual') {
+        setStatus('error');
+        setTimeout(() => setStatus('idle'), 2000);
+        return;
+      }
+    } else {
+      masterMember = nameOrMember;
+    }
     
     if (masterMember) {
       setSelectedMember(masterMember);
-      // BLOQUEO DE SEGURIDAD: Si está vencido o debe, solo se muestra la alerta y NO se activa en sala automáticamente.
+      // BLOQUEO DE SEGURIDAD
       if (masterMember.debt > 0 || masterMember.status === 'expired' || masterMember.status === 'expiring') {
          setAlertMember(masterMember);
          setStatus('complete');
@@ -130,7 +151,8 @@ export default function Reception() {
       }
     }
 
-    const nameToUse = masterMember ? masterMember.name : name;
+    const nameToUse = masterMember ? masterMember.name : (typeof nameOrMember === 'string' ? nameOrMember : '');
+    if (!nameToUse) return;
 
     const existing = activeMembers.find(m => m.name === nameToUse);
     if (existing) {
@@ -157,10 +179,7 @@ export default function Reception() {
       setProgress(0); 
       stopCamera(); 
       setSearch('');
-      // Si fue manual y no encontró, no cerramos
-      if (!masterMember && method === 'manual') {
-         setStatus('error');
-      }
+      setSuggestions([]);
     }, 1500);
   };
 
@@ -393,6 +412,35 @@ export default function Reception() {
                         >
                           BUSCAR
                         </button>
+
+                        {/* Suggestion List */}
+                        {suggestions.length > 0 && (
+                          <div style={{ 
+                            position: 'absolute', top: '105%', left: 0, right: 0, 
+                            background: '#0a0f0d', border: '1px solid var(--green-20)', 
+                            borderRadius: 16, overflow: 'hidden', zIndex: 100, 
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.5)' 
+                          }}>
+                            {suggestions.map(m => (
+                              <div 
+                                key={m.id}
+                                onClick={() => handleSuccess(m, 'manual')}
+                                style={{ 
+                                  padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', 
+                                  cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                  transition: '0.2s'
+                                }}
+                                className="suggestion-item"
+                              >
+                                <div>
+                                  <div style={{ fontSize: 14, fontWeight: 800 }}>{m.name}</div>
+                                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{m.plan} • {m.status.toUpperCase()}</div>
+                                </div>
+                                <ChevronRight size={16} color="var(--neon-green)" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
                     </div>
                   </div>
                 ) : (
