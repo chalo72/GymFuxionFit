@@ -387,9 +387,27 @@ export default function Reception() {
            ))}
         </div>
 
-        {/* COL 2: CORE SCANNER + DETALLE DE CLIENTE (Fusión v3.9) */}
+        {/* COL 2: CORE SCANNER + DETALLE DE CLIENTE (Fusión v4.0 - MODO FÁCIL) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto' }}>
            
+           {/* Guía Rápida para Recepción */}
+           {!selectedMember && (
+             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 15, marginBottom: 10 }}>
+                <div style={{ background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)', padding: 15, borderRadius: 16, textAlign: 'center' }}>
+                  <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 5 }}>PASO 1</div>
+                  <div style={{ fontSize: 12, fontWeight: 700 }}>Busca al Atleta</div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: 15, borderRadius: 16, textAlign: 'center', opacity: 0.5 }}>
+                  <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 5 }}>PASO 2</div>
+                  <div style={{ fontSize: 12, fontWeight: 700 }}>Verifica su Plan</div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: 15, borderRadius: 16, textAlign: 'center', opacity: 0.5 }}>
+                  <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 5 }}>PASO 3</div>
+                  <div style={{ fontSize: 12, fontWeight: 700 }}>Registra Entrada</div>
+                </div>
+             </div>
+           )}
+
            {/* Active Scanner Zone */}
            {!selectedMember ? (
              <div className="glass-card" style={{ minHeight: 400, padding: 0, position: 'relative', overflow: 'hidden', border: '1px solid var(--green-10)', background: 'radial-gradient(circle at center, #0a0f0d, #000)' }}>

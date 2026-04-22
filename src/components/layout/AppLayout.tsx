@@ -77,6 +77,12 @@ export default function AppLayout() {
             <div className="navbar-breadcrumb">
               <span style={{ color: 'var(--neon-green)', fontSize: 8, fontWeight: 950, background: 'var(--green-10)', padding: '2px 6px', borderRadius: 4, marginRight: 8, border: '1px solid var(--green-20)' }}>SISTEMA_OK</span>
               <span style={{ color: '#fff', fontSize: 8, fontWeight: 950, background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, marginRight: 8, border: '1px solid rgba(255,255,255,0.1)' }}>v{versionData.version}</span>
+              <button 
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '4px 8px', borderRadius: 6, fontSize: 9, fontWeight: 950, cursor: 'pointer', marginRight: 8 }}
+              >
+                {isCollapsed ? 'ABRIR MENÚ »' : '« CERRAR MENÚ'}
+              </button>
               <span>Gym Admin</span>
               <span>/</span>
               <span style={{ color: 'var(--neon-green)' }}>{title}</span>
