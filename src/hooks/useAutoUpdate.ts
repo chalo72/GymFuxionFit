@@ -15,8 +15,11 @@ export const useAutoUpdate = () => {
         });
         const serverVersion = await response.json();
 
-        if (serverVersion.version !== versionData.version) {
-          console.log(`🚀 Nueva versión detectada: ${serverVersion.version}. Forzando sincronización...`);
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentVParam = urlParams.get('v');
+
+        if (serverVersion.version !== versionData.version && currentVParam !== serverVersion.version) {
+          console.log(`🚀 Nueva versión detectada: ${serverVersion.version}. Forzando sincronización única...`);
           
           // 1. Limpiar caches de navegador
           if ('caches' in window) {
