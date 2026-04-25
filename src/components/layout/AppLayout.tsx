@@ -32,19 +32,32 @@ export default function AppLayout() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
-    return localStorage.getItem('sidebar-collapsed') === 'true';
+    // Solo respetar la preferencia guardada si la pantalla es ancha (≥1200px)
+    // En pantallas más pequeñas o sin preferencia → siempre expandido
+    const saved = localStorage.getItem('sidebar-collapsed');
+    const isWideScreen = window.innerWidth >= 1200;
+    if (saved === 'true' && isWideScreen) return true;
+    return false; // Por defecto: siempre expandido
   });
   const title = pageTitles[location.pathname] || 'GymFuxionFit';
 
-  // Persistir estado
-  useEffect(() => {
-    localStorage.setItem('sidebar-collapsed', isCollapsed.toString());
-  }, [isCollapsed]);
+  // Estado persistido manualmente en handleToggleCollapse
 
   // Cerrar menu al cambiar de ruta
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  const handleToggleCollapse = () => {
+    const newVal = !isCollapsed;
+    setIsCollapsed(newVal);
+    if (!newVal) {
+      // Al expandir → limpiar preferencia guardada para que siempre arranque expandido
+      localStorage.removeItem('sidebar-collapsed');
+    } else {
+      localStorage.setItem('sidebar-collapsed', 'true');
+    }
+  };
 
   return (
     <div className={`app-layout ${mobileMenuOpen ? 'mobile-menu-open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
@@ -52,7 +65,7 @@ export default function AppLayout() {
         isOpen={mobileMenuOpen} 
         onClose={() => setMobileMenuOpen(false)} 
         isCollapsed={isCollapsed}
-        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+        onToggleCollapse={handleToggleCollapse}
       />
 
       {/* Overlay para móvil */}
@@ -78,7 +91,7 @@ export default function AppLayout() {
               <span style={{ color: 'var(--neon-green)', fontSize: 8, fontWeight: 950, background: 'var(--green-10)', padding: '2px 6px', borderRadius: 4, marginRight: 8, border: '1px solid var(--green-20)' }}>SISTEMA_OK</span>
               <span style={{ color: '#fff', fontSize: 8, fontWeight: 950, background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, marginRight: 8, border: '1px solid rgba(255,255,255,0.1)' }}>v{versionData.version}</span>
               <button 
-                onClick={() => setIsCollapsed(!isCollapsed)}
+                onClick={handleToggleCollapse}
                 style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 950, cursor: 'pointer', marginRight: 10, transition: '0.2s' }}
               >
                 {isCollapsed ? 'VISTA AMPLIADA »' : '« VISTA COMPACTA'}

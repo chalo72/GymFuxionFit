@@ -88,7 +88,7 @@ export interface Member {
   address?: string;
   notes?: string;
   objective?: string;
-  injuries?: string;
+  injuries?: string | string[];
   nutrition?: string;
   emergencyContact?: string;
   bodyFat?: number;

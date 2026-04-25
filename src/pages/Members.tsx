@@ -34,7 +34,7 @@ interface Client {
   lastVisit?: string;
   color?: string;
   objective?: string;
-  injuries?: string;
+  injuries?: string | string[];
   nutrition?: string;
   emergencyContact?: string;
   // Métricas Biométricas

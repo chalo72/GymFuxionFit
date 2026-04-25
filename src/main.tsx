@@ -4,12 +4,15 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
+import { GymConfigProvider } from './contexts/GymConfigContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <GymConfigProvider>
+          <App />
+        </GymConfigProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

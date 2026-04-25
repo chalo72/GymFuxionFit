@@ -1,44 +1,64 @@
+import { useMemo } from 'react';
 import { DollarSign, Users, TrendingUp, Activity } from 'lucide-react';
 import RevenueOverview from '../components/dashboard/RevenueOverview';
 import MemberAttendance from '../components/dashboard/MemberAttendance';
 import AICoachPerformance from '../components/dashboard/AICoachPerformance';
-
-const kpis = [
-  {
-    icon: DollarSign,
-    label: 'Ingresos del Mes',
-    value: '$38,750',
-    change: '+15.8%',
-    positive: true,
-    accent: 'cyan' as const,
-  },
-  {
-    icon: Users,
-    label: 'Miembros Activos',
-    value: '1,247',
-    change: '+245',
-    positive: true,
-    accent: 'orange' as const,
-  },
-  {
-    icon: TrendingUp,
-    label: 'Tasa de Retención',
-    value: '93.2%',
-    change: '+2.1%',
-    positive: true,
-    accent: 'green' as const,
-  },
-  {
-    icon: Activity,
-    label: 'Sesiones IA Hoy',
-    value: '185',
-    change: '+12%',
-    positive: true,
-    accent: 'cyan' as const,
-  },
-];
+import { useGymData } from '../hooks/useGymData';
 
 export default function Dashboard() {
+  const { members, transactions } = useGymData();
+
+  const kpis = useMemo(() => {
+    /* Ingresos del mes actual */
+    const now = new Date();
+    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthlyIncome = transactions
+      .filter(t => t.type === 'income' && t.date?.startsWith(monthStr))
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    /* Miembros activos */
+    const activeCount = members.filter(m => m.status === 'active').length;
+    const totalCount = members.length || 1; // evitar div/0
+
+    /* Tasa de retención */
+    const retentionRate = Math.round((activeCount / totalCount) * 100);
+
+    return [
+      {
+        icon: DollarSign,
+        label: 'Ingresos del Mes',
+        value: `$${monthlyIncome.toLocaleString('es-CO')}`,
+        change: monthlyIncome > 0 ? 'Mes actual' : 'Sin datos',
+        positive: monthlyIncome > 0,
+        accent: 'cyan' as const,
+      },
+      {
+        icon: Users,
+        label: 'Miembros Activos',
+        value: activeCount.toLocaleString(),
+        change: `de ${totalCount} totales`,
+        positive: activeCount > 0,
+        accent: 'orange' as const,
+      },
+      {
+        icon: TrendingUp,
+        label: 'Tasa de Retención',
+        value: `${retentionRate}%`,
+        change: retentionRate >= 80 ? 'Excelente' : retentionRate >= 60 ? 'Regular' : 'Atención',
+        positive: retentionRate >= 60,
+        accent: 'green' as const,
+      },
+      {
+        icon: Activity,
+        label: 'Sesiones IA',
+        value: '—',
+        change: 'En desarrollo',
+        positive: true,
+        accent: 'cyan' as const,
+      },
+    ];
+  }, [members, transactions]);
+
   return (
     <div>
       {/* ─── KPI ROW ─── */}
@@ -84,9 +104,9 @@ export default function Dashboard() {
            
            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {[
-                { l: 'NEQUI_RADAR_STATUS', v: 'SYNCED (120s)', c: 'var(--neon-green)' },
+                { l: 'MIEMBROS_EN_DB', v: `${members.length}_ATLETAS`, c: 'var(--neon-green)' },
                 { l: 'PWA_CACHE_SHIELD', v: 'PROTECTED (v.2.6)', c: 'var(--neon-green)' },
-                { l: 'PROFILES_INCOMPLETE', v: '12_ATHLETES', c: 'var(--danger-red)', alert: true },
+                { l: 'PERFILES_SIN_BIOMETRÍA', v: `${members.filter(m => m.biometricStatus !== 'completed').length}_ATLETAS`, c: members.filter(m => m.biometricStatus !== 'completed').length > 0 ? 'var(--danger-red)' : 'var(--neon-green)', alert: members.filter(m => m.biometricStatus !== 'completed').length > 0 },
               ].map(s => (
                 <div key={s.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: s.alert ? '1px solid rgba(255,61,87,0.2)' : '1px solid rgba(255,255,255,0.05)' }}>
                    <span style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)' }}>{s.l}</span>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   DollarSign, Search, AlertTriangle,
   CheckCircle2, CreditCard, Smartphone, Banknote,
@@ -7,9 +7,11 @@ import {
   Calendar, BarChart2, Trash2, MinusCircle,
   QrCode, ScanEye, Camera, ShieldCheck, Activity,
   Zap, Database, Map as MapIcon, RefreshCcw, User,
-  AlertCircle, HeartPulse, ChevronRight
+  AlertCircle, HeartPulse, ChevronRight, Dumbbell,
+  Contact, Star
 } from 'lucide-react';
 import { useGymData, Member } from '../hooks/useGymData';
+import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
 
 /* ══════════════════════════════════════════
    TIPOS & MOCKS HIDRINOS
@@ -37,6 +39,42 @@ const fmtTime = (s: number) => {
    ══════════════════════════════════════════ */
 export default function Reception() {
   const { members, transactions, clearMemberDebt, injectTransaction, products, registerProductSale, updateMemberStatus } = useGymData();
+  const { products: configProducts } = useGymConfig();
+
+  /* ── KPIs del día calculados en tiempo real ── */
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayKpis = useMemo(() => {
+    const todayTx = transactions.filter(t => t.date === todayStr && t.type === 'income');
+    const total = todayTx.reduce((acc, t) => acc + t.amount, 0);
+    const count = todayTx.length;
+    const methodMap: Record<string, number> = {};
+    todayTx.forEach(t => { methodMap[t.method] = (methodMap[t.method] || 0) + 1; });
+    const topMethod = Object.entries(methodMap).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '--';
+    const prodMap: Record<string, number> = {};
+    todayTx.forEach(t => {
+      const k = t.description?.replace(/^(Servicio: |Venta: )/, '') ?? 'Servicio';
+      prodMap[k] = (prodMap[k] || 0) + 1;
+    });
+    const topProd = Object.entries(prodMap).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '--';
+    return { total, count, topMethod, topProd };
+  }, [transactions, todayStr]);
+
+  /* ── Catálogo unificado para POS: inventario real → config → fallback ── */
+  const posCatalog = useMemo(() => {
+    if (products && products.length > 0) {
+      return products.map(p => ({
+        id: p.id, name: p.name,
+        sellPrice: p.sellPrice ?? (p as any).price ?? 0,
+        category: p.category ?? 'Producto',
+        stock: p.stock
+      }));
+    }
+    // Fallback a catálogo de configuración (Settings)
+    return configProducts.filter(p => p.active).map(p => ({
+      id: p.id, name: `${p.emoji} ${p.name}`,
+      sellPrice: p.price, category: 'Producto', stock: undefined
+    }));
+  }, [products, configProducts]);
   const [activeMembers, setActiveMembers] = useState<ActiveMember[]>([
     { 
       id: 5, name: 'Rodrigo Silva', initials: 'RS', plan: 'Pro', 
@@ -62,6 +100,10 @@ export default function Reception() {
   const [cart, setCart] = useState<{ id: string, name: string, price: number, qty: number, category: string }[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Nequi' | 'Crédito'>('Efectivo');
   const [paymentType, setPaymentType] = useState('Venta Producto');
+  const [cashReceived, setCashReceived] = useState<string>('');
+  const [productSearch, setProductSearch] = useState('');
+
+
 
   useEffect(() => {
     const t = setInterval(() => setTick(x => x + 1), 1000);
@@ -398,17 +440,27 @@ export default function Reception() {
                         >
                           BUSCAR
                         </button>
+                        
+                        {/* ── PREDICTIVE SUGGESTIONS HUB ── */}
                         {suggestions.length > 0 && (
-                          <div style={{ position: 'absolute', top: '105%', left: 0, right: 0, background: '#0a0f0d', border: '1px solid var(--green-20)', borderRadius: 16, overflow: 'hidden', zIndex: 100 }}>
-                            {suggestions.map(m => (
-                              <div key={m.id} onClick={() => handleSuccess(m, 'manual')} className="suggestion-item" style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                 <div>
-                                   <div style={{ fontSize: 14, fontWeight: 800 }}>{m.name}</div>
-                                   <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{m.plan} • {m.status.toUpperCase()}</div>
-                                 </div>
-                                 <ChevronRight size={16} color="var(--neon-green)" />
-                              </div>
-                            ))}
+                          <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(20px)', borderRadius: 24, border: '1px solid var(--green-20)', zIndex: 100, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+                             {suggestions.map(s => (
+                               <div 
+                                 key={s.id} 
+                                 onClick={() => handleSuccess(s, 'manual')}
+                                 style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }}
+                                 className="suggestion-item"
+                               >
+                                  <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
+                                     <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--green-10)', color: 'var(--neon-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 950 }}>{s.name.slice(0,1)}</div>
+                                     <div>
+                                        <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{s.name}</div>
+                                        <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>PLAN: {s.plan.toUpperCase()}</div>
+                                     </div>
+                                  </div>
+                                  <div style={{ fontSize: 10, fontWeight: 950, color: s.status === 'active' ? 'var(--neon-green)' : 'var(--danger-red)' }}>{s.status.toUpperCase()}</div>
+                               </div>
+                             ))}
                           </div>
                         )}
                     </div>
@@ -437,7 +489,7 @@ export default function Reception() {
              </div>
            ) : (
              /* ── FOCUS CLIENT CARD COMPACT v4.1 ── */
-             <div className="glass-card" style={{ minHeight: 380, padding: '15px 20px', border: `1px solid ${selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--green-20)'}`, background: 'rgba(0,0,0,0.6)', position: 'relative', animation: 'slideIn 0.3s ease-out', display: 'flex', flexDirection: 'column' }}>
+             <div className="glass-card" style={{ minHeight: 450, padding: '15px 20px', border: `1px solid ${selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--green-20)'}`, background: 'rgba(0,0,0,0.6)', position: 'relative', animation: 'slideIn 0.3s ease-out', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
                    <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
                       <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--green-10)', border: '1px solid var(--neon-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 950, color: 'var(--neon-green)' }}>{selectedMember.name.slice(0,1)}</div>
@@ -447,7 +499,28 @@ export default function Reception() {
                       </div>
                    </div>
                    <div style={{ display: 'flex', gap: 10 }}>
-                      <button onClick={() => setShowProfile(true)} style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer' }}>PERFIL</button>
+                      <button onClick={() => setShowProfile(true)} style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer', display:'flex', alignItems:'center', gap:5 }}><Eye size={12}/> PERFIL</button>
+                      <button 
+                         onClick={() => {
+                            const obs = prompt(`Razón de SALIDA ADMINISTRATIVA para ${selectedMember.name}:`, 'Solicitud del cliente');
+                            if (obs !== null) {
+                              setActiveMembers(prev => prev.filter(am => String(am.id) !== String(selectedMember.id)));
+                              setLogs(prev => [{ 
+                                id: Date.now(), 
+                                name: selectedMember.name, 
+                                action: 'SALIDA ADMIN', 
+                                time: new Date().toLocaleTimeString().slice(0,5), 
+                                method: 'manual', 
+                                color: 'var(--warning-yellow)',
+                                note: obs 
+                              }, ...prev]);
+                              setSelectedMember(null);
+                            }
+                         }}
+                         style={{ background: 'rgba(255,150,0,0.1)', border: '1px solid rgba(255,150,0,0.2)', color: 'var(--warning-yellow)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
+                       >
+                          SALIDA
+                       </button>
                       <button onClick={() => { setSelectedMember(null); setPosMode(false); }} style={{ background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer' }}>CERRAR</button>
                    </div>
                 </div>
@@ -471,7 +544,7 @@ export default function Reception() {
                      </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 15, flex: 1, overflow: 'hidden' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 15, flex: 1 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
                        <div>
                           <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8 }}>SERVICIOS</div>
@@ -479,18 +552,47 @@ export default function Reception() {
                              <button onClick={() => addToCart({ id: 'srv_dia', name: 'DÍA DE GYM', price: 10000, category: 'Servicio' })} style={{ padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 10, fontWeight: 950, textAlign: 'left', display:'flex', justifyContent:'space-between', cursor:'pointer' }}>
                                 <span>🏋️ DÍA GYM</span><span>$10k</span>
                              </button>
+                             <button onClick={() => addToCart({ id: 'srv_sem', name: 'SEMANA GYM', price: 25000, category: 'Servicio' })} style={{ padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 10, fontWeight: 950, textAlign: 'left', display:'flex', justifyContent:'space-between', cursor:'pointer' }}>
+                                <span>🗓️ SEMANA</span><span>$25k</span>
+                             </button>
                              <button onClick={() => addToCart({ id: 'srv_mes', name: 'MENSUALIDAD', price: 80000, category: 'Servicio' })} style={{ padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 10, fontWeight: 950, textAlign: 'left', display:'flex', justifyContent:'space-between', cursor:'pointer' }}>
                                 <span>💎 MES</span><span>$80k</span>
                              </button>
                           </div>
                        </div>
-                       <div>
-                          <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8 }}>PRODUCTOS</div>
-                          <select onChange={(e) => { const p = products.find(prod => prod.id === e.target.value); if (p) { addToCart(p); e.target.value = ''; } }} style={{ width: '100%', padding: 10, borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 10, outline: 'none' }}>
-                             <option value="">-- SELECCIONAR --</option>
-                             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                          </select>
-                       </div>
+                        <div style={{ flex: 1, display:'flex', flexDirection:'column', position:'relative' }}>
+                           <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8 }}>BUSCAR PRODUCTOS</div>
+                           <div style={{ position:'relative', marginBottom: 10 }}>
+                              <ShoppingBag size={14} style={{ position:'absolute', left: 10, top:'50%', transform:'translateY(-50%)', opacity:0.5 }} />
+                              <input 
+                                placeholder="Escribir nombre..."
+                                value={productSearch}
+                                onChange={e => setProductSearch(e.target.value)}
+                                style={{ width:'100%', padding: '10px 10px 10px 30px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontSize: 10, outline:'none' }}
+                              />
+                           </div>
+                           
+                           <div style={{ flex: 1, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, background:'rgba(0,0,0,0.2)' }}>
+                              {(products.length > 0 ? products : [
+                                { id: 'p_agua', name: '💧 AGUA', sellPrice: 2000, category: 'Bebida' },
+                                { id: 'p_gat', name: '⚡ GATORADE', sellPrice: 5000, category: 'Bebida' },
+                                { id: 'p_bar', name: '🍫 BARRA PROT', sellPrice: 6000, category: 'Snack' },
+                                { id: 'p_sha', name: '🥤 SHAKER', sellPrice: 15000, category: 'Accesorio' }
+                              ])
+                              .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
+                              .map(p => (
+                                <div 
+                                  key={p.id}
+                                  onClick={() => { addToCart(p); setProductSearch(''); }}
+                                  style={{ padding: '10px 15px', borderBottom: '1px solid rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }}
+                                  className="suggestion-item"
+                                >
+                                  <span style={{ fontSize: 10, fontWeight: 700 }}>{p.name}</span>
+                                  <span style={{ color:'var(--neon-green)', fontSize: 10, fontWeight: 950 }}>${p.sellPrice.toLocaleString()}</span>
+                                </div>
+                              ))}
+                           </div>
+                        </div>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', background:'rgba(0,0,0,0.3)', borderRadius: 16, padding: 15, border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -505,11 +607,49 @@ export default function Reception() {
                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 10 }}>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, marginBottom: 10 }}>
                              {['Efectivo', 'Nequi', 'Crédito'].map(m => (
-                               <button key={m} onClick={() => setPaymentMethod(m as any)} style={{ padding: 6, borderRadius: 6, background: paymentMethod === m ? 'var(--green-10)' : 'rgba(255,255,255,0.03)', border: `1px solid ${paymentMethod === m ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)'}`, color: paymentMethod === m ? 'var(--neon-green)' : 'var(--text-muted)', fontSize: 8, fontWeight: 950, cursor:'pointer' }}>{m.toUpperCase()}</button>
+                               <button key={m} onClick={() => { setPaymentMethod(m as any); if (m !== 'Efectivo') setCashReceived(''); }} style={{ padding: 6, borderRadius: 6, background: paymentMethod === m ? 'var(--green-10)' : 'rgba(255,255,255,0.03)', border: `1px solid ${paymentMethod === m ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)'}`, color: paymentMethod === m ? 'var(--neon-green)' : 'var(--text-muted)', fontSize: 8, fontWeight: 950, cursor:'pointer' }}>{m.toUpperCase()}</button>
                              ))}
                           </div>
-                          <button onClick={handleFinalizeSale} disabled={cart.length === 0} style={{ width:'100%', padding:10, borderRadius:10, background: cart.length > 0 ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)', color:'#000', border:'none', fontWeight: 950, fontSize:11, cursor:'pointer' }}>
-                             COBRAR: ${cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0).toLocaleString()}
+
+                          {paymentMethod === 'Efectivo' && (
+                             <div 
+                               style={{ 
+                                 marginBottom: 10, background:'rgba(255,255,255,0.03)', borderRadius:12, padding:12, 
+                                 border: `1px solid ${Number(cashReceived) >= cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0) && cart.length > 0 ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)'}`,
+                                 boxShadow: Number(cashReceived) >= cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0) && cart.length > 0 ? '0 0 15px rgba(0,255,136,0.1)' : 'none',
+                                 transition: '0.3s'
+                               }}
+                             >
+                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                                   <span style={{ fontSize: 9, color:'var(--text-muted)', fontWeight:950 }}>RECIBIDO:</span>
+                                   <div style={{ position:'relative' }}>
+                                      <span style={{ position:'absolute', left:-10, color:'var(--neon-green)', fontWeight:950 }}>$</span>
+                                      <input 
+                                        type="number" 
+                                        placeholder="0"
+                                        value={cashReceived}
+                                        onChange={e => setCashReceived(e.target.value)}
+                                        style={{ width: 80, background: 'none', border: 'none', borderBottom: '1px solid var(--neon-green)', color: '#fff', fontSize: 14, fontWeight: 950, textAlign: 'right', outline: 'none' }}
+                                      />
+                                   </div>
+                                </div>
+                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                                   <span style={{ fontSize: 9, color:'var(--text-muted)', fontWeight:950 }}>CAMBIO:</span>
+                                   <span 
+                                     style={{ fontSize: 18, fontWeight: 950, color: 'var(--neon-green)' }}
+                                   >
+                                      ${Math.max(0, (Number(cashReceived) || 0) - cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0)).toLocaleString()}
+                                   </span>
+                                </div>
+                             </div>
+                          )}
+
+                          <button 
+                             onClick={() => { handleFinalizeSale(); setCashReceived(''); }} 
+                             disabled={cart.length === 0} 
+                             style={{ width:'100%', padding:12, borderRadius:12, background: cart.length > 0 ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)', color:'#000', border:'none', fontWeight: 950, fontSize:12, cursor:'pointer', boxShadow: cart.length > 0 ? '0 0 20px rgba(0,255,136,0.2)' : 'none' }}
+                          >
+                             FINALIZAR: ${cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0).toLocaleString()}
                           </button>
                        </div>
                     </div>
@@ -519,28 +659,103 @@ export default function Reception() {
 
            {showProfile && selectedMember && (
              <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(20px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-                <div className="glass-card" style={{ maxWidth: 500, width: '100%', border: '1px solid var(--green-20)' }}>
+                <div className="glass-card" style={{ maxWidth: 560, width: '100%', border: '1px solid var(--green-20)', maxHeight: '90vh', overflowY: 'auto' }}>
+                   {/* ── HEADER EXPEDIENTE ── */}
                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
                       <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
-                         <div style={{ width: 60, height: 60, borderRadius: 16, background: 'var(--green-10)', border: '2px solid var(--neon-green)', display:'flex', alignItems:'center', justifyContent:'center', fontSize: 24, fontWeight:950, color:'var(--neon-green)' }}>{selectedMember.name.slice(0,1)}</div>
+                         <div style={{ width: 64, height: 64, borderRadius: 18, background: 'var(--green-10)', border: '2px solid var(--neon-green)', display:'flex', alignItems:'center', justifyContent:'center', fontSize: 26, fontWeight:950, color:'var(--neon-green)', position:'relative' }}>
+                           {selectedMember.name.slice(0,1)}
+                           {/* Semáforo de salud */}
+                           {selectedMember.injuries && String(selectedMember.injuries).trim().length > 0 && (
+                             <div style={{ position:'absolute', top:-6, right:-6, width:18, height:18, borderRadius:'50%', background:'var(--danger-red)', border:'2px solid #000', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                <AlertCircle size={10} color="#fff" />
+                              </div>
+                            )}
+                          </div>
                          <div>
                             <h2 style={{ fontSize: 22, fontWeight:950, color:'#fff' }}>{selectedMember.name}</h2>
-                            <div style={{ color:'var(--neon-green)', fontWeight:900, fontSize: 10 }}>ATLETA {selectedMember.plan.toUpperCase()}</div>
-                         </div>
-                      </div>
-                      <button onClick={() => setShowProfile(false)} style={{ background:'none', border:'none', color:'#fff', cursor:'pointer' }}><X size={24}/></button>
+                            <div style={{ color:'var(--neon-green)', fontWeight:900, fontSize: 10 }}>🏋️ ATLETA {selectedMember.plan.toUpperCase()} · ID #{selectedMember.id}</div>
+                          </div>
+                       </div>
+                       <button onClick={() => setShowProfile(false)} style={{ background:'none', border:'none', color:'#fff', cursor:'pointer', padding: 4 }}><X size={24}/></button>
+                    </div>
+                    {selectedMember.injuries && selectedMember.injuries.length > 0 && (() => {
+                      const injList: string[] = Array.isArray(selectedMember.injuries)
+                        ? (selectedMember.injuries as string[])
+                        : String(selectedMember.injuries).split(',').filter(Boolean);
+                      return injList.length > 0 ? (
+                        <div style={{ background:'rgba(255,61,87,0.06)', padding: '12px 16px', borderRadius: 12, border:'1px solid rgba(255,61,87,0.2)', marginBottom: 10 }}>
+                           <div style={{ display:'flex', gap: 8, alignItems:'center', marginBottom: 8 }}>
+                             <HeartPulse size={14} style={{ color:'var(--danger-red)' }} />
+                             <span style={{ fontSize: 9, fontWeight:950, color:'var(--danger-red)' }}>LESIONES ACTIVAS</span>
+                           </div>
+                           <div style={{ display:'flex', flexWrap:'wrap', gap: 6 }}>
+                             {injList.map((inj, i) => (
+                               <span key={i} style={{ fontSize: 9, background:'rgba(255,61,87,0.1)', color:'var(--danger-red)', border:'1px solid rgba(255,61,87,0.2)', padding:'4px 10px', borderRadius:20, fontWeight:800 }}>{inj.trim()}</span>
+                             ))}
+                           </div>
+                        </div>
+                      ) : null;
+                    })()}
+
+                   {/* ── GRID 4 COLS — DATOS CLAVE ── */}
+                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
+                      {[
+                        { label: 'PLAN',        val: selectedMember.plan,                    icon: <Star size={12}/>,        color: 'var(--neon-green)' },
+                        { label: 'VENCIMIENTO', val: selectedMember.expiryDate,              icon: <Calendar size={12}/>,    color: selectedMember.status === 'expired' ? 'var(--danger-red)' : '#fff' },
+                        { label: 'ESTADO',      val: selectedMember.status.toUpperCase(),    icon: <CheckCircle2 size={12}/>, color: selectedMember.status === 'active' ? 'var(--neon-green)' : 'var(--danger-red)' },
+                        { label: 'DEUDA',       val: `$${selectedMember.debt.toLocaleString()}`, icon: <DollarSign size={12}/>, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' },
+                      ].map(row => (
+                        <div key={row.label} style={{ background:'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 12, border:'1px solid rgba(255,255,255,0.06)' }}>
+                          <div style={{ display:'flex', gap:5, alignItems:'center', fontSize: 8, color:'var(--text-muted)', marginBottom: 5, fontWeight:950 }}>{row.icon}{row.label}</div>
+                          <div style={{ fontSize: 12, fontWeight: 800, color: row.color }}>{row.val}</div>
+                        </div>
+                      ))}
                    </div>
-                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-                      <div style={{ background:'rgba(255,255,255,0.02)', padding: 12, borderRadius: 12 }}>
-                         <div style={{ fontSize: 8, color:'var(--text-muted)', marginBottom: 4 }}>OBJETIVO</div>
-                         <div style={{ fontSize: 11, fontWeight: 800 }}>{selectedMember.objective || 'Sin definir'}</div>
-                      </div>
-                      <div style={{ background:'rgba(255,255,255,0.02)', padding: 12, borderRadius: 12 }}>
-                         <div style={{ fontSize: 8, color:'var(--text-muted)', marginBottom: 4 }}>VENCIMIENTO</div>
-                         <div style={{ fontSize: 11, fontWeight: 800 }}>{selectedMember.expiryDate}</div>
+
+                   {/* ── OBJETIVO ── */}
+                   <div style={{ background:'rgba(0,255,136,0.04)', padding: '12px 16px', borderRadius: 12, border:'1px solid rgba(0,255,136,0.1)', marginBottom: 10, display:'flex', gap: 10, alignItems:'center' }}>
+                      <Dumbbell size={16} style={{ color:'var(--neon-green)', flexShrink:0 }} />
+                      <div>
+                        <div style={{ fontSize: 8, color:'var(--text-muted)', fontWeight:950, marginBottom: 3 }}>OBJETIVO DE ENTRENAMIENTO</div>
+                        <div style={{ fontSize: 12, fontWeight: 800 }}>{selectedMember.objective || 'Sin definir'}</div>
                       </div>
                    </div>
-                   <button onClick={() => setShowProfile(false)} style={{ width:'100%', padding:15, borderRadius:12, background:'var(--neon-green)', color:'#000', border:'none', fontWeight:950, fontSize:12, cursor:'pointer' }}>CERRAR EXPEDIENTE</button>
+
+                   {/* ── CONTACTO ── */}
+                   <div style={{ background:'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: 12, border:'1px solid rgba(255,255,255,0.05)', marginBottom: 10 }}>
+                      <div style={{ fontSize: 9, fontWeight:950, color:'var(--text-muted)', marginBottom: 10 }}>INFORMACIÓN DE CONTACTO</div>
+                      <div style={{ display:'flex', flexDirection:'column', gap: 8 }}>
+                        {selectedMember.phone && (
+                          <div style={{ display:'flex', gap: 10, alignItems:'center', fontSize: 11 }}>
+                            <Phone size={12} style={{ color:'var(--text-muted)' }} />
+                            <span style={{ fontWeight:700 }}>{selectedMember.phone}</span>
+                          </div>
+                        )}
+                        {selectedMember.email && (
+                          <div style={{ display:'flex', gap: 10, alignItems:'center', fontSize: 11 }}>
+                            <Mail size={12} style={{ color:'var(--text-muted)' }} />
+                            <span style={{ fontWeight:700 }}>{selectedMember.email}</span>
+                          </div>
+                        )}
+                        {(selectedMember as any).emergencyContact && (
+                          <div style={{ display:'flex', gap: 10, alignItems:'center', fontSize: 11 }}>
+                            <Contact size={12} style={{ color:'var(--warning-yellow)', flexShrink:0 }} />
+                            <span style={{ fontWeight:700, color:'var(--warning-yellow)' }}>Emergencia: {(selectedMember as any).emergencyContact}</span>
+                          </div>
+                        )}
+                      </div>
+                   </div>
+
+                   {/* ── HISTORIAL DE VISITAS ── */}
+                   <div style={{ background:'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: 12, border:'1px solid rgba(255,255,255,0.05)', marginBottom: 16 }}>
+                      <div style={{ fontSize: 9, fontWeight:950, color:'var(--text-muted)', marginBottom: 8 }}>ÚLTIMA VISITA REGISTRADA</div>
+                      <div style={{ fontSize: 11, fontWeight:800 }}>
+                        {selectedMember.lastVisit ? new Date(selectedMember.lastVisit).toLocaleDateString('es-CO', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) : 'Sin registro'}
+                      </div>
+                   </div>
+
+                   <button onClick={() => setShowProfile(false)} style={{ width:'100%', padding:15, borderRadius:12, background:'var(--neon-green)', color:'#000', border:'none', fontWeight:950, fontSize:12, cursor:'pointer', letterSpacing:1 }}>CERRAR EXPEDIENTE 360°</button>
                 </div>
              </div>
            )}
@@ -555,7 +770,24 @@ export default function Reception() {
                        String(mMaster.id) === String(m.id) || 
                        mMaster.name?.trim().toLowerCase() === m.name?.trim().toLowerCase()
                      );
-                     if (master) setSelectedMember(master);
+                     if (master) {
+                        setSelectedMember(master);
+                     } else {
+                        // Fallback: Si no está en la DB global, crear objeto temporal para permitir ver la ficha
+                        setSelectedMember({
+                           id: String(m.id),
+                           name: m.name,
+                           status: m.membershipStatus,
+                           expiryDate: '2026-12-31', // Fecha estimada si es mock
+                           debt: 0,
+                           lastVisit: new Date().toISOString(),
+                           plan: m.plan,
+                           phone: '3000000000',
+                           color: m.color,
+                           biometricStatus: 'completed',
+                           objective: 'Mantener forma'
+                        } as any);
+                     }
                    }}
                   className="glass-card" 
                   style={{ minWidth: 260, padding: 15, border: `1px solid ${m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'rgba(255,255,255,0.1)'}`, background: `linear-gradient(135deg, ${m.color}08, transparent)`, display: 'flex', flexDirection: 'column', gap: 10, cursor: 'pointer', transition: '0.3s' }}
@@ -637,15 +869,29 @@ export default function Reception() {
                  ))}
               </div>
            </div>
-           <div className="glass-card" style={{ height: 180, background: 'linear-gradient(135deg, var(--green-5), transparent)', border: '1px solid var(--green-20)', padding: 20 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                 <span style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', letterSpacing: 1 }}>SISTEMA DE SEGURIDAD</span>
-                 <Activity size={16} style={{ color: 'var(--neon-green)' }} />
+           {/* ── DAILY REVENUE INTEL ── */}
+           <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(0,255,136,0.06), transparent)', border: '1px solid var(--green-20)', padding: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems:'center', marginBottom: 16 }}>
+                 <span style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', letterSpacing: 1 }}>RESUMEN DEL DÍA</span>
+                 <TrendingUp size={16} style={{ color: 'var(--neon-green)' }} />
               </div>
-              <div style={{ fontSize: 10, lineHeight: 2, fontWeight: 700, color: 'var(--text-secondary)' }}>
-                 ENLACE: <span style={{ color:'#fff' }}>ENCRIPTADO AES-256</span><br />
-                 AMENAZAS: <span style={{ color:'var(--neon-green)' }}>0 DETECTADAS</span><br />
-                 ALERTAS: <span style={{ color:'var(--neon-green)' }}>ACTIVADAS</span>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap: 8 }}>
+                <div style={{ background:'rgba(0,255,136,0.05)', padding:'12px 14px', borderRadius:12, border:'1px solid rgba(0,255,136,0.1)' }}>
+                  <div style={{ fontSize: 8, color:'var(--text-muted)', marginBottom:4, fontWeight:950 }}>INGRESOS HOY</div>
+                  <div style={{ fontSize: 18, fontWeight:950, color:'var(--neon-green)' }}>${todayKpis.total.toLocaleString()}</div>
+                </div>
+                <div style={{ background:'rgba(255,255,255,0.02)', padding:'12px 14px', borderRadius:12, border:'1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ fontSize: 8, color:'var(--text-muted)', marginBottom:4, fontWeight:950 }}>TRANSACCIONES</div>
+                  <div style={{ fontSize: 18, fontWeight:950, color:'#fff' }}>{todayKpis.count}</div>
+                </div>
+                <div style={{ background:'rgba(255,255,255,0.02)', padding:'10px 14px', borderRadius:12, border:'1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ fontSize: 8, color:'var(--text-muted)', marginBottom:3, fontWeight:950 }}>MÉTODO + USADO</div>
+                  <div style={{ fontSize: 11, fontWeight:800, color:'var(--neon-green)' }}>{todayKpis.topMethod}</div>
+                </div>
+                <div style={{ background:'rgba(255,255,255,0.02)', padding:'10px 14px', borderRadius:12, border:'1px solid rgba(255,255,255,0.05)', overflow:'hidden' }}>
+                  <div style={{ fontSize: 8, color:'var(--text-muted)', marginBottom:3, fontWeight:950 }}>TOP PRODUCTO</div>
+                  <div style={{ fontSize: 10, fontWeight:800, color:'#fff', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{todayKpis.topProd}</div>
+                </div>
               </div>
            </div>
         </div>

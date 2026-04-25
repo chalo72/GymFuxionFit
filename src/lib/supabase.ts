@@ -1,6 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://yaeoyqcculiovxwehztn.supabase.co';
-const supabaseAnonKey = 'sb_publishable_CGc4NGNg4aVIqG6aFGwPYA_riYQtw7Q';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error(
+    '⚠️ GYMFUXIONFIT: Faltan variables de entorno VITE_SUPABASE_URL y/o VITE_SUPABASE_ANON_KEY. ' +
+    'Crea un archivo .env en la raíz del proyecto con estas variables.'
+  );
+}
+
+export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '');
