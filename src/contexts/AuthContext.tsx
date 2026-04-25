@@ -15,25 +15,21 @@ interface AuthContextType {
   login: (role: UserRole) => void;
   logout: () => void;
   isAuthenticated: boolean;
-  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem('gymfuxion_auth');
-      if (savedUser) {
+    const savedUser = localStorage.getItem('gymfuxion_auth');
+    if (savedUser) {
+      try {
         setUser(JSON.parse(savedUser));
+      } catch {
+        localStorage.removeItem('gymfuxion_auth');
       }
-    } catch {
-      localStorage.removeItem('gymfuxion_auth');
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -54,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
