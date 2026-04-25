@@ -48,9 +48,10 @@ function LoadingFallback() {
   );
 }
 
-/* ── Protección de rutas autenticadas ── */
+/* -- Proteccion de rutas autenticadas -- */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingFallback />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
