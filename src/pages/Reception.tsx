@@ -557,14 +557,14 @@ export default function Reception() {
                            <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, letterSpacing: 1 }}>PRODUCTOS / INVENTARIO</div>
                            <div style={{ position:'relative' }}>
                               <Search size={14} style={{ position:'absolute', left: 12, top:'50%', transform:'translateY(-50%)', opacity:0.5 }} />
-                              <input 
-                                placeholder="Buscar suplemento, agua..."
-                                value={productSearch}
-                                onChange={e => setProductSearch(e.target.value)}
-                                style={{ width:'100%', padding: '12px 12px 12px 35px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff', fontSize: 11, outline:'none', transition:'0.3s' }}
-                                onFocus={(e) => e.target.style.borderColor = 'var(--neon-green)'}
-                                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-                              />
+                               <input 
+                                 placeholder="Buscar suplemento, agua, servicios..."
+                                 value={productSearch}
+                                 onChange={e => setProductSearch(e.target.value)}
+                                 style={{ width:'100%', padding: '15px 15px 15px 45px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, color: '#fff', fontSize: 14, outline:'none', transition:'0.3s' }}
+                                 onFocus={(e) => e.target.style.borderColor = 'var(--neon-green)'}
+                                 onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                               />
 
                               {/* ── DROPDOWN INTELIGENTE DE PRODUCTOS ── */}
                               {productSearch.length > 0 && (
