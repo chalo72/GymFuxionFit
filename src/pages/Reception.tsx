@@ -507,7 +507,10 @@ export default function Reception() {
                    key={m.id} 
                    onClick={() => {
                       const master = members?.find(mMaster => String(mMaster.id) === String(m.id));
-                      if (master) setSelectedMember(master);
+                      if (master) {
+                         setSelectedMember(master);
+                         setShowProfile(true);
+                      }
                    }}
                    className="glass-card athlete-card" 
                    style={{ padding: '20px', border: `1px solid ${m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'rgba(255,255,255,0.1)'}`, background: `linear-gradient(135deg, ${m.color}15, rgba(0,0,0,0.4))`, display: 'flex', flexDirection: 'column', gap: 15, cursor: 'pointer', borderRadius: 20 }}
