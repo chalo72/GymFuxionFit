@@ -392,26 +392,26 @@ export default function Reception() {
       <div className="reception-layout-grid">
         
         {/* COL 1: SENSORES */}
-        <div className="sensor-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="sensor-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
            {[
-             { id: 'manual', icon: <User size={20}/>, label: 'MANUAL' },
-             { id: 'qr', icon: <QrCode size={20}/>, label: 'LEER QR' },
-             { id: 'facial', icon: <ScanEye size={20}/>, label: 'FACIAL' },
-             { id: 'geo', icon: <MapPin size={20}/>, label: 'PROXIMIDAD' }
+             { id: 'manual', icon: <User size={24}/>, label: 'MANUAL' },
+             { id: 'qr', icon: <QrCode size={24}/>, label: 'LEER QR' },
+             { id: 'facial', icon: <ScanEye size={24}/>, label: 'FACIAL' },
+             { id: 'geo', icon: <MapPin size={24}/>, label: 'PROXIMIDAD' }
            ].map(t => (
              <button 
                key={t.id}
                className="sensor-btn"
                onClick={() => { startScanning(t.id as any); setSelectedMember(null); setPosMode(false); }}
                style={{ 
-                 height: 85, borderRadius: 16, background: activeTab === t.id ? 'var(--green-10)' : 'rgba(255,255,255,0.03)',
+                 height: 100, borderRadius: 20, background: activeTab === t.id ? 'var(--green-10)' : 'rgba(255,255,255,0.03)',
                  border: `1px solid ${activeTab === t.id ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)'}`,
                  color: activeTab === t.id ? 'var(--neon-green)' : 'var(--text-muted)',
-                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, transition: '0.3s', cursor: 'pointer'
+                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, transition: '0.3s', cursor: 'pointer'
                }}
              >
                {t.icon}
-               <span style={{ fontSize: 9, fontWeight: 950 }}>{t.label}</span>
+               <span style={{ fontSize: 11, fontWeight: 950 }}>{t.label}</span>
              </button>
            ))}
         </div>
@@ -517,24 +517,25 @@ export default function Reception() {
                    </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
-                    <div style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                       <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4 }}>VENCIMIENTO</div>
-                       <div style={{ fontSize: 13, fontWeight: 950 }}>{selectedMember.expiryDate}</div>
-                    </div>
-                    <div style={{ padding: 12, background: selectedMember.debt > 0 ? 'rgba(255,61,87,0.06)' : 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                       <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4 }}>DEUDA</div>
-                       <div style={{ fontSize: 13, fontWeight: 950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' }}>${selectedMember.debt.toLocaleString()}</div>
-                    </div>
-                    <div style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                        <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4 }}>BIOMETRÍA</div>
-                        <div style={{ fontSize: 13, fontWeight: 950, color: selectedMember.biometricStatus === 'completed' ? 'var(--neon-green)' : 'var(--danger-red)' }}>{selectedMember.biometricStatus === 'completed' ? 'OK ✓' : 'FALTA ⚠'}</div>
+                 {/* ── INFO DEL CLIENTE (REFORMATEADA PARA LEER MEJOR) ── */}
+                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
+                     <div style={{ padding: 14, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 6 }}>📅 VENCIMIENTO</div>
+                        <div style={{ fontSize: 16, fontWeight: 950, color: '#fff' }}>{selectedMember.expiryDate}</div>
                      </div>
-                     <div style={{ padding: 12, background: 'rgba(0,255,136,0.04)', borderRadius: 12, border: '1px solid rgba(0,255,136,0.1)', textAlign: 'center' }}>
-                        <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 4 }}>OBJETIVO</div>
-                        <div style={{ fontSize: 13, fontWeight: 950 }}>{selectedMember.objective?.slice(0,15) || '--'}</div>
+                     <div style={{ padding: 14, background: selectedMember.debt > 0 ? 'rgba(255,61,87,0.08)' : 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 6 }}>💰 DEUDA PENDIENTE</div>
+                        <div style={{ fontSize: 16, fontWeight: 950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' }}>${selectedMember.debt.toLocaleString()}</div>
                      </div>
-                </div>
+                     <div style={{ padding: 14, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+                         <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 6 }}>👤 BIOMETRÍA</div>
+                         <div style={{ fontSize: 16, fontWeight: 950, color: selectedMember.biometricStatus === 'completed' ? 'var(--neon-green)' : 'var(--danger-red)' }}>{selectedMember.biometricStatus === 'completed' ? 'REGISTRADO ✓' : 'PENDIENTE ⚠'}</div>
+                      </div>
+                      <div style={{ padding: 14, background: 'rgba(0,255,136,0.04)', borderRadius: 12, border: '1px solid rgba(0,255,136,0.1)' }}>
+                         <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 6 }}>🎯 OBJETIVO</div>
+                         <div style={{ fontSize: 16, fontWeight: 950 }}>{selectedMember.objective || 'SIN DEFINIR'}</div>
+                      </div>
+                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 15, flex: 1 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
