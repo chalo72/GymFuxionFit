@@ -498,64 +498,56 @@ export default function Reception() {
                          <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--neon-green)' }}>{selectedMember.plan.toUpperCase()} · ID: #{selectedMember.id}</div>
                       </div>
                    </div>
-                   <div style={{ display: 'flex', gap: 10 }}>
-                      <button onClick={() => setShowProfile(true)} style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer', display:'flex', alignItems:'center', gap:5 }}><Eye size={12}/> PERFIL</button>
-                      <button 
-                         onClick={() => {
-                            const obs = prompt(`Razón de SALIDA ADMINISTRATIVA para ${selectedMember.name}:`, 'Solicitud del cliente');
-                            if (obs !== null) {
-                              setActiveMembers(prev => prev.filter(am => String(am.id) !== String(selectedMember.id)));
-                              setLogs(prev => [{ 
-                                id: Date.now(), 
-                                name: selectedMember.name, 
-                                action: 'SALIDA ADMIN', 
-                                time: new Date().toLocaleTimeString().slice(0,5), 
-                                method: 'manual', 
-                                color: 'var(--warning-yellow)',
-                                note: obs 
-                              }, ...prev]);
-                              setSelectedMember(null);
-                            }
-                         }}
-                         style={{ background: 'rgba(255,150,0,0.1)', border: '1px solid rgba(255,150,0,0.2)', color: 'var(--warning-yellow)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
-                       >
-                          SALIDA
-                       </button>
-                      <button onClick={() => { setSelectedMember(null); setPosMode(false); }} style={{ background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', padding: '6px 12px', borderRadius: 8, fontSize: 9, fontWeight: 950, cursor: 'pointer' }}>CERRAR</button>
+                   <div style={{ display: 'flex', gap: 12 }}>
+                       <button onClick={() => setShowProfile(true)} style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '10px 18px', borderRadius: 10, fontSize: 11, fontWeight: 950, cursor: 'pointer', display:'flex', alignItems:'center', gap:6 }}><Eye size={14}/> VER PERFIL</button>
+                       <button 
+                          onClick={() => {
+                             const obs = prompt(`Razón de SALIDA ADMINISTRATIVA para ${selectedMember.name}:`, 'Solicitud del cliente');
+                             if (obs !== null) {
+                               setActiveMembers(prev => prev.filter(am => String(am.id) !== String(selectedMember.id)));
+                               setLogs(prev => [{ id: Date.now(), name: selectedMember.name, action: 'SALIDA ADMIN', time: new Date().toLocaleTimeString().slice(0,5), method: 'manual', color: 'var(--warning-yellow)', note: obs }, ...prev]);
+                               setSelectedMember(null);
+                             }
+                          }}
+                          style={{ background: 'rgba(255,150,0,0.1)', border: '1px solid rgba(255,150,0,0.2)', color: 'var(--warning-yellow)', padding: '10px 18px', borderRadius: 10, fontSize: 11, fontWeight: 950, cursor: 'pointer' }}
+                        >
+                           MARCAR SALIDA
+                        </button>
+                       <button onClick={() => { setSelectedMember(null); setPosMode(false); }} style={{ background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', padding: '10px 18px', borderRadius: 10, fontSize: 11, fontWeight: 950, cursor: 'pointer' }}>CERRAR</button>
                    </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 15 }}>
-                    <div style={{ padding: 8, background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                       <div style={{ fontSize: 7, fontWeight: 950, color: 'var(--text-muted)' }}>VENCIMIENTO</div>
-                       <div style={{ fontSize: 10, fontWeight: 950 }}>{selectedMember.expiryDate}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
+                    <div style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                       <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4 }}>VENCIMIENTO</div>
+                       <div style={{ fontSize: 13, fontWeight: 950 }}>{selectedMember.expiryDate}</div>
                     </div>
-                    <div style={{ padding: 8, background: selectedMember.debt > 0 ? 'rgba(255,61,87,0.05)' : 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                       <div style={{ fontSize: 7, fontWeight: 950, color: 'var(--text-muted)' }}>DEUDA</div>
-                       <div style={{ fontSize: 10, fontWeight: 950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' }}>${selectedMember.debt.toLocaleString()}</div>
+                    <div style={{ padding: 12, background: selectedMember.debt > 0 ? 'rgba(255,61,87,0.06)' : 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                       <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4 }}>DEUDA</div>
+                       <div style={{ fontSize: 13, fontWeight: 950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' }}>${selectedMember.debt.toLocaleString()}</div>
                     </div>
-                    <div style={{ padding: 8, background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                        <div style={{ fontSize: 7, fontWeight: 950, color: 'var(--text-muted)' }}>BIOMETRÍA</div>
-                        <div style={{ fontSize: 10, fontWeight: 950, color: selectedMember.biometricStatus === 'completed' ? 'var(--neon-green)' : 'var(--danger-red)' }}>{selectedMember.biometricStatus === 'completed' ? 'OK ✓' : 'FALTA ⚠'}</div>
+                    <div style={{ padding: 12, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                        <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4 }}>BIOMETRÍA</div>
+                        <div style={{ fontSize: 13, fontWeight: 950, color: selectedMember.biometricStatus === 'completed' ? 'var(--neon-green)' : 'var(--danger-red)' }}>{selectedMember.biometricStatus === 'completed' ? 'OK ✓' : 'FALTA ⚠'}</div>
                      </div>
-                     <div style={{ padding: 8, background: 'rgba(0,255,136,0.03)', borderRadius: 10, border: '1px solid rgba(0,255,136,0.1)', textAlign: 'center' }}>
-                        <div style={{ fontSize: 7, fontWeight: 950, color: 'var(--neon-green)' }}>OBJETIVO</div>
-                        <div style={{ fontSize: 10, fontWeight: 950 }}>{selectedMember.objective?.slice(0,12) || '--'}</div>
+                     <div style={{ padding: 12, background: 'rgba(0,255,136,0.04)', borderRadius: 12, border: '1px solid rgba(0,255,136,0.1)', textAlign: 'center' }}>
+                        <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 4 }}>OBJETIVO</div>
+                        <div style={{ fontSize: 13, fontWeight: 950 }}>{selectedMember.objective?.slice(0,15) || '--'}</div>
                      </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 15, flex: 1 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                        <div>
-                          <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8, letterSpacing: 1 }}>SERVICIOS RÁPIDOS</div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-                             <button onClick={() => addToCart({ id: 'srv_dia', name: 'DÍA GYM', price: 10000, category: 'Servicio' })} style={{ padding: '10px 5px', borderRadius: 10, background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)', color: '#fff', fontSize: 9, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                          <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 12, letterSpacing: 1 }}>SERVICIOS RÁPIDOS</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                             <button onClick={() => addToCart({ id: 'srv_dia', name: 'DÍA GYM', price: 10000, category: 'Servicio' })} style={{ padding: '14px 8px', borderRadius: 12, background: 'rgba(0,255,136,0.06)', border: '1px solid rgba(0,255,136,0.15)', color: '#fff', fontSize: 11, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
                                 <span>🏋️ DÍA</span><span style={{color:'var(--neon-green)'}}>$10k</span>
                              </button>
-                             <button onClick={() => addToCart({ id: 'srv_sem', name: 'SEMANA', price: 25000, category: 'Servicio' })} style={{ padding: '10px 5px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 9, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                             <button onClick={() => addToCart({ id: 'srv_sem', name: 'SEMANA', price: 25000, category: 'Servicio' })} style={{ padding: '14px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
                                 <span>🗓️ SEM</span><span style={{color:'var(--neon-green)'}}>$25k</span>
                              </button>
-                             <button onClick={() => addToCart({ id: 'srv_mes', name: 'MES', price: 80000, category: 'Servicio' })} style={{ padding: '10px 5px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 9, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                             <button onClick={() => addToCart({ id: 'srv_mes', name: 'MES', price: 80000, category: 'Servicio' })} style={{ padding: '14px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
                                 <span>💎 MES</span><span style={{color:'var(--neon-green)'}}>$80k</span>
                              </button>
                           </div>
@@ -604,9 +596,9 @@ export default function Reception() {
                            
                            {/* Espacio informativo cuando no hay búsqueda activa */}
                            {productSearch.length === 0 && (
-                             <div style={{ marginTop: 10, padding: 15, background:'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.05)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap: 8, flex: 1 }}>
-                                <ShoppingBag size={24} style={{ opacity:0.1 }} />
-                                <span style={{ fontSize: 9, color:'var(--text-muted)', textAlign:'center' }}>Usa el buscador para añadir productos al carrito</span>
+                             <div style={{ marginTop: 10, padding: 20, background:'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap: 10, flex: 1 }}>
+                                <ShoppingBag size={32} style={{ opacity:0.15 }} />
+                                <span style={{ fontSize: 11, color:'var(--text-muted)', textAlign:'center', fontWeight: 600 }}>BUSCAR SUPLEMENTO O BEBIDA PARA AÑADIR</span>
                              </div>
                            )}
                         </div>
@@ -777,8 +769,14 @@ export default function Reception() {
              </div>
            )}
 
-           {/* Live Flow Athletes Monitoring (Pestañas Expandibles v4.1) */}
-           <div style={{ height: 280, display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 15, marginTop: 10 }}>
+           {/* ── ACTIVE FLOW MONITORING (VERTICAL SCROLL) ── */}
+           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', paddingRight: 8, marginTop: 10, maxHeight: 'calc(100vh - 500px)' }}>
+              <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 5 }}>CLIENTES EN SALA</div>
+              {activeMembers.length === 0 && (
+                <div style={{ padding: 30, textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 16 }}>
+                   No hay atletas registrados en sala actualmente.
+                </div>
+              )}
               {activeMembers.map(m => (
                 <div 
                   key={m.id} 
@@ -787,75 +785,35 @@ export default function Reception() {
                        String(mMaster.id) === String(m.id) || 
                        mMaster.name?.trim().toLowerCase() === m.name?.trim().toLowerCase()
                      );
-                     if (master) {
-                        setSelectedMember(master);
-                     } else {
-                        // Fallback: Si no está en la DB global, crear objeto temporal para permitir ver la ficha
-                        setSelectedMember({
-                           id: String(m.id),
-                           name: m.name,
-                           status: m.membershipStatus,
-                           expiryDate: '2026-12-31', // Fecha estimada si es mock
-                           debt: 0,
-                           lastVisit: new Date().toISOString(),
-                           plan: m.plan,
-                           phone: '3000000000',
-                           color: m.color,
-                           biometricStatus: 'completed',
-                           objective: 'Mantener forma'
-                        } as any);
-                     }
+                     if (master) setSelectedMember(master);
                    }}
                   className="glass-card" 
-                  style={{ minWidth: 260, padding: 15, border: `1px solid ${m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'rgba(255,255,255,0.1)'}`, background: `linear-gradient(135deg, ${m.color}08, transparent)`, display: 'flex', flexDirection: 'column', gap: 10, cursor: 'pointer', transition: '0.3s' }}
+                  style={{ minWidth: '100%', padding: '16px 20px', border: `1px solid ${m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'rgba(255,255,255,0.08)'}`, background: `linear-gradient(90deg, ${m.color}08, transparent)`, display: 'flex', alignItems: 'center', gap: 15, cursor: 'pointer', transition: '0.3s' }}
                 >
-                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: `${m.color}15`, border: `1px solid ${m.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 950, color: m.color, fontSize: 14 }}>{m.initials}</div>
-                      <div style={{ flex: 1 }}>
-                         <div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{m.name}</div>
-                         <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 800 }}>{m.plan}</div>
-                      </div>
-                      <div style={{ padding: '4px 8px', borderRadius: 8, background: m.membershipStatus === 'expired' ? 'rgba(255,61,87,0.1)' : 'rgba(0,255,136,0.1)', color: m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'var(--neon-green)', fontSize: 8, fontWeight: 950 }}>
-                         {m.membershipStatus === 'active' ? 'ACTIVO' : 'DEUDA'}
-                      </div>
+                   <div style={{ width: 45, height: 45, borderRadius: 12, background: `${m.color}15`, border: `1px solid ${m.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 950, color: m.color, fontSize: 16 }}>{m.initials}</div>
+                   
+                   <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>{m.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800 }}>{m.plan} · Ingreso: {new Date(m.checkedInAt).toLocaleTimeString().slice(0,5)}</div>
                    </div>
-                   <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: 12, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
-                         <span style={{ color: 'var(--text-muted)' }}>Ingreso:</span>
-                         <span style={{ fontWeight: 800 }}>{new Date(m.checkedInAt).toLocaleTimeString().slice(0,5)}</span>
+
+                   <div style={{ textAlign: 'right', display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                         <div style={{ fontSize: 10, fontWeight: 950, color: m.membershipStatus === 'active' ? 'var(--neon-green)' : 'var(--danger-red)' }}>{m.membershipStatus.toUpperCase()}</div>
+                         <div style={{ fontSize: 11, color: 'var(--neon-green)', fontWeight: 800 }}>{fmtTime(Math.floor((Date.now() - m.checkedInAt) / 1000))}</div>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
-                         <span style={{ color: 'var(--text-muted)' }}>En Sala:</span>
-                         <span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>{fmtTime(Math.floor((Date.now() - m.checkedInAt) / 1000))}</span>
-                      </div>
-                   </div>
-                   <div style={{ display: 'flex', gap: 6 }}>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setSelectedMember(members?.find(master => master.id === m.id.toString()) || null); }}
-                        style={{ flex: 1, padding: 8, borderRadius: 8, background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
-                      >
-                         ABRIR FICHA
-                      </button>
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          const obs = prompt(`¿Por qué marcas salida de ${m.name}? (Sin cobro)`, 'Error de registro');
+                          const obs = prompt(`¿Por qué marcas salida de ${m.name}?`, 'Salida manual');
                           if (obs !== null) {
                             setActiveMembers(prev => prev.filter(am => am.id !== m.id));
-                            setLogs(prev => [{ 
-                              id: Date.now(), 
-                              name: m.name, 
-                              action: 'SALIDA (S.C)', 
-                              time: new Date().toLocaleTimeString().slice(0,5), 
-                              method: 'manual', 
-                              color: 'var(--danger-red)',
-                              note: obs 
-                            }, ...prev]);
+                            setLogs(prev => [{ id: Date.now(), name: m.name, action: 'SALIDA', time: new Date().toLocaleTimeString().slice(0,5), method: 'manual', color: 'var(--danger-red)', note: obs }, ...prev]);
                           }
                         }}
-                        style={{ padding: 8, borderRadius: 8, background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
+                        style={{ padding: 10, borderRadius: 10, background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', cursor: 'pointer' }}
                       >
-                         <LogOut size={12} />
+                         <LogOut size={16} />
                       </button>
                    </div>
                 </div>
