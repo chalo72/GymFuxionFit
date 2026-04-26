@@ -61,6 +61,10 @@ export default function AppLayout() {
 
   return (
     <div className={`app-layout ${mobileMenuOpen ? 'mobile-menu-open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
+      {/* 🚨 DEBUG: SI VES ESTO, EL CODIGO ESTA VIVO 🚨 */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'red', color: 'white', zIndex: 99999, textAlign: 'center', fontSize: 14, fontWeight: 900, padding: 5 }}>
+        V5.7.7-SYNC-VERIFIED
+      </div>
       <Sidebar 
         isOpen={mobileMenuOpen} 
         onClose={() => setMobileMenuOpen(false)} 
