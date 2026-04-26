@@ -566,30 +566,32 @@ export default function Reception() {
                                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
                                />
 
-                              {/* ── DROPDOWN INTELIGENTE DE PRODUCTOS ── */}
+                              {/* ── DROPDOWN INTELIGENTE DE PRODUCTOS (FIXED VISIBILITY) ── */}
                               {productSearch.length > 0 && (
-                                <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, background: 'rgba(10,15,13,0.98)', backdropFilter: 'blur(20px)', borderRadius: 16, border: '1px solid var(--green-20)', zIndex: 100, overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.8)', maxHeight: 250, overflowY: 'auto' }}>
+                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'rgba(10,15,13,0.98)', backdropFilter: 'blur(30px)', borderRadius: 16, border: '2px solid var(--neon-green)', zIndex: 9999, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.9)', maxHeight: 300, overflowY: 'auto', marginTop: 5 }}>
                                    {products
                                      .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
                                      .map(p => (
                                        <div 
                                          key={p.id}
                                          onClick={() => { addToCart(p); setProductSearch(''); }}
-                                         style={{ padding: '12px 15px', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }}
+                                         style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }}
                                          className="suggestion-item"
+                                         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,255,136,0.1)'}
+                                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                        >
                                          <div style={{ display:'flex', flexDirection:'column' }}>
-                                            <span style={{ fontSize: 11, fontWeight: 800 }}>{p.name}</span>
-                                            <span style={{ fontSize: 8, color:'var(--text-muted)' }}>{p.category} · Stock: {p.stock || 0}</span>
+                                            <span style={{ fontSize: 13, fontWeight: 800, color:'#fff' }}>{p.name}</span>
+                                            <span style={{ fontSize: 10, color:'var(--text-muted)' }}>{p.category} · Stock: {p.stock || 0}</span>
                                          </div>
                                          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end' }}>
-                                            <span style={{ color:'var(--neon-green)', fontSize: 11, fontWeight: 950 }}>${p.sellPrice.toLocaleString()}</span>
-                                            <span style={{ fontSize: 7, color:'var(--text-muted)' }}>CLIC PARA AGREGAR</span>
+                                            <span style={{ color:'var(--neon-green)', fontSize: 14, fontWeight: 950 }}>${p.sellPrice.toLocaleString()}</span>
+                                            <span style={{ fontSize: 8, color:'var(--text-muted)' }}>AÑADIR +</span>
                                          </div>
                                        </div>
                                      ))}
                                    {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
-                                      <div style={{ padding: 20, textAlign:'center', color:'var(--text-muted)', fontSize:11 }}>Sin coincidencias</div>
+                                      <div style={{ padding: 25, textAlign:'center', color:'var(--text-muted)', fontSize:12 }}>No se encontraron productos</div>
                                    )}
                                 </div>
                               )}
@@ -770,12 +772,12 @@ export default function Reception() {
              </div>
            )}
 
-           {/* ── ACTIVE FLOW MONITORING (VERTICAL SCROLL) ── */}
-           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', paddingRight: 8, marginTop: 10, maxHeight: 'calc(100vh - 500px)' }}>
-              <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 5 }}>CLIENTES EN SALA</div>
+           {/* ── ACTIVE FLOW MONITORING (DUAL COLUMN GRID) ── */}
+           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, overflowY: 'auto', paddingRight: 8, marginTop: 10, maxHeight: '600px' }}>
+              <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 5 }}>CLIENTES EN SALA</div>
               {activeMembers.length === 0 && (
-                <div style={{ padding: 30, textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: 16 }}>
-                   No hay atletas registrados en sala actualmente.
+                <div style={{ gridColumn: '1 / -1', padding: 40, textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 20 }}>
+                   El gimnasio está vacío actualmente.
                 </div>
               )}
               {activeMembers.map(m => (
@@ -786,22 +788,36 @@ export default function Reception() {
                        String(mMaster.id) === String(m.id) || 
                        mMaster.name?.trim().toLowerCase() === m.name?.trim().toLowerCase()
                      );
-                     if (master) setSelectedMember(master);
+                     // 🚀 RESTAURACIÓN: Si existe en maestra lo cargamos, si no, abrimos ficha temporal para no bloquear la app
+                     if (master) {
+                        setSelectedMember(master);
+                     } else {
+                        setSelectedMember({
+                           id: String(m.id),
+                           name: m.name,
+                           status: m.membershipStatus,
+                           expiryDate: 'Consultando...',
+                           debt: 0,
+                           lastVisit: new Date().toISOString(),
+                           plan: m.plan,
+                           color: m.color,
+                           biometricStatus: 'completed'
+                        } as any);
+                     }
                    }}
                   className="glass-card" 
-                  style={{ minWidth: '100%', padding: '16px 20px', border: `1px solid ${m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'rgba(255,255,255,0.08)'}`, background: `linear-gradient(90deg, ${m.color}08, transparent)`, display: 'flex', alignItems: 'center', gap: 15, cursor: 'pointer', transition: '0.3s' }}
+                  style={{ minWidth: 0, padding: '12px 15px', border: `1px solid ${m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'rgba(255,255,255,0.08)'}`, background: `linear-gradient(90deg, ${m.color}15, transparent)`, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', transition: '0.3s' }}
                 >
-                   <div style={{ width: 45, height: 45, borderRadius: 12, background: `${m.color}15`, border: `1px solid ${m.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 950, color: m.color, fontSize: 16 }}>{m.initials}</div>
+                   <div style={{ width: 38, height: 38, borderRadius: 10, background: `${m.color}15`, border: `1px solid ${m.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 950, color: m.color, fontSize: 14 }}>{m.initials}</div>
                    
-                   <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 15, fontWeight: 900, color: '#fff' }}>{m.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800 }}>{m.plan} · Ingreso: {new Date(m.checkedInAt).toLocaleTimeString().slice(0,5)}</div>
+                   <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 800 }}>{new Date(m.checkedInAt).toLocaleTimeString().slice(0,5)} · {m.plan.split(' ')[0]}</div>
                    </div>
 
-                   <div style={{ textAlign: 'right', display: 'flex', gap: 10, alignItems: 'center' }}>
+                   <div style={{ textAlign: 'right', display: 'flex', gap: 8, alignItems: 'center' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                         <div style={{ fontSize: 10, fontWeight: 950, color: m.membershipStatus === 'active' ? 'var(--neon-green)' : 'var(--danger-red)' }}>{m.membershipStatus.toUpperCase()}</div>
-                         <div style={{ fontSize: 11, color: 'var(--neon-green)', fontWeight: 800 }}>{fmtTime(Math.floor((Date.now() - m.checkedInAt) / 1000))}</div>
+                         <div style={{ fontSize: 10, color: 'var(--neon-green)', fontWeight: 800 }}>{fmtTime(Math.floor((Date.now() - m.checkedInAt) / 1000))}</div>
                       </div>
                       <button 
                         onClick={(e) => {
@@ -812,9 +828,9 @@ export default function Reception() {
                             setLogs(prev => [{ id: Date.now(), name: m.name, action: 'SALIDA', time: new Date().toLocaleTimeString().slice(0,5), method: 'manual', color: 'var(--danger-red)', note: obs }, ...prev]);
                           }
                         }}
-                        style={{ padding: 10, borderRadius: 10, background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', cursor: 'pointer' }}
+                        style={{ padding: 6, borderRadius: 8, background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', cursor: 'pointer' }}
                       >
-                         <LogOut size={16} />
+                         <LogOut size={14} />
                       </button>
                    </div>
                 </div>
