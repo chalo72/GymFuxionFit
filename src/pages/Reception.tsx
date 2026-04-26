@@ -544,54 +544,71 @@ export default function Reception() {
                      </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: 15, flex: 1 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 15, flex: 1 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                        <div>
-                          <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8 }}>SERVICIOS</div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 6 }}>
-                             <button onClick={() => addToCart({ id: 'srv_dia', name: 'DÍA DE GYM', price: 10000, category: 'Servicio' })} style={{ padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 10, fontWeight: 950, textAlign: 'left', display:'flex', justifyContent:'space-between', cursor:'pointer' }}>
-                                <span>🏋️ DÍA GYM</span><span>$10k</span>
+                          <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8, letterSpacing: 1 }}>SERVICIOS RÁPIDOS</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                             <button onClick={() => addToCart({ id: 'srv_dia', name: 'DÍA GYM', price: 10000, category: 'Servicio' })} style={{ padding: '10px 5px', borderRadius: 10, background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)', color: '#fff', fontSize: 9, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                                <span>🏋️ DÍA</span><span style={{color:'var(--neon-green)'}}>$10k</span>
                              </button>
-                             <button onClick={() => addToCart({ id: 'srv_sem', name: 'SEMANA GYM', price: 25000, category: 'Servicio' })} style={{ padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 10, fontWeight: 950, textAlign: 'left', display:'flex', justifyContent:'space-between', cursor:'pointer' }}>
-                                <span>🗓️ SEMANA</span><span>$25k</span>
+                             <button onClick={() => addToCart({ id: 'srv_sem', name: 'SEMANA', price: 25000, category: 'Servicio' })} style={{ padding: '10px 5px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 9, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                                <span>🗓️ SEM</span><span style={{color:'var(--neon-green)'}}>$25k</span>
                              </button>
-                             <button onClick={() => addToCart({ id: 'srv_mes', name: 'MENSUALIDAD', price: 80000, category: 'Servicio' })} style={{ padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 10, fontWeight: 950, textAlign: 'left', display:'flex', justifyContent:'space-between', cursor:'pointer' }}>
-                                <span>💎 MES</span><span>$80k</span>
+                             <button onClick={() => addToCart({ id: 'srv_mes', name: 'MES', price: 80000, category: 'Servicio' })} style={{ padding: '10px 5px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#fff', fontSize: 9, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                                <span>💎 MES</span><span style={{color:'var(--neon-green)'}}>$80k</span>
                              </button>
                           </div>
                        </div>
                         <div style={{ flex: 1, display:'flex', flexDirection:'column', position:'relative' }}>
-                           <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8 }}>BUSCAR PRODUCTOS</div>
-                           <div style={{ position:'relative', marginBottom: 10 }}>
-                              <ShoppingBag size={14} style={{ position:'absolute', left: 10, top:'50%', transform:'translateY(-50%)', opacity:0.5 }} />
+                           <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, letterSpacing: 1 }}>PRODUCTOS / INVENTARIO</div>
+                           <div style={{ position:'relative' }}>
+                              <Search size={14} style={{ position:'absolute', left: 12, top:'50%', transform:'translateY(-50%)', opacity:0.5 }} />
                               <input 
-                                placeholder="Escribir nombre..."
+                                placeholder="Buscar suplemento, agua..."
                                 value={productSearch}
                                 onChange={e => setProductSearch(e.target.value)}
-                                style={{ width:'100%', padding: '10px 10px 10px 30px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#fff', fontSize: 10, outline:'none' }}
+                                style={{ width:'100%', padding: '12px 12px 12px 35px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff', fontSize: 11, outline:'none', transition:'0.3s' }}
+                                onFocus={(e) => e.target.style.borderColor = 'var(--neon-green)'}
+                                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
                               />
+
+                              {/* ── DROPDOWN INTELIGENTE DE PRODUCTOS ── */}
+                              {productSearch.length > 0 && (
+                                <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, background: 'rgba(10,15,13,0.98)', backdropFilter: 'blur(20px)', borderRadius: 16, border: '1px solid var(--green-20)', zIndex: 100, overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.8)', maxHeight: 250, overflowY: 'auto' }}>
+                                   {products
+                                     .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
+                                     .map(p => (
+                                       <div 
+                                         key={p.id}
+                                         onClick={() => { addToCart(p); setProductSearch(''); }}
+                                         style={{ padding: '12px 15px', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }}
+                                         className="suggestion-item"
+                                       >
+                                         <div style={{ display:'flex', flexDirection:'column' }}>
+                                            <span style={{ fontSize: 11, fontWeight: 800 }}>{p.name}</span>
+                                            <span style={{ fontSize: 8, color:'var(--text-muted)' }}>{p.category} · Stock: {p.stock || 0}</span>
+                                         </div>
+                                         <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end' }}>
+                                            <span style={{ color:'var(--neon-green)', fontSize: 11, fontWeight: 950 }}>${p.sellPrice.toLocaleString()}</span>
+                                            <span style={{ fontSize: 7, color:'var(--text-muted)' }}>CLIC PARA AGREGAR</span>
+                                         </div>
+                                       </div>
+                                     ))}
+                                   {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
+                                      <div style={{ padding: 20, textAlign:'center', color:'var(--text-muted)', fontSize:11 }}>Sin coincidencias</div>
+                                   )}
+                                </div>
+                              )}
                            </div>
                            
-                           <div style={{ flex: 1, overflowY: 'auto', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, background:'rgba(0,0,0,0.2)' }}>
-                              {(products.length > 0 ? products : [
-                                { id: 'p_agua', name: '💧 AGUA', sellPrice: 2000, category: 'Bebida' },
-                                { id: 'p_gat', name: '⚡ GATORADE', sellPrice: 5000, category: 'Bebida' },
-                                { id: 'p_bar', name: '🍫 BARRA PROT', sellPrice: 6000, category: 'Snack' },
-                                { id: 'p_sha', name: '🥤 SHAKER', sellPrice: 15000, category: 'Accesorio' }
-                              ])
-                              .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
-                              .map(p => (
-                                <div 
-                                  key={p.id}
-                                  onClick={() => { addToCart(p); setProductSearch(''); }}
-                                  style={{ padding: '10px 15px', borderBottom: '1px solid rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }}
-                                  className="suggestion-item"
-                                >
-                                  <span style={{ fontSize: 10, fontWeight: 700 }}>{p.name}</span>
-                                  <span style={{ color:'var(--neon-green)', fontSize: 10, fontWeight: 950 }}>${p.sellPrice.toLocaleString()}</span>
-                                </div>
-                              ))}
-                           </div>
+                           {/* Espacio informativo cuando no hay búsqueda activa */}
+                           {productSearch.length === 0 && (
+                             <div style={{ marginTop: 10, padding: 15, background:'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px dashed rgba(255,255,255,0.05)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap: 8, flex: 1 }}>
+                                <ShoppingBag size={24} style={{ opacity:0.1 }} />
+                                <span style={{ fontSize: 9, color:'var(--text-muted)', textAlign:'center' }}>Usa el buscador para añadir productos al carrito</span>
+                             </div>
+                           )}
                         </div>
                     </div>
 
