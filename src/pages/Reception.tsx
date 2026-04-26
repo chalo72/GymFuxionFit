@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import {
+import { 
   DollarSign, Search, AlertTriangle,
   CheckCircle2, CreditCard, Smartphone, Banknote,
   TrendingUp, Users, X, Plus, ShoppingBag,
@@ -8,7 +8,7 @@ import {
   QrCode, ScanEye, Camera, ShieldCheck, Activity,
   Zap, Database, Map as MapIcon, RefreshCcw, User,
   AlertCircle, HeartPulse, ChevronRight, Dumbbell,
-  Contact, Star
+  Contact, Star, Target, Clock, History
 } from 'lucide-react';
 import { useGymData, Member } from '../hooks/useGymData';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
@@ -355,496 +355,182 @@ export default function Reception() {
              </div>
 
              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <button 
-                  onClick={() => setAlertMember(null)}
-                  style={{ padding: '16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'none', fontSize: 12, fontWeight: 950, color: 'var(--text-secondary)', cursor: 'pointer' }}
-                >
-                   SOLO REGISTRAR
-                </button>
-                <button 
-                  onClick={() => handleClearDebt()}
-                  style={{ padding: '16px', borderRadius: 12, background: 'var(--neon-green)', color: '#000', border: 'none', fontSize: 12, fontWeight: 950, boxShadow: '0 0 25px rgba(0,255,136,0.4)', cursor: 'pointer' }}
-                >
-                  {alertMember.debt > 0 ? 'LIQUIDAR DEUDA' : 'RENOVAR MEMBRESÍA'}
-                </button>
-             </div>
-          </div>
+                 <button 
+                   onClick={() => handleClearDebt()}
+                   style={{ padding: '16px', borderRadius: 12, background: 'var(--neon-green)', color: '#000', border: 'none', fontSize: 12, fontWeight: 950, boxShadow: '0 0 25px rgba(0,255,136,0.4)', cursor: 'pointer' }}
+                 >
+                   {alertMember.debt > 0 ? 'LIQUIDAR DEUDA' : 'RENOVAR MEMBRESÍA'}
+                 </button>
+              </div>
+           </div>
         </div>
       )}
 
-      {/* ── HEADER HUD ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h2 style={{ fontSize: 28, fontWeight: 950, display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Zap size={28} style={{ color: 'var(--neon-green)' }} />
-            CONTROL DE ENTRADAS <span style={{ color: 'var(--text-muted)', fontWeight: 300 }}>v.4.1</span>
-          </h2>
-          <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--text-muted)', letterSpacing: 2 }}>ESTADO DEL GIMNASIO EN VIVO</div>
-        </div>
-        <div style={{ display: 'flex', gap: 12 }}>
-           <div className="glass-card" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--green-20)' }}>
-              <Users size={16} />
-              <span style={{ fontSize: 14, fontWeight: 950 }}>{activeMembers.length} EN SALA</span>
-           </div>
-        </div>
-      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr 350px', gap: 20, height: 'calc(100vh - 160px)', overflow: 'hidden' }}>
+         
+         {/* ── COL 1: OPERACIONES (CHECK-IN & VENTAS) ── */}
+         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto', paddingRight: 5 }}>
+            <div style={{ display: 'flex', gap: 10 }}>
+               {[
+                 { id: 'manual', icon: <User size={20}/>, label: 'MANUAL' },
+                 { id: 'qr', icon: <QrCode size={20}/>, label: 'QR' },
+                 { id: 'facial', icon: <ScanEye size={20}/>, label: 'FACIAL' },
+                 { id: 'geo', icon: <MapPin size={20}/>, label: 'PROX' }
+               ].map(t => (
+                 <button 
+                   key={t.id}
+                   onClick={() => { startScanning(t.id as any); setSelectedMember(null); setPosMode(false); }}
+                   style={{ 
+                     flex: 1, padding: '15px 0', borderRadius: 16, background: activeTab === t.id ? 'var(--green-10)' : 'rgba(255,255,255,0.03)',
+                     border: `1px solid ${activeTab === t.id ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)'}`,
+                     color: activeTab === t.id ? 'var(--neon-green)' : 'var(--text-muted)',
+                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', transition: '0.3s'
+                   }}
+                 >
+                   {t.icon}
+                   <span style={{ fontSize: 10, fontWeight: 950 }}>{t.label}</span>
+                 </button>
+               ))}
+            </div>
 
-      <div className="reception-layout-grid">
-        
-        {/* COL 1: SENSORES */}
-        <div className="sensor-selector-container" style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-           {[
-             { id: 'manual', icon: <User size={24}/>, label: 'MANUAL' },
-             { id: 'qr', icon: <QrCode size={24}/>, label: 'LEER QR' },
-             { id: 'facial', icon: <ScanEye size={24}/>, label: 'FACIAL' },
-             { id: 'geo', icon: <MapPin size={24}/>, label: 'PROXIMIDAD' }
-           ].map(t => (
-             <button 
-               key={t.id}
-               className="sensor-btn"
-               onClick={() => { startScanning(t.id as any); setSelectedMember(null); setPosMode(false); }}
-               style={{ 
-                 height: 100, borderRadius: 20, background: activeTab === t.id ? 'var(--green-10)' : 'rgba(255,255,255,0.03)',
-                 border: `1px solid ${activeTab === t.id ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)'}`,
-                 color: activeTab === t.id ? 'var(--neon-green)' : 'var(--text-muted)',
-                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, transition: '0.3s', cursor: 'pointer'
-               }}
-             >
-               {t.icon}
-               <span style={{ fontSize: 11, fontWeight: 950 }}>{t.label}</span>
-             </button>
-           ))}
-        </div>
-
-        {/* COL 2: SCANNER & ACTIVE FLOW */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto' }}>
-           
-           {!selectedMember ? (
-             <div className="glass-card" style={{ minHeight: 400, padding: 0, position: 'relative', overflow: 'hidden', border: '1px solid var(--green-10)', background: 'radial-gradient(circle at center, #0a0f0d, #000)' }}>
+            {!selectedMember ? (
+             <div className="glass-card" style={{ flex: 1, padding: 30, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--green-10)', background: 'radial-gradient(circle at center, #0a0f0d, #000)', borderRadius: 24 }}>
                 {activeTab === 'manual' ? (
-                   <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, minHeight: 400 }}>
-                    <Activity size={80} style={{ color: 'var(--neon-green)', opacity: 0.1, marginBottom: 30 }} />
-                    <h3 style={{ fontSize: 20, fontWeight: 950, marginBottom: 24, letterSpacing: 1 }}>ESPERANDO REGISTRO</h3>
-                    <div style={{ width: '100%', maxWidth: 450, position: 'relative' }}>
-                        <Search style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={24} />
-                        <input 
-                          placeholder="BUSCAR ATLETA POR NOMBRE..." 
-                          value={search}
-                          onChange={e => setSearch(e.target.value)}
-                          onKeyDown={e => e.key === 'Enter' && handleSuccess(search, 'manual')}
-                          style={{ width: '100%', padding: '24px 80px 24px 60px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, color: '#fff', fontSize: 18, fontWeight: 700, outline: 'none' }}
-                        />
-                        <button 
-                          onClick={() => handleSuccess(search, 'manual')}
-                          style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'var(--neon-green)', color: '#000', padding: '12px 20px', borderRadius: 16, fontWeight: 950, fontSize: 12, cursor: 'pointer' }}
-                        >
-                          BUSCAR
-                        </button>
-                        
-                        {/* ── PREDICTIVE SUGGESTIONS HUB ── */}
-                        {suggestions.length > 0 && (
-                          <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(20px)', borderRadius: 24, border: '1px solid var(--green-20)', zIndex: 100, overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-                             {suggestions.map(s => (
-                               <div 
-                                 key={s.id} 
-                                 onClick={() => handleSuccess(s, 'manual')}
-                                 style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }}
-                                 className="suggestion-item"
-                               >
-                                  <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
-                                     <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--green-10)', color: 'var(--neon-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 950 }}>{s.name.slice(0,1)}</div>
-                                     <div>
-                                        <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{s.name}</div>
-                                        <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>PLAN: {s.plan.toUpperCase()}</div>
-                                     </div>
-                                  </div>
-                                  <div style={{ fontSize: 10, fontWeight: 950, color: s.status === 'active' ? 'var(--neon-green)' : 'var(--danger-red)' }}>{s.status.toUpperCase()}</div>
-                               </div>
-                             ))}
-                          </div>
-                        )}
-                    </div>
+                   <div style={{ width:'100%', textAlign:'center' }}>
+                      <Activity size={60} style={{ color: 'var(--neon-green)', opacity: 0.1, marginBottom: 20 }} />
+                      <h3 style={{ fontSize: 16, fontWeight: 950, marginBottom: 20 }}>BUSCAR ATLETA</h3>
+                      <div style={{ width: '100%', position: 'relative' }}>
+                          <Search style={{ position: 'absolute', left: 15, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
+                          <input 
+                            placeholder="Nombre o ID..." 
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handleSuccess(search, 'manual')}
+                            style={{ width: '100%', padding: '15px 15px 15px 45px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, color: '#fff', fontSize: 14, outline: 'none' }}
+                          />
+                      </div>
                    </div>
                 ) : (
-                  <div style={{ width: '100%', minHeight: 400, position: 'relative' }}>
-                    {cameraStream ? (
-                        <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
-                    ) : (
-                        <div style={{ height: '100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'var(--neon-green)', fontWeight:950, minHeight: 400, gap: 20 }}>
-                           <RefreshCcw className="spinning" size={40} style={{ opacity: 0.5 }} />
-                           <div>INICIALIZANDO CÁMARA...</div>
-                        </div>
-                    )}
-                    <div style={{ position: 'absolute', bottom: 30, left: 30, right: 30, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', padding: 20, borderRadius: 24, border: '1px solid rgba(255,255,255,0.1)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                          <span style={{ fontSize: 13, fontWeight: 950 }}>{status === 'complete' ? 'IDENTIDAD CONFIRMADA' : `ANALIZANDO ${activeTab.toUpperCase()}...`}</span>
-                          <span style={{ fontSize: 13, fontWeight: 950 }}>{Math.round(progress)}%</span>
-                        </div>
-                        <div style={{ width: '100%', height: 6, background: 'rgba(255,255,255,0.05)', borderRadius: 10, overflow: 'hidden' }}>
-                          <div style={{ width: `${progress}%`, height: '100%', background: 'var(--neon-green)', transition: '0.1s ease-out' }} />
-                        </div>
-                    </div>
-                  </div>
+                   <div style={{ textAlign:'center' }}>
+                      <RefreshCcw className="spinning" size={40} style={{ color:'var(--neon-green)', opacity: 0.5, marginBottom: 20 }} />
+                      <div style={{ fontSize:14, fontWeight:950, color:'var(--neon-green)' }}>ACTIVANDO SENSOR...</div>
+                   </div>
                 )}
              </div>
-           ) : (
-             /* ── FOCUS CLIENT CARD COMPACT v4.1 ── */
-             <div className="glass-card" style={{ minHeight: 450, padding: '15px 20px', border: `1px solid ${selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--green-20)'}`, background: 'rgba(0,0,0,0.6)', position: 'relative', animation: 'slideIn 0.3s ease-out', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 }}>
-                   <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
-                      <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--green-10)', border: '1px solid var(--neon-green)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 950, color: 'var(--neon-green)' }}>{selectedMember.name.slice(0,1)}</div>
+            ) : (
+             <div className="glass-card" style={{ flex: 1, padding: 20, border: `1px solid ${selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--green-20)'}`, background: 'rgba(0,0,0,0.6)', display:'flex', flexDirection:'column', borderRadius: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--green-10)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 950, color: 'var(--neon-green)' }}>{selectedMember.name.slice(0,1)}</div>
                       <div>
-                         <h3 style={{ fontSize: 18, fontWeight: 950, color: '#fff' }}>{selectedMember.name}</h3>
-                         <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--neon-green)' }}>{selectedMember.plan.toUpperCase()} · ID: #{selectedMember.id}</div>
+                         <h3 style={{ fontSize: 14, fontWeight: 950, color: '#fff', margin:0 }}>{selectedMember.name}</h3>
+                         <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--neon-green)' }}>{selectedMember.plan.toUpperCase()}</div>
                       </div>
                    </div>
-                   <div style={{ display: 'flex', gap: 12 }}>
-                       <button onClick={() => setShowProfile(true)} style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '10px 18px', borderRadius: 10, fontSize: 11, fontWeight: 950, cursor: 'pointer', display:'flex', alignItems:'center', gap:6 }}><Eye size={14}/> VER PERFIL</button>
-                       <button 
-                          onClick={() => {
-                             const obs = prompt(`Razón de SALIDA ADMINISTRATIVA para ${selectedMember.name}:`, 'Solicitud del cliente');
-                             if (obs !== null) {
-                               setActiveMembers(prev => prev.filter(am => String(am.id) !== String(selectedMember.id)));
-                               setLogs(prev => [{ id: Date.now(), name: selectedMember.name, action: 'SALIDA ADMIN', time: new Date().toLocaleTimeString().slice(0,5), method: 'manual', color: 'var(--warning-yellow)', note: obs }, ...prev]);
-                               setSelectedMember(null);
-                             }
-                          }}
-                          style={{ background: 'rgba(255,150,0,0.1)', border: '1px solid rgba(255,150,0,0.2)', color: 'var(--warning-yellow)', padding: '10px 18px', borderRadius: 10, fontSize: 11, fontWeight: 950, cursor: 'pointer' }}
-                        >
-                           MARCAR SALIDA
-                        </button>
-                       <button onClick={() => { setSelectedMember(null); setPosMode(false); }} style={{ background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', padding: '10px 18px', borderRadius: 10, fontSize: 11, fontWeight: 950, cursor: 'pointer' }}>CERRAR</button>
-                   </div>
+                   <button onClick={() => setSelectedMember(null)} style={{ background: 'rgba(255,61,87,0.1)', border: 'none', color: 'var(--danger-red)', padding: '6px 12px', borderRadius: 8, fontSize: 10, cursor: 'pointer', fontWeight: 950 }}>CANCELAR</button>
                 </div>
 
-                 {/* ── INFO DEL CLIENTE (REFORMATEADA PARA LEER MEJOR) ── */}
-                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
-                     <div style={{ padding: 14, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 6 }}>📅 VENCIMIENTO</div>
-                        <div style={{ fontSize: 16, fontWeight: 950, color: '#fff' }}>{selectedMember.expiryDate}</div>
-                     </div>
-                     <div style={{ padding: 14, background: selectedMember.debt > 0 ? 'rgba(255,61,87,0.08)' : 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 6 }}>💰 DEUDA PENDIENTE</div>
-                        <div style={{ fontSize: 16, fontWeight: 950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' }}>${selectedMember.debt.toLocaleString()}</div>
-                     </div>
-                     <div style={{ padding: 14, background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-                         <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 6 }}>👤 BIOMETRÍA</div>
-                         <div style={{ fontSize: 16, fontWeight: 950, color: selectedMember.biometricStatus === 'completed' ? 'var(--neon-green)' : 'var(--danger-red)' }}>{selectedMember.biometricStatus === 'completed' ? 'REGISTRADO ✓' : 'PENDIENTE ⚠'}</div>
-                      </div>
-                      <div style={{ padding: 14, background: 'rgba(0,255,136,0.04)', borderRadius: 12, border: '1px solid rgba(0,255,136,0.1)' }}>
-                         <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 6 }}>🎯 OBJETIVO</div>
-                         <div style={{ fontSize: 16, fontWeight: 950 }}>{selectedMember.objective || 'SIN DEFINIR'}</div>
-                      </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 15, flex: 1 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                       <div style={{ background:'rgba(255,255,255,0.03)', padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)', textAlign:'center' }}>
+                          <div style={{ fontSize: 8, color: 'var(--text-muted)', marginBottom: 5 }}>DEUDA</div>
+                          <div style={{ fontSize: 14, fontWeight: 950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' }}>${selectedMember.debt.toLocaleString()}</div>
+                       </div>
+                       <button onClick={() => setShowProfile(true)} style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', borderRadius: 12, fontSize: 10, fontWeight: 950, cursor:'pointer' }}>VER FICHA</button>
+                    </div>
+
+                    <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 1 }}>VENTA RÁPIDA</div>
+                    <div style={{ position:'relative' }}>
+                       <Search size={14} style={{ position:'absolute', left: 12, top:'50%', transform:'translateY(-50%)', opacity:0.5 }} />
+                       <input 
+                         placeholder="Buscar producto..."
+                         value={productSearch}
+                         onChange={e => setProductSearch(e.target.value)}
+                         style={{ width:'100%', padding: '12px 12px 12px 35px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, color: '#fff', fontSize: 12, outline:'none' }}
+                       />
+                       {productSearch.length > 0 && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'rgba(10,15,13,0.98)', borderRadius: 12, border: '1px solid var(--neon-green)', zIndex: 9999, maxHeight: 200, overflowY: 'auto' }}>
+                             {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).map(p => (
+                                <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding: 12, borderBottom: '1px solid rgba(255,255,255,0.05)', cursor:'pointer', fontSize: 12 }}>
+                                   {p.name} - ${p.sellPrice.toLocaleString()}
+                                </div>
+                             ))}
+                          </div>
+                       )}
+                    </div>
+
+                    <div style={{ flex: 1, overflowY: 'auto', background: 'rgba(0,0,0,0.2)', borderRadius: 12, padding: 10, minHeight: 100 }}>
+                       {cart.length === 0 && <div style={{ height:'100%', display:'flex', alignItems:'center', justifyContent:'center', fontSize: 10, color:'var(--text-muted)' }}>CARRITO VACÍO</div>}
+                       {cart.map(item => (
+                         <div key={item.id} style={{ display: 'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 8, background:'rgba(255,255,255,0.02)', padding: 10, borderRadius: 8 }}>
+                            <div style={{ fontSize: 11 }}><span style={{ color:'var(--neon-green)', fontWeight:950, marginRight:5 }}>{item.qty}x</span>{item.name}</div>
+                            <button onClick={() => removeFromCart(item.id)} style={{ background:'none', border:'none', color:'var(--danger-red)', cursor:'pointer' }}><X size={12}/></button>
+                         </div>
+                       ))}
+                    </div>
+                    
+                    <button 
+                      onClick={() => { handleFinalizeSale(); setCashReceived(''); }} 
+                      disabled={cart.length === 0} 
+                      style={{ width:'100%', padding:'18px', borderRadius:'16px', background: cart.length > 0 ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)', color:'#000', border:'none', fontWeight: 950, fontSize:'16px', cursor:'pointer', boxShadow: cart.length > 0 ? '0 10px 30px rgba(0,255,136,0.3)' : 'none' }}
+                   >
+                      FINALIZAR: ${cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0).toLocaleString()}
+                   </button>
+                </div>
+             </div>
+            )}
+         </div>
+
+         {/* ── COL 2: MONITOR DE SALA (EL GRID GIGANTE) ── */}
+         <div style={{ display: 'flex', flexDirection: 'column', gap: 15, overflowY: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '15px 25px', borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
+               <div>
+                 <div style={{ fontSize: 13, fontWeight: 950, color: 'var(--neon-green)', letterSpacing: 1 }}>ATLETAS EN SALA</div>
+                 <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 800 }}>MONITOREO EN TIEMPO REAL</div>
+               </div>
+               <div style={{ background: 'var(--green-10)', padding: '10px 20px', borderRadius: 15, border: '1px solid var(--green-20)', fontSize: 24, fontWeight: 950, color: 'var(--neon-green)' }}>
+                 {activeMembers.length}
+               </div>
+            </div>
+
+            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 15, overflowY: 'auto', paddingRight: 10, alignContent: 'start' }}>
+               {activeMembers.length === 0 && (
+                 <div style={{ gridColumn: '1 / -1', padding: 120, textAlign: 'center', color: 'var(--text-muted)', border: '2px dashed rgba(255,255,255,0.05)', borderRadius: 30 }}>
+                    <Users size={60} style={{ opacity: 0.1, marginBottom: 20 }} />
+                    <div style={{ fontSize: 18, fontWeight: 800 }}>SALA VACÍA</div>
+                    <p style={{ fontSize: 12 }}>No hay ingresos registrados actualmente.</p>
                  </div>
+               )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 15, flex: 1 }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                       <div>
-                          <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 12, letterSpacing: 1 }}>SERVICIOS RÁPIDOS</div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                             <button onClick={() => addToCart({ id: 'srv_dia', name: 'DÍA GYM', price: 10000, category: 'Servicio' })} style={{ padding: '14px 8px', borderRadius: 12, background: 'rgba(0,255,136,0.06)', border: '1px solid rgba(0,255,136,0.15)', color: '#fff', fontSize: 11, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
-                                <span>🏋️ DÍA</span><span style={{color:'var(--neon-green)'}}>$10k</span>
-                             </button>
-                             <button onClick={() => addToCart({ id: 'srv_sem', name: 'SEMANA', price: 25000, category: 'Servicio' })} style={{ padding: '14px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
-                                <span>🗓️ SEM</span><span style={{color:'var(--neon-green)'}}>$25k</span>
-                             </button>
-                             <button onClick={() => addToCart({ id: 'srv_mes', name: 'MES', price: 80000, category: 'Servicio' })} style={{ padding: '14px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 11, fontWeight: 950, cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5 }}>
-                                <span>💎 MES</span><span style={{color:'var(--neon-green)'}}>$80k</span>
-                             </button>
-                          </div>
-                       </div>
-                        <div style={{ flex: 1, display:'flex', flexDirection:'column', position:'relative' }}>
-                           <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, letterSpacing: 1 }}>PRODUCTOS / INVENTARIO</div>
-                           <div style={{ position:'relative' }}>
-                              <Search size={14} style={{ position:'absolute', left: 12, top:'50%', transform:'translateY(-50%)', opacity:0.5 }} />
-                               <input 
-                                 placeholder="Buscar suplemento, agua, servicios..."
-                                 value={productSearch}
-                                 onChange={e => setProductSearch(e.target.value)}
-                                 style={{ width:'100%', padding: '15px 15px 15px 45px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 14, color: '#fff', fontSize: 14, outline:'none', transition:'0.3s' }}
-                                 onFocus={(e) => e.target.style.borderColor = 'var(--neon-green)'}
-                                 onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-                               />
-
-                              {/* ── DROPDOWN INTELIGENTE DE PRODUCTOS (FIXED VISIBILITY) ── */}
-                              {productSearch.length > 0 && (
-                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'rgba(10,15,13,0.98)', backdropFilter: 'blur(30px)', borderRadius: 16, border: '2px solid var(--neon-green)', zIndex: 9999, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.9)', maxHeight: 300, overflowY: 'auto', marginTop: 5 }}>
-                                   {products
-                                     .filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()))
-                                     .map(p => (
-                                       <div 
-                                         key={p.id}
-                                         onClick={() => { addToCart(p); setProductSearch(''); }}
-                                         style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }}
-                                         className="suggestion-item"
-                                         onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,255,136,0.1)'}
-                                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                       >
-                                         <div style={{ display:'flex', flexDirection:'column' }}>
-                                            <span style={{ fontSize: 13, fontWeight: 800, color:'#fff' }}>{p.name}</span>
-                                            <span style={{ fontSize: 10, color:'var(--text-muted)' }}>{p.category} · Stock: {p.stock || 0}</span>
-                                         </div>
-                                         <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end' }}>
-                                            <span style={{ color:'var(--neon-green)', fontSize: 14, fontWeight: 950 }}>${p.sellPrice.toLocaleString()}</span>
-                                            <span style={{ fontSize: 8, color:'var(--text-muted)' }}>AÑADIR +</span>
-                                         </div>
-                                       </div>
-                                     ))}
-                                   {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
-                                      <div style={{ padding: 25, textAlign:'center', color:'var(--text-muted)', fontSize:12 }}>No se encontraron productos</div>
-                                   )}
-                                </div>
-                              )}
-                           </div>
-                           
-                           {/* Espacio informativo cuando no hay búsqueda activa */}
-                           {productSearch.length === 0 && (
-                             <div style={{ marginTop: 10, padding: 20, background:'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap: 10, flex: 1 }}>
-                                <ShoppingBag size={32} style={{ opacity:0.15 }} />
-                                <span style={{ fontSize: 11, color:'var(--text-muted)', textAlign:'center', fontWeight: 600 }}>BUSCAR SUPLEMENTO O BEBIDA PARA AÑADIR</span>
-                             </div>
-                           )}
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', background:'rgba(0,0,0,0.3)', borderRadius: 16, padding: 15, border: '1px solid rgba(255,255,255,0.05)' }}>
-                       <div style={{ flex: 1, overflowY: 'auto' }}>
-                          {cart.map(item => (
-                            <div key={item.id} style={{ display: 'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 8, background:'rgba(255,255,255,0.02)', padding: 8, borderRadius: 8 }}>
-                               <div style={{ fontSize: 10 }}><span style={{ color:'var(--neon-green)', fontWeight:950, marginRight:5 }}>{item.qty}x</span>{item.name}</div>
-                               <button onClick={() => removeFromCart(item.id)} style={{ background:'none', border:'none', color:'var(--danger-red)', cursor:'pointer' }}><X size={14}/></button>
-                            </div>
-                          ))}
-                       </div>
-                       <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 10 }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, marginBottom: 10 }}>
-                             {['Efectivo', 'Nequi', 'Crédito'].map(m => (
-                               <button key={m} onClick={() => { setPaymentMethod(m as any); if (m !== 'Efectivo') setCashReceived(''); }} style={{ padding: 6, borderRadius: 6, background: paymentMethod === m ? 'var(--green-10)' : 'rgba(255,255,255,0.03)', border: `1px solid ${paymentMethod === m ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)'}`, color: paymentMethod === m ? 'var(--neon-green)' : 'var(--text-muted)', fontSize: 8, fontWeight: 950, cursor:'pointer' }}>{m.toUpperCase()}</button>
-                             ))}
-                          </div>
-
-                          {paymentMethod === 'Efectivo' && (
-                             <div 
-                               style={{ 
-                                 marginBottom: 10, background:'rgba(255,255,255,0.03)', borderRadius:12, padding:12, 
-                                 border: `1px solid ${Number(cashReceived) >= cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0) && cart.length > 0 ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)'}`,
-                                 boxShadow: Number(cashReceived) >= cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0) && cart.length > 0 ? '0 0 15px rgba(0,255,136,0.1)' : 'none',
-                                 transition: '0.3s'
-                               }}
-                             >
-                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                                   <span style={{ fontSize: 9, color:'var(--text-muted)', fontWeight:950 }}>RECIBIDO:</span>
-                                   <div style={{ position:'relative' }}>
-                                      <span style={{ position:'absolute', left:-10, color:'var(--neon-green)', fontWeight:950 }}>$</span>
-                                      <input 
-                                        type="number" 
-                                        placeholder="0"
-                                        value={cashReceived}
-                                        onChange={e => setCashReceived(e.target.value)}
-                                        style={{ width: 80, background: 'none', border: 'none', borderBottom: '1px solid var(--neon-green)', color: '#fff', fontSize: 14, fontWeight: 950, textAlign: 'right', outline: 'none' }}
-                                      />
-                                   </div>
-                                </div>
-                                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                                   <span style={{ fontSize: 9, color:'var(--text-muted)', fontWeight:950 }}>CAMBIO:</span>
-                                   <span 
-                                     style={{ fontSize: 18, fontWeight: 950, color: 'var(--neon-green)' }}
-                                   >
-                                      ${Math.max(0, (Number(cashReceived) || 0) - cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0)).toLocaleString()}
-                                   </span>
-                                </div>
-                             </div>
-                          )}
-
-                          <button 
-                             onClick={() => { handleFinalizeSale(); setCashReceived(''); }} 
-                             disabled={cart.length === 0} 
-                             style={{ width:'100%', padding:12, borderRadius:12, background: cart.length > 0 ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)', color:'#000', border:'none', fontWeight: 950, fontSize:12, cursor:'pointer', boxShadow: cart.length > 0 ? '0 0 20px rgba(0,255,136,0.2)' : 'none' }}
-                          >
-                             FINALIZAR: ${cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0).toLocaleString()}
-                          </button>
-                       </div>
-                    </div>
-                </div>
-             </div>
-           )}
-
-           {showProfile && selectedMember && (
-             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(20px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-                <div className="glass-card" style={{ maxWidth: 560, width: '100%', border: '1px solid var(--green-20)', maxHeight: '90vh', overflowY: 'auto' }}>
-                   {/* ── HEADER EXPEDIENTE ── */}
-                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-                      <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
-                         <div style={{ width: 64, height: 64, borderRadius: 18, background: 'var(--green-10)', border: '2px solid var(--neon-green)', display:'flex', alignItems:'center', justifyContent:'center', fontSize: 26, fontWeight:950, color:'var(--neon-green)', position:'relative' }}>
-                           {selectedMember.name.slice(0,1)}
-                           {/* Semáforo de salud */}
-                           {selectedMember.injuries && String(selectedMember.injuries).trim().length > 0 && (
-                             <div style={{ position:'absolute', top:-6, right:-6, width:18, height:18, borderRadius:'50%', background:'var(--danger-red)', border:'2px solid #000', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                                <AlertCircle size={10} color="#fff" />
-                              </div>
-                            )}
-                          </div>
-                         <div>
-                            <h2 style={{ fontSize: 22, fontWeight:950, color:'#fff' }}>{selectedMember.name}</h2>
-                            <div style={{ color:'var(--neon-green)', fontWeight:900, fontSize: 10 }}>🏋️ ATLETA {selectedMember.plan.toUpperCase()} · ID #{selectedMember.id}</div>
-                          </div>
-                       </div>
-                       <button onClick={() => setShowProfile(false)} style={{ background:'none', border:'none', color:'#fff', cursor:'pointer', padding: 4 }}><X size={24}/></button>
-                    </div>
-                    {selectedMember.injuries && selectedMember.injuries.length > 0 && (() => {
-                      const injList: string[] = Array.isArray(selectedMember.injuries)
-                        ? (selectedMember.injuries as string[])
-                        : String(selectedMember.injuries).split(',').filter(Boolean);
-                      return injList.length > 0 ? (
-                        <div style={{ background:'rgba(255,61,87,0.06)', padding: '12px 16px', borderRadius: 12, border:'1px solid rgba(255,61,87,0.2)', marginBottom: 10 }}>
-                           <div style={{ display:'flex', gap: 8, alignItems:'center', marginBottom: 8 }}>
-                             <HeartPulse size={14} style={{ color:'var(--danger-red)' }} />
-                             <span style={{ fontSize: 9, fontWeight:950, color:'var(--danger-red)' }}>LESIONES ACTIVAS</span>
-                           </div>
-                           <div style={{ display:'flex', flexWrap:'wrap', gap: 6 }}>
-                             {injList.map((inj, i) => (
-                               <span key={i} style={{ fontSize: 9, background:'rgba(255,61,87,0.1)', color:'var(--danger-red)', border:'1px solid rgba(255,61,87,0.2)', padding:'4px 10px', borderRadius:20, fontWeight:800 }}>{inj.trim()}</span>
-                             ))}
-                           </div>
-                        </div>
-                      ) : null;
-                    })()}
-
-                   {/* ── GRID 4 COLS — DATOS CLAVE ── */}
-                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
-                      {[
-                        { label: 'PLAN',        val: selectedMember.plan,                    icon: <Star size={12}/>,        color: 'var(--neon-green)' },
-                        { label: 'VENCIMIENTO', val: selectedMember.expiryDate,              icon: <Calendar size={12}/>,    color: selectedMember.status === 'expired' ? 'var(--danger-red)' : '#fff' },
-                        { label: 'ESTADO',      val: selectedMember.status.toUpperCase(),    icon: <CheckCircle2 size={12}/>, color: selectedMember.status === 'active' ? 'var(--neon-green)' : 'var(--danger-red)' },
-                        { label: 'DEUDA',       val: `$${selectedMember.debt.toLocaleString()}`, icon: <DollarSign size={12}/>, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' },
-                      ].map(row => (
-                        <div key={row.label} style={{ background:'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 12, border:'1px solid rgba(255,255,255,0.06)' }}>
-                          <div style={{ display:'flex', gap:5, alignItems:'center', fontSize: 8, color:'var(--text-muted)', marginBottom: 5, fontWeight:950 }}>{row.icon}{row.label}</div>
-                          <div style={{ fontSize: 12, fontWeight: 800, color: row.color }}>{row.val}</div>
-                        </div>
-                      ))}
-                   </div>
-
-                   {/* ── OBJETIVO ── */}
-                   <div style={{ background:'rgba(0,255,136,0.04)', padding: '12px 16px', borderRadius: 12, border:'1px solid rgba(0,255,136,0.1)', marginBottom: 10, display:'flex', gap: 10, alignItems:'center' }}>
-                      <Dumbbell size={16} style={{ color:'var(--neon-green)', flexShrink:0 }} />
-                      <div>
-                        <div style={{ fontSize: 8, color:'var(--text-muted)', fontWeight:950, marginBottom: 3 }}>OBJETIVO DE ENTRENAMIENTO</div>
-                        <div style={{ fontSize: 12, fontWeight: 800 }}>{selectedMember.objective || 'Sin definir'}</div>
-                      </div>
-                   </div>
-
-                   {/* ── CONTACTO ── */}
-                   <div style={{ background:'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: 12, border:'1px solid rgba(255,255,255,0.05)', marginBottom: 10 }}>
-                      <div style={{ fontSize: 9, fontWeight:950, color:'var(--text-muted)', marginBottom: 10 }}>INFORMACIÓN DE CONTACTO</div>
-                      <div style={{ display:'flex', flexDirection:'column', gap: 8 }}>
-                        {selectedMember.phone && (
-                          <div style={{ display:'flex', gap: 10, alignItems:'center', fontSize: 11 }}>
-                            <Phone size={12} style={{ color:'var(--text-muted)' }} />
-                            <span style={{ fontWeight:700 }}>{selectedMember.phone}</span>
-                          </div>
-                        )}
-                        {selectedMember.email && (
-                          <div style={{ display:'flex', gap: 10, alignItems:'center', fontSize: 11 }}>
-                            <Mail size={12} style={{ color:'var(--text-muted)' }} />
-                            <span style={{ fontWeight:700 }}>{selectedMember.email}</span>
-                          </div>
-                        )}
-                        {(selectedMember as any).emergencyContact && (
-                          <div style={{ display:'flex', gap: 10, alignItems:'center', fontSize: 11 }}>
-                            <Contact size={12} style={{ color:'var(--warning-yellow)', flexShrink:0 }} />
-                            <span style={{ fontWeight:700, color:'var(--warning-yellow)' }}>Emergencia: {(selectedMember as any).emergencyContact}</span>
-                          </div>
-                        )}
-                      </div>
-                   </div>
-
-                   {/* ── HISTORIAL DE VISITAS ── */}
-                   <div style={{ background:'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: 12, border:'1px solid rgba(255,255,255,0.05)', marginBottom: 16 }}>
-                      <div style={{ fontSize: 9, fontWeight:950, color:'var(--text-muted)', marginBottom: 8 }}>ÚLTIMA VISITA REGISTRADA</div>
-                      <div style={{ fontSize: 11, fontWeight:800 }}>
-                        {selectedMember.lastVisit ? new Date(selectedMember.lastVisit).toLocaleDateString('es-CO', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) : 'Sin registro'}
-                      </div>
-                   </div>
-
-                   <button onClick={() => setShowProfile(false)} style={{ width:'100%', padding:15, borderRadius:12, background:'var(--neon-green)', color:'#000', border:'none', fontWeight:950, fontSize:12, cursor:'pointer', letterSpacing:1 }}>CERRAR EXPEDIENTE 360°</button>
-                </div>
-             </div>
-           )}
-
-           {/* ── ACTIVE FLOW MONITORING (DUAL COLUMN GRID) ── */}
-           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, overflowY: 'auto', paddingRight: 8, marginTop: 10, maxHeight: '600px' }}>
-              <div style={{ gridColumn: '1 / -1', fontSize: 12, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 5 }}>CLIENTES EN SALA</div>
-              {activeMembers.length === 0 && (
-                <div style={{ gridColumn: '1 / -1', padding: 40, textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 20 }}>
-                   El gimnasio está vacío actualmente.
-                </div>
-              )}
-              {activeMembers.map(m => (
-                <div 
-                  key={m.id} 
-                  onClick={() => {
-                     const master = members?.find(mMaster => 
-                       String(mMaster.id) === String(m.id) || 
-                       mMaster.name?.trim().toLowerCase() === m.name?.trim().toLowerCase()
-                     );
-                     // 🚀 RESTAURACIÓN: Si existe en maestra lo cargamos, si no, abrimos ficha temporal para no bloquear la app
-                     if (master) {
-                        setSelectedMember(master);
-                     } else {
-                        setSelectedMember({
-                           id: String(m.id),
-                           name: m.name,
-                           status: m.membershipStatus,
-                           expiryDate: 'Consultando...',
-                           debt: 0,
-                           lastVisit: new Date().toISOString(),
-                           plan: m.plan,
-                           color: m.color,
-                           biometricStatus: 'completed'
-                        } as any);
-                     }
+               {activeMembers.map(m => (
+                 <div 
+                   key={m.id} 
+                   onClick={() => {
+                      const master = members?.find(mMaster => String(mMaster.id) === String(m.id));
+                      if (master) setSelectedMember(master);
                    }}
-                  className="glass-card" 
-                  style={{ minWidth: 0, padding: '12px 15px', border: `1px solid ${m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'rgba(255,255,255,0.08)'}`, background: `linear-gradient(90deg, ${m.color}15, transparent)`, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', transition: '0.3s' }}
-                >
-                   <div style={{ width: 38, height: 38, borderRadius: 10, background: `${m.color}15`, border: `1px solid ${m.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 950, color: m.color, fontSize: 14 }}>{m.initials}</div>
-                   
-                   <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 800 }}>{new Date(m.checkedInAt).toLocaleTimeString().slice(0,5)} · {m.plan.split(' ')[0]}</div>
-                   </div>
-
-                   <div style={{ textAlign: 'right', display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                         <div style={{ fontSize: 10, color: 'var(--neon-green)', fontWeight: 800 }}>{fmtTime(Math.floor((Date.now() - m.checkedInAt) / 1000))}</div>
-                      </div>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const obs = prompt(`¿Por qué marcas salida de ${m.name}?`, 'Salida manual');
-                          if (obs !== null) {
-                            setActiveMembers(prev => prev.filter(am => am.id !== m.id));
-                            setLogs(prev => [{ id: Date.now(), name: m.name, action: 'SALIDA', time: new Date().toLocaleTimeString().slice(0,5), method: 'manual', color: 'var(--danger-red)', note: obs }, ...prev]);
-                          }
-                        }}
-                        style={{ padding: 6, borderRadius: 8, background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', cursor: 'pointer' }}
-                      >
-                         <LogOut size={14} />
-                      </button>
-                   </div>
-                </div>
-              ))}
-           </div>
-        </div>
-
-        {/* COL 3: INTELLIGENCE FEED */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-           <div className="glass-card" style={{ flex: 1, padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ padding: '18px 24px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
-                 <span style={{ fontSize: 11, fontWeight: 950, letterSpacing: 2, color: 'var(--text-muted)' }}>REGISTRO DE AUDITORÍA</span>
-              </div>
-              <div style={{ flex: 1, overflowY: 'auto', padding: 12, fontFamily: 'monospace' }}>
+                   className="glass-card athlete-card" 
+                   style={{ padding: '20px', border: `1px solid ${m.membershipStatus === 'expired' ? 'var(--danger-red)' : 'rgba(255,255,255,0.1)'}`, background: `linear-gradient(135deg, ${m.color}15, rgba(0,0,0,0.4))`, display: 'flex', flexDirection: 'column', gap: 15, cursor: 'pointer', borderRadius: 20 }}
+                 >
+                    <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
+                       <div style={{ width: 50, height: 50, borderRadius: 14, background: `${m.color}20`, border: `1px solid ${m.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 950, color: m.color, fontSize: 20 }}>{m.initials}</div>
+                       <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 16, fontWeight: 900, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</div>
+                          <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 800 }}>{m.plan.toUpperCase()}</div>
+                       </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '10px 15px', borderRadius: 12 }}>
+                       <div style={{ fontSize: 12, color: 'var(--neon-green)', fontWeight: 950, display:'flex', alignItems:'center', gap:6 }}><Clock size={14}/> {fmtTime(Math.floor((Date.now() - m.checkedInAt) / 1000))}</div>
+                       <button onClick={(e) => { e.stopPropagation(); setActiveMembers(prev => prev.filter(am => am.id !== m.id)); }} style={{ background:'rgba(255,61,87,0.1)', border:'none', color:'var(--danger-red)', padding:'6px 12px', borderRadius:8, fontSize:10, fontWeight:950 }}>SALIDA</button>
+                    </div>
+                 </div>
+               ))}
+            </div>
+         </div>
+         <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            <div className="glass-card" style={{ flex:1, padding:20 }}>
+               <div style={{ flex:1, overflowY:'auto' }}>
                  {logs.map(l => (
                    <div key={l.id} style={{ padding: '12px 14px', fontSize: 10, borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', gap: 4 }}>
                       <div style={{ display: 'flex', gap: 14 }}>
@@ -890,13 +576,38 @@ export default function Reception() {
 
       </div>
 
+      {showProfile && selectedMember && (
+         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,10,0.95)', backdropFilter: 'blur(25px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div className="glass-card" style={{ maxWidth: 750, width: '100%', border: '2px solid var(--green-20)', maxHeight: '95vh', overflowY: 'auto', padding: 30, borderRadius: 32, boxShadow: '0 25px 80px rgba(0,0,0,0.8)' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 30, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 20 }}>
+                  <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+                     <div style={{ width: 80, height: 80, borderRadius: 20, background: 'var(--green-10)', border: '2px solid var(--neon-green)', display:'flex', alignItems:'center', justifyContent:'center', fontSize: 32, fontWeight:950, color:'var(--neon-green)' }}>{selectedMember.name.slice(0,1)}</div>
+                     <div>
+                        <h2 style={{ fontSize: 26, fontWeight:950, color:'#fff', margin: 0 }}>{selectedMember.name}</h2>
+                        <span style={{ color:'var(--neon-green)', fontWeight:900, fontSize: 11, background:'var(--green-10)', padding:'2px 8px', borderRadius:5 }}>{selectedMember.plan.toUpperCase()}</span>
+                     </div>
+                  </div>
+                  <button onClick={() => setShowProfile(false)} style={{ background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', cursor:'pointer', padding: 12, borderRadius: 15 }}><X size={24}/></button>
+               </div>
+               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 25, marginBottom: 30 }}>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
+                     <div style={{ fontSize: 12, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 10 }}>ESTADO MÉDICO</div>
+                     <div style={{ color: selectedMember.injuries ? 'var(--danger-red)' : 'var(--neon-green)', fontWeight: 800 }}>{selectedMember.injuries || 'Sin lesiones reportadas'}</div>
+                  </div>
+                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 20, border: '1px solid rgba(255,255,255,0.05)' }}>
+                     <div style={{ fontSize: 12, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 10 }}>OBJETIVO</div>
+                     <div style={{ color: '#fff', fontWeight: 800 }}>{selectedMember.objective || 'Mantener forma física'}</div>
+                  </div>
+               </div>
+               <button onClick={() => setShowProfile(false)} style={{ width:'100%', padding:20, borderRadius:15, background:'var(--neon-green)', color:'#000', border:'none', fontWeight:950, fontSize:14, cursor:'pointer' }}>CERRAR EXPEDIENTE</button>
+            </div>
+         </div>
+      )}
+
       <style>{`
-        @keyframes spinning { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .spinning { animation: spinning 2s linear infinite; }
-        @keyframes slideIn { from { transform: translateY(30px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-        .reception-layout-grid { display: grid; grid-template-columns: 100px 1fr 350px; gap: 20; height: calc(100vh - 250px); }
-        .sensor-btn:hover { background: var(--green-5) !important; border-color: var(--neon-green) !important; }
-        .suggestion-item:hover { background: rgba(0,255,136,0.05) !important; }
+         @keyframes spinning { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+         .spinning { animation: spinning 2s linear infinite; }
+         .athlete-card:hover { transform: translateY(-5px); border-color: var(--neon-green) !important; box-shadow: 0 10px 30px rgba(0,255,136,0.1); }
       `}</style>
     </div>
   );
