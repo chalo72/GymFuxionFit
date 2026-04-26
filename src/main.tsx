@@ -39,7 +39,7 @@ class ErrorBoundary extends React.Component<
             </pre>
           </div>
           <button
-            onClick={() => window.location.href = '/login'}
+            onClick={() => window.location.reload()}
             style={{
               padding: '12px 32px', background: '#00ff88', color: '#000',
               border: 'none', borderRadius: 12, fontWeight: 900, fontSize: 14,

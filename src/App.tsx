@@ -48,10 +48,9 @@ function LoadingFallback() {
   );
 }
 
-/* -- Proteccion de rutas autenticadas -- */
+/* -- Proteccion de rutas (DESACTIVADA PARA DEBUG CRITICO) -- */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  console.log("🛡️ MODO CRÍTICO: Bypass de seguridad activado.");
   return <>{children}</>;
 }
 

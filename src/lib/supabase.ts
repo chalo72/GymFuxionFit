@@ -3,11 +3,18 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error(
+// Bandera: true solo si ambas variables están configuradas
+export const hasSupabase = !!(supabaseUrl && supabaseAnonKey);
+
+if (!hasSupabase) {
+  console.warn(
     '⚠️ GYMFUXIONFIT: Faltan variables de entorno VITE_SUPABASE_URL y/o VITE_SUPABASE_ANON_KEY. ' +
-    'Crea un archivo .env en la raíz del proyecto con estas variables.'
+    'Modo OFFLINE activado — datos solo desde localStorage.'
   );
 }
 
-export const supabase = createClient(supabaseUrl ?? '', supabaseAnonKey ?? '');
+// Si no hay credenciales se usa un cliente dummy que no lanza errores de red
+export const supabase = createClient(
+  supabaseUrl ?? 'https://placeholder.supabase.co',
+  supabaseAnonKey ?? 'placeholder-key'
+);

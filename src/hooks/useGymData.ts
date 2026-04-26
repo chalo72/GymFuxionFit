@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, hasSupabase } from '../lib/supabase';
 
 /* ══════════════════════════════════════════
    GLOBAL_SYNC_SERVICE V.1.0
@@ -162,22 +162,29 @@ export function useGymData() {
 
     initData();
 
-    // 3. Suscripción Realtime (Para cambios en vivo entre dispositivos)
-    const membersSub = supabase
-      .channel('schema-db-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const m = payload.new as any;
-          setMembers(prev => [{ ...m, expiryDate: m.expiry_date, biometricStatus: m.biometric_status }, ...prev]);
-        } else if (payload.eventType === 'UPDATE') {
-          const m = payload.new as any;
-          setMembers(prev => prev.map(old => old.id === m.id ? { ...m, expiryDate: m.expiry_date, biometricStatus: m.biometric_status } : old));
-        }
-      })
-      .subscribe();
+    // 3. Suscripción Realtime — solo si Supabase está configurado
+    let membersSub: ReturnType<typeof supabase.channel> | null = null;
+    if (hasSupabase) {
+      try {
+        membersSub = supabase
+          .channel('schema-db-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, (payload) => {
+            if (payload.eventType === 'INSERT') {
+              const m = payload.new as any;
+              setMembers(prev => [{ ...m, expiryDate: m.expiry_date, biometricStatus: m.biometric_status }, ...prev]);
+            } else if (payload.eventType === 'UPDATE') {
+              const m = payload.new as any;
+              setMembers(prev => prev.map(old => old.id === m.id ? { ...m, expiryDate: m.expiry_date, biometricStatus: m.biometric_status } : old));
+            }
+          })
+          .subscribe();
+      } catch (subErr) {
+        console.warn('Realtime subscription no disponible:', subErr);
+      }
+    }
 
     return () => {
-      supabase.removeChannel(membersSub);
+      if (membersSub) supabase.removeChannel(membersSub);
     };
   }, []);
 

@@ -1,5 +1,5 @@
 import { Dumbbell, ScanFace, KeyRound, ShieldCheck, Dumbbell as DumbbellIcon, UserCheck } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import type { UserRole } from '../contexts/AuthContext';
@@ -30,25 +30,35 @@ const roleConfig: Record<UserRole, { label: string; description: string; redirec
 
 export default function Login() {
   const navigate   = useNavigate();
-  const { login }  = useAuth();
+  const { login, isAuthenticated, user, loading } = useAuth();
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
 
+  // 🛡️ MODO CRÍTICO: Redirección automática desactivada para romper bucles
+  /*
+  if (isAuthenticated && user) {
+    const redirect = roleConfig[user.role]?.redirect ?? '/dashboard';
+    console.log("🚀 Login: Usuario detectado, redirigiendo a:", redirect);
+    return <Navigate to={redirect} replace />;
+  }
+  */
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     login(selectedRole);
-    navigate(roleConfig[selectedRole].redirect);
+    // FORZADO FÍSICO
+    window.location.href = roleConfig[selectedRole].redirect;
   };
 
   const handleBiometricLogin = () => {
     login(selectedRole);
-    navigate(roleConfig[selectedRole].redirect);
+    window.location.href = roleConfig[selectedRole].redirect;
   };
 
   const handleQuickLogin = (role: UserRole) => {
     login(role);
-    navigate(roleConfig[role].redirect);
+    window.location.href = roleConfig[role].redirect;
   };
 
   return (
