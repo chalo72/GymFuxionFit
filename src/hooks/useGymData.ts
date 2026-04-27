@@ -106,6 +106,7 @@ export function useGymData() {
   const [assets, setAssets] = useState<GymAsset[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -296,12 +297,17 @@ export function useGymData() {
         };
         try {
           const { data, error } = await supabase.from('products').insert([dbProduct]).select();
+          if (error) {
+            setSyncError(`Error Supabase (Productos): ${error.message}`);
+            console.error("Error en rescate:", error);
+          }
           if (!error && data && data[0]) {
             const cloudP = { ...data[0], id: String(data[0].id), buyPrice: data[0].buy_price, sellPrice: data[0].sell_price, minStock: data[0].min_stock };
             setProducts(prev => prev.map(item => item.id === p.id ? cloudP : item));
+            setSyncError(null);
           }
         } catch (e) {
-          console.error("Fallo en rescate de producto:", e);
+          setSyncError("Fallo de red al rescatar productos.");
         }
       }
 
@@ -631,7 +637,8 @@ export function useGymData() {
         setMembers(original);
         alert("Error al eliminar de la nube.");
       }
-    }
+    },
+    syncError
   };
 }
 

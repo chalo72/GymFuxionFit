@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
+import { useGymData } from './hooks/useGymData';
 import AppLayout from './components/layout/AppLayout';
 
 /* ══════════════════════════════════════════
@@ -55,8 +56,35 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  const { syncError } = useGymData();
+
   return (
     <Suspense fallback={<LoadingFallback />}>
+      {syncError && (
+        <div style={{
+          background: 'var(--danger-red)',
+          color: '#000',
+          padding: '8px 20px',
+          fontSize: 11,
+          fontWeight: 950,
+          textAlign: 'center',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 12,
+          letterSpacing: 1
+        }}>
+          ⚠️ ALERTA DE SINCRONIZACIÓN: {syncError.toUpperCase()}
+          <button onClick={() => window.location.reload()} style={{ background: '#000', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 4, fontSize: 9, fontWeight: 900, cursor: 'pointer' }}>
+            REINTENTAR AHORA
+          </button>
+        </div>
+      )}
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={
