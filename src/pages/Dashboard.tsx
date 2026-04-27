@@ -6,7 +6,11 @@ import AICoachPerformance from '../components/dashboard/AICoachPerformance';
 import { useGymData } from '../hooks/useGymData';
 
 export default function Dashboard() {
-  const { members, transactions } = useGymData();
+  const { members, transactions, products } = useGymData();
+
+  const lowStockCount = useMemo(() => {
+    return products.filter(p => p.stock <= (p.minStock || 0)).length;
+  }, [products]);
 
   const kpis = useMemo(() => {
     /* Ingresos del mes actual */
@@ -106,6 +110,7 @@ export default function Dashboard() {
               {[
                 { l: 'MIEMBROS_EN_DB', v: `${members.length}_ATLETAS`, c: 'var(--neon-green)' },
                 { l: 'PWA_CACHE_SHIELD', v: 'PROTECTED (v.2.6)', c: 'var(--neon-green)' },
+                { l: 'ALERTA_DE_STOCK_BAJO', v: `${lowStockCount}_PRODUCTOS`, c: lowStockCount > 0 ? 'var(--danger-red)' : 'var(--neon-green)', alert: lowStockCount > 0 },
                 { l: 'PERFILES_SIN_BIOMETRÍA', v: `${members.filter(m => m.biometricStatus !== 'completed').length}_ATLETAS`, c: members.filter(m => m.biometricStatus !== 'completed').length > 0 ? 'var(--danger-red)' : 'var(--neon-green)', alert: members.filter(m => m.biometricStatus !== 'completed').length > 0 },
               ].map(s => (
                 <div key={s.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: s.alert ? '1px solid rgba(255,61,87,0.2)' : '1px solid rgba(255,255,255,0.05)' }}>

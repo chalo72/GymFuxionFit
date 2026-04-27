@@ -1,7 +1,6 @@
 {
-  "version": "6.0.0-MODO-DIOS",
-  "codename": "OMNI_SYNC_FORCE",
-  "releaseDate": "2026-04-27",
-  "status": "production_ready",
-  "author": "Antigravity Dev-Elite"
+  "version": "5.8.0",
+  "name": "GymFuxionFit",
+  "buildDate": "2026-04-27T12:35:00Z",
+  "notes": "🚀 NEXUS_AUTO_SYNC_RESCUE: Protocolo de recuperación de productos locales activado."
 }

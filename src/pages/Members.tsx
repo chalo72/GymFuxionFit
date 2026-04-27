@@ -129,7 +129,7 @@ function ClientModal({
     if (form.joined) {
       const d = new Date(form.joined);
       d.setMonth(d.getMonth() + 1);
-      set('expiry', d.toISOString().slice(0,10));
+      set('expiryDate', d.toISOString().slice(0,10));
       set('nextPayment', d.toISOString().slice(0,10));
     }
   };
@@ -139,7 +139,7 @@ function ClientModal({
     if (v) {
       const d = new Date(v);
       d.setMonth(d.getMonth() + 1);
-      set('expiry', d.toISOString().slice(0,10));
+      set('expiryDate', d.toISOString().slice(0,10));
       set('nextPayment', d.toISOString().slice(0,10));
     }
   };
@@ -270,7 +270,7 @@ function ClientModal({
                 </div>
                 <div>
                   <label style={labelStyle}>Vencimiento (auto)</label>
-                  <input style={inputStyle} type="date" value={form.expiry} onChange={e => set('expiry',e.target.value)}/>
+                  <input style={inputStyle} type="date" value={form.expiryDate} onChange={e => set('expiryDate',e.target.value)}/>
                 </div>
                 <div>
                   <label style={labelStyle}>Método de Pago</label>
@@ -503,7 +503,7 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
    PÁGINA PRINCIPAL
 ══════════════════════════════════════════ */
 export default function Members() {
-  const { members: clients, updateMemberStatus, setMembers } = useGymData();
+  const { members: clients, updateMemberStatus, addMember, deleteMember } = useGymData();
   const [search,  setSearch]        = useState('');
   const [filterPlan, setFilterPlan] = useState<string | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all');
@@ -541,24 +541,7 @@ export default function Members() {
       await updateMemberStatus(editClient.id, data);
       showToast(`✅ Cliente "${data.name}" actualizado`);
     } else {
-      const newId = 'm_' + Date.now();
-      const newClient: any = {
-        ...data, 
-        id: newId, 
-        visits: 0,
-        lastVisit: 'Nunca',
-        color: COLORS[clients.length % COLORS.length],
-      };
-      
-      // Cloud Sync
-      const { supabase } = await import('../lib/supabase');
-      await supabase.from('members').insert([{
-        ...newClient,
-        expiry_date: newClient.expiry,
-        biometric_status: newClient.biometricStatus || 'pending'
-      }]);
-
-      setMembers(prev => [newClient, ...prev]);
+      await addMember(data);
       showToast(`✅ Cliente "${data.name}" registrado exitosamente`);
     }
     setShowModal(false);
@@ -573,9 +556,7 @@ export default function Members() {
 
   const deleteClient = async (id: any) => {
     const name = clients.find(c => c.id === id)?.name;
-    const { supabase } = await import('../lib/supabase');
-    await supabase.from('members').delete().eq('id', id);
-    setMembers(prev => prev.filter(c => c.id !== id));
+    await deleteMember(id);
     setViewClient(null);
     showToast(`🗑️ Cliente "${name}" eliminado`);
   };
@@ -712,7 +693,7 @@ export default function Members() {
                   </td>
                   <td style={{ padding:'14px 16px' }}><PlanBadge p={c.plan}/></td>
                   <td style={{ padding:'14px 16px' }}><StatusBadge s={c.status}/></td>
-                  <td style={{ padding:'14px 16px', fontSize:12.5, color: c.status==='expired' ? 'var(--danger-red)' : c.status==='expiring' ? '#FFD600' : 'var(--text-secondary)' }}>{c.expiry}</td>
+                  <td style={{ padding:'14px 16px', fontSize:12.5, color: c.status==='expired' ? 'var(--danger-red)' : c.status==='expiring' ? '#FFD600' : 'var(--text-secondary)' }}>{c.expiryDate || c.expiry}</td>
                   <td style={{ padding:'14px 16px', fontSize:12, color:'var(--text-secondary)', textTransform:'capitalize' }}>{c.payMethod}</td>
                   <td style={{ padding:'14px 16px', fontSize:12, color:'var(--text-secondary)' }}>{c.trainer||'—'}</td>
                   <td style={{ padding:'14px 16px', fontSize:13, fontWeight:700, color:'var(--text-primary)' }}>{c.visits}</td>

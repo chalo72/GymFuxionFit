@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   Dumbbell, Wrench, Activity, AlertCircle, 
   Calendar, ChevronRight, Package, Search, 
@@ -20,6 +20,12 @@ export default function Inventory() {
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState<string | null>(null);
+
+  // Reset filtros al cambiar de pestaña para evitar bloqueos visuales
+  useEffect(() => {
+    setFilter('all');
+    setSearchTerm('');
+  }, [activeTab]);
 
   const showToast = (msg: string) => {
     setToast(msg);

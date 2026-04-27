@@ -134,8 +134,8 @@ export function useGymData() {
         if (!mErr && cloudMembers) {
            const mappedMembers = cloudMembers.map(m => ({
              ...m,
-             expiryDate: m.expiry_date,
-             biometricStatus: m.biometric_status
+             expiryDate: m.expiry_date || m.expiry || m.expiryDate,
+             biometricStatus: m.biometric_status || m.biometricStatus
            }));
            setMembers(mappedMembers);
            localStorage.setItem('fuxion_members', JSON.stringify(mappedMembers));
@@ -202,6 +202,7 @@ export function useGymData() {
     // 3. Suscripción Realtime — solo si Supabase está configurado
     let membersSub: ReturnType<typeof supabase.channel> | null = null;
     let productsSub: ReturnType<typeof supabase.channel> | null = null;
+    let transactionsSub: ReturnType<typeof supabase.channel> | null = null;
 
     if (hasSupabase) {
       try {
@@ -210,10 +211,16 @@ export function useGymData() {
           .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, (payload) => {
             if (payload.eventType === 'INSERT') {
               const m = payload.new as any;
-              setMembers(prev => [{ ...m, expiryDate: m.expiry_date, biometricStatus: m.biometric_status }, ...prev]);
+              setMembers(prev => {
+                const exists = prev.find(old => String(old.id) === String(m.id));
+                if (exists) return prev;
+                return [{ ...m, expiryDate: m.expiry_date, biometricStatus: m.biometric_status }, ...prev];
+              });
             } else if (payload.eventType === 'UPDATE') {
               const m = payload.new as any;
-              setMembers(prev => prev.map(old => old.id === m.id ? { ...m, expiryDate: m.expiry_date, biometricStatus: m.biometric_status } : old));
+              setMembers(prev => prev.map(old => String(old.id) === String(m.id) ? { ...m, expiryDate: m.expiry_date, biometricStatus: m.biometric_status } : old));
+            } else if (payload.eventType === 'DELETE') {
+              setMembers(prev => prev.filter(old => String(old.id) !== String(payload.old.id)));
             }
           })
           .subscribe();
@@ -221,24 +228,39 @@ export function useGymData() {
         productsSub = supabase
           .channel('products-changes')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
-            const p = payload.new as any;
-            const mapped = {
-              ...p,
-              id: String(p.id),
-              buyPrice: p.buy_price || p.buyPrice || 0,
-              sellPrice: p.sell_price || p.sellPrice || 0,
-              minStock: p.min_stock || p.minStock || 0
-            };
+            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              const p = payload.new as any;
+              const mapped = {
+                ...p,
+                id: String(p.id),
+                buyPrice: p.buy_price || p.buyPrice || 0,
+                sellPrice: p.sell_price || p.sellPrice || 0,
+                minStock: p.min_stock || p.minStock || 0
+              };
 
-            if (payload.eventType === 'INSERT') {
-              setProducts(prev => {
-                const exists = prev.find(i => i.name.toLowerCase() === mapped.name.toLowerCase());
-                return exists ? prev : [mapped, ...prev];
-              });
-            } else if (payload.eventType === 'UPDATE') {
-              setProducts(prev => prev.map(old => old.id === String(p.id) ? mapped : old));
+              if (payload.eventType === 'INSERT') {
+                setProducts(prev => {
+                  const exists = prev.find(i => i.name.toLowerCase() === mapped.name.toLowerCase() || String(i.id) === String(mapped.id));
+                  return exists ? prev.map(old => String(old.id) === String(mapped.id) ? mapped : old) : [mapped, ...prev];
+                });
+              } else {
+                setProducts(prev => prev.map(old => String(old.id) === String(p.id) ? mapped : old));
+              }
             } else if (payload.eventType === 'DELETE') {
-              setProducts(prev => prev.filter(old => old.id !== String(payload.old.id)));
+              setProducts(prev => prev.filter(old => String(old.id) !== String(payload.old.id)));
+            }
+          })
+          .subscribe();
+
+        transactionsSub = supabase
+          .channel('transactions-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, (payload) => {
+            if (payload.eventType === 'INSERT') {
+              const t = payload.new as Transaction;
+              setTransactions(prev => {
+                const exists = prev.find(old => old.hash === t.hash);
+                return exists ? prev : [t, ...prev];
+              });
             }
           })
           .subscribe();
@@ -251,8 +273,61 @@ export function useGymData() {
     return () => {
       if (membersSub) supabase.removeChannel(membersSub);
       if (productsSub) supabase.removeChannel(productsSub);
+      if (transactionsSub) supabase.removeChannel(transactionsSub);
     };
   }, []);
+
+  // 4. Protocolo de Rescate Auto-Sync (Nexus Emergency Sync)
+  useEffect(() => {
+    if (!isLoaded || !hasSupabase) return;
+
+    const rescueData = async () => {
+      // Rescate de Productos
+      const unsyncedProducts = products.filter(p => String(p.id).startsWith('temp_'));
+      for (const p of unsyncedProducts) {
+        console.log(`🚀 Rescatando producto: ${p.name}`);
+        const dbProduct = {
+          name: p.name,
+          category: p.category,
+          stock: p.stock,
+          min_stock: p.minStock,
+          buy_price: p.buyPrice,
+          sell_price: p.sellPrice
+        };
+        try {
+          const { data, error } = await supabase.from('products').insert([dbProduct]).select();
+          if (!error && data && data[0]) {
+            const cloudP = { ...data[0], id: String(data[0].id), buyPrice: data[0].buy_price, sellPrice: data[0].sell_price, minStock: data[0].min_stock };
+            setProducts(prev => prev.map(item => item.id === p.id ? cloudP : item));
+          }
+        } catch (e) {
+          console.error("Fallo en rescate de producto:", e);
+        }
+      }
+
+      // Rescate de Miembros
+      const unsyncedMembers = members.filter(m => String(m.id).startsWith('m_temp_'));
+      for (const m of unsyncedMembers) {
+        console.log(`🚀 Rescatando miembro: ${m.name}`);
+        const dbMember = {
+          name: m.name, email: m.email, phone: m.phone, plan: m.plan, status: m.status, joined: m.joined,
+          expiry_date: m.expiryDate, pay_method: m.payMethod, trainer: m.trainer,
+          biometric_status: m.biometricStatus || 'pending'
+        };
+        try {
+          const { data, error } = await supabase.from('members').insert([dbMember]).select();
+          if (!error && data && data[0]) {
+            const cloudM = { ...data[0], id: String(data[0].id), expiryDate: data[0].expiry_date, biometricStatus: data[0].biometric_status };
+            setMembers(prev => prev.map(item => item.id === m.id ? cloudM : item));
+          }
+        } catch (e) {
+          console.error("Fallo en rescate de miembro:", e);
+        }
+      }
+    };
+
+    rescueData();
+  }, [isLoaded, products.length, members.length]);
 
   // Guardar cada vez que cambian (SOLO si ya se cargó)
   useEffect(() => {
@@ -501,6 +576,61 @@ export function useGymData() {
           }, ...prev]);
         }
       });
+    },
+
+    // CRUD Miembros Centralizado
+    addMember: async (m: Omit<Member, 'id'>) => {
+      const tempId = 'm_temp_' + Date.now();
+      const newMember = { ...m, id: tempId };
+      setMembers(prev => [newMember, ...prev]);
+
+      const dbMember = {
+        name: m.name,
+        email: m.email,
+        phone: m.phone,
+        plan: m.plan,
+        status: m.status,
+        joined: m.joined,
+        expiry_date: m.expiryDate || m.expiry,
+        next_payment: m.nextPayment,
+        pay_method: m.payMethod,
+        trainer: m.trainer,
+        emergency: m.emergency,
+        emergency_phone: m.emergencyPhone,
+        address: m.address,
+        notes: m.notes,
+        objective: m.objective,
+        injuries: typeof m.injuries === 'string' ? m.injuries : JSON.stringify(m.injuries),
+        nutrition: m.nutrition,
+        emergency_contact: m.emergencyContact,
+        biometric_status: m.biometricStatus || 'pending'
+      };
+
+      try {
+        const { data, error } = await supabase.from('members').insert([dbMember]).select();
+        if (error) throw error;
+        if (data && data[0]) {
+          const cloudM = {
+            ...data[0],
+            id: String(data[0].id),
+            expiryDate: data[0].expiry_date,
+            biometricStatus: data[0].biometric_status
+          };
+          setMembers(prev => prev.map(item => item.id === tempId ? cloudM : item));
+        }
+      } catch (err) {
+        console.error("Error sincronizando miembro:", err);
+      }
+    },
+    deleteMember: async (id: string) => {
+      const original = [...members];
+      setMembers(prev => prev.filter(m => m.id !== id));
+      const { error } = await supabase.from('members').delete().eq('id', id);
+      if (error) {
+        console.error("Error eliminando miembro:", error);
+        setMembers(original);
+        alert("Error al eliminar de la nube.");
+      }
     }
   };
 }
