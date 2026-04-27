@@ -235,9 +235,22 @@ export default function Reception() {
         const total = cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
         await updateMemberStatus(selectedMember.id, { debt: (selectedMember.debt || 0) + total });
       }
-      setLogs(prev => [{ id: Date.now(), name: selectedMember.name, action: paymentMethod === 'Crédito' ? 'FIADO' : 'COBRO', time: new Date().toLocaleTimeString().slice(0, 5), method: paymentMethod, color: paymentMethod === 'Crédito' ? 'var(--danger-red)' : 'var(--neon-green)' }, ...prev]);
+      
+      // LOG & CLEANUP
+      setLogs(prev => [{ 
+        id: Date.now(), 
+        name: selectedMember.name, 
+        action: paymentMethod === 'Crédito' ? 'FIADO' : 'COBRO', 
+        time: new Date().toLocaleTimeString().slice(0, 5), 
+        method: paymentMethod, 
+        color: paymentMethod === 'Crédito' ? 'var(--danger-red)' : 'var(--neon-green)' 
+      }, ...prev]);
+      
       setCart([]);
-      if (showProfile) setShowProfile(false);
+      setProductSearch(''); // Limpiar búsqueda
+      if (showProfile) setShowProfile(false); // Cierre automático del modal
+      setSelectedMember(null); // Deseleccionar para volver al estado inicial
+      
     } catch (error) {
       console.error("Error al procesar venta:", error);
       alert("Error al procesar el cobro. Por favor intente de nuevo.");
@@ -544,18 +557,31 @@ export default function Reception() {
                            <h4 style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 15 }}>CATÁLOGO DE PRODUCTOS</h4>
                            <div style={{ position: 'relative', marginBottom: 20 }}>
                               <Search size={16} style={{ position: 'absolute', left: 15, top: 15, color: 'var(--text-muted)' }} />
-                              <input placeholder="Buscar suplementos..." value={productSearch} onChange={e => setProductSearch(e.target.value)} style={{ width:'100%', padding:'15px 15px 15px 45px', background:'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius:16, color:'#fff', fontSize: 13 }} />
-                              
-                              {productSearch && (
-                                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#080808', border: '1px solid var(--green-20)', borderRadius: 16, marginTop: 10, maxHeight: 200, overflowY: 'auto', zIndex: 100, boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-                                    {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).map(p => (
-                                       <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding: 15, borderBottom: '1px solid #111', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                                          <span style={{ fontSize: 12, fontWeight: 700 }}>{p.name}</span>
-                                          <span style={{ fontSize: 12, color: 'var(--neon-green)', fontWeight: 900 }}>${p.sellPrice.toLocaleString()}</span>
-                                       </div>
-                                    ))}
-                                 </div>
-                              )}
+                              <input 
+                                 placeholder="Buscar suplementos o bebidas..." 
+                                 value={productSearch} 
+                                 onChange={e => setProductSearch(e.target.value)} 
+                                 style={{ width:'100%', padding:'15px 15px 15px 45px', background:'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius:16, color:'#fff', fontSize: 13 }} 
+                               />
+                               
+                               {productSearch && (
+                                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#080808', border: '1px solid var(--neon-green)', borderRadius: 16, marginTop: 10, maxHeight: 300, overflowY: 'auto', zIndex: 100, boxShadow: '0 10px 40px rgba(0,0,0,0.8)' }}>
+                                     {products
+                                       .filter(p => p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(productSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
+                                       .map(p => (
+                                        <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                           <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                              <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{p.name}</span>
+                                              <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>{p.category}</span>
+                                           </div>
+                                           <span style={{ fontSize: 13, color: 'var(--neon-green)', fontWeight: 950 }}>${p.sellPrice.toLocaleString()}</span>
+                                        </div>
+                                     ))}
+                                     {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).length === 0 && (
+                                        <div style={{ padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--text-muted)' }}>Sin resultados para "{productSearch}"</div>
+                                     )}
+                                  </div>
+                               )}
                            </div>
 
                            {!productSearch && (

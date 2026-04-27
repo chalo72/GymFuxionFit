@@ -158,21 +158,36 @@ export function useGymData() {
             minStock: p.min_stock || p.minStock || 0
           }));
 
+          // 🔄 AUTO-SYNC: Intentar subir productos temporales locales a la nube
+          if (hasSupabase) {
+            const currentLocal = JSON.parse(localStorage.getItem('fuxion_products') || '[]');
+            const toSync = currentLocal.filter((lp: any) => String(lp.id).startsWith('temp_'));
+            
+            for (const lp of toSync) {
+              const alreadyInCloud = mappedCloud.find(cp => cp.name.toLowerCase() === lp.name.toLowerCase());
+              if (!alreadyInCloud) {
+                console.log(`🚀 Sincronizando producto pendiente: ${lp.name}`);
+                await supabase.from('products').insert([{
+                  name: lp.name, category: lp.category, stock: lp.stock,
+                  min_stock: lp.minStock, buy_price: lp.buyPrice, sell_price: lp.sellPrice
+                }]);
+              }
+            }
+          }
+
           setProducts(prev => {
-            // Prioridad Nube: Si el producto está en la nube, usamos ese.
-            // Si el producto está solo en local, lo conservamos.
             const combined = [...mappedCloud];
             prev.forEach(localItem => {
               const exists = combined.find(c => 
                 String(c.id) === String(localItem.id) || 
                 c.name.toLowerCase() === localItem.name.toLowerCase()
               );
-              if (!exists) {
-                combined.push(localItem);
-              }
+              if (!exists) combined.push(localItem);
             });
             return combined;
           });
+        } else if (pErr) {
+          console.error("Error al conectar con Supabase:", pErr.message);
         }
 
         setIsLoaded(true);
@@ -343,7 +358,7 @@ export function useGymData() {
       // Actualización optimista del estado local
       setProducts(prev => [newProduct, ...prev]);
       
-      // Mapeo UI -> DB
+      // Mapeo UI -> DB (Snake Case)
       const dbProduct = {
         name: p.name,
         category: p.category,
@@ -358,19 +373,19 @@ export function useGymData() {
         
         if (error) {
           console.warn("Sync warning (Guardado localmente):", error.message);
-          // No retornamos aquí, el producto ya está en el estado local
           return;
         }
 
         if (data && data[0]) {
           const cloudProduct = {
             ...data[0],
+            id: String(data[0].id),
             buyPrice: data[0].buy_price,
             sellPrice: data[0].sell_price,
             minStock: data[0].min_stock
           } as Product;
           
-          // Reemplazar el temporal con el oficial de la nube para mantener coherencia de IDs
+          // Reemplazar el temporal con el oficial de la nube
           setProducts(prev => prev.map(item => item.id === tempId ? cloudProduct : item));
         }
       } catch (err) {
