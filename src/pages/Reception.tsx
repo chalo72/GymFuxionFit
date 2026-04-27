@@ -350,14 +350,25 @@ export default function Reception() {
                      </div>
                      <button onClick={() => setShowProfile(true)} style={{ background:'var(--green-10)', border:'none', color:'var(--neon-green)', borderRadius:12, fontSize:10, fontWeight:950, cursor:'pointer' }}>VER FICHA</button>
                   </div>
+                  
                   <div style={{ position: 'relative', marginBottom: 10 }}>
-                    <input placeholder="Vender producto..." value={productSearch} onChange={e => setProductSearch(e.target.value)} style={{ width:'100%', padding:'12px', background:'rgba(255,255,255,0.05)', borderRadius:12, color:'#fff' }} />
-                    {productSearch && (
-                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#000', borderRadius: 12, border: '1px solid var(--neon-green)', maxHeight: 150, overflowY: 'auto', zIndex: 10 }}>
-                           {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).map(p => (
-                              <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding: 10, borderBottom: '1px solid #111', fontSize: 11, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-                                 <span>{p.name}</span>
-                                 <span style={{ fontWeight: 900, color: 'var(--neon-green)' }}>${p.sellPrice.toLocaleString()}</span>
+                     <input 
+                       placeholder="Vender producto o bebida..." 
+                       value={productSearch} 
+                       onChange={e => setProductSearch(e.target.value)} 
+                       style={{ width:'100%', padding:'12px', background:'rgba(255,255,255,0.05)', borderRadius:12, color:'#fff', border: '1px solid rgba(255,255,255,0.1)' }} 
+                     />
+                     {productSearch && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#080808', borderRadius: 12, border: '1px solid var(--neon-green)', maxHeight: 250, overflowY: 'auto', zIndex: 100, boxShadow: '0 10px 30px rgba(0,0,0,0.8)' }}>
+                           {products
+                             .filter(p => p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(productSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
+                             .map(p => (
+                              <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding: '12px 15px', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontSize: 11, fontWeight: 700, color: '#fff' }}>{p.name}</span>
+                                    <span style={{ fontSize: 8, color: 'var(--text-muted)' }}>{p.category}</span>
+                                 </div>
+                                 <span style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)' }}>${p.sellPrice.toLocaleString()}</span>
                               </div>
                            ))}
                         </div>

@@ -285,13 +285,15 @@ export default function Inventory() {
                  <div style={{ display:'flex', gap:10, marginTop:10 }}>
                     <button onClick={() => setShowProductModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:950, cursor:'pointer' }}>CANCELAR</button>
                      <button onClick={async () => {
+                         if (!productForm.name) return alert("El nombre es obligatorio");
                          if (editingProduct) {
                            await updateProduct(editingProduct.id, productForm);
                            showToast('✅ Producto actualizado');
                          } else {
                            await addProduct(productForm);
-                           showToast('✅ Producto guardado en la nube');
+                           showToast('🚀 Producto propagado a Recepción');
                          }
+                         setSearchTerm('');
                          setShowProductModal(false);
                      }} style={{ flex:1, padding:14, borderRadius:12, background:'var(--neon-green)', border:'none', color:'#000', fontWeight:950, cursor:'pointer' }}>GUARDAR_ITEM</button>
                  </div>
