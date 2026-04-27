@@ -1,6 +1,6 @@
 {
-  "version": "5.8.0",
+  "version": "5.8.1",
   "name": "GymFuxionFit",
-  "buildDate": "2026-04-27T12:35:00Z",
-  "notes": "🚀 NEXUS_AUTO_SYNC_RESCUE: Protocolo de recuperación de productos locales activado."
+  "buildDate": "2026-04-27T13:56:00Z",
+  "notes": "🚀 NEXUS_DIAGNOSTIC_BANNER: Sistema de diagnóstico visual activado para depurar Error 400."
 }
