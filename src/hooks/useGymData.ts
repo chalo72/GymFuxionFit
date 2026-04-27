@@ -148,25 +148,31 @@ export function useGymData() {
         }
 
         const { data: cloudProducts, error: pErr } = await supabase.from('products').select('*');
-        if (!pErr && cloudProducts && cloudProducts.length > 0) {
-          // Mapeo de snake_case (DB) a CamelCase (UI)
-          const mappedProducts = cloudProducts.map((p: any) => ({
+        
+        if (!pErr && cloudProducts) {
+          const mappedCloud = cloudProducts.map((p: any) => ({
             ...p,
+            id: String(p.id),
             buyPrice: p.buy_price || p.buyPrice || 0,
             sellPrice: p.sell_price || p.sellPrice || 0,
             minStock: p.min_stock || p.minStock || 0
           }));
-          setProducts(mappedProducts);
-          localStorage.setItem('fuxion_products', JSON.stringify(mappedProducts));
-        } else if (!pErr) {
-          // Fallback a básicos si está vacío
-          const base = [
-            { id: 'p_agua', name: 'Agua 500ml', category: 'drinks', stock: 50, minStock: 10, buyPrice: 1000, sellPrice: 2000 },
-            { id: 'p_gatorade', name: 'Gatorade', category: 'drinks', stock: 24, minStock: 6, buyPrice: 3000, sellPrice: 4500 },
-            { id: 'p_proteina', name: 'Proteína shake', category: 'supplements', stock: 15, minStock: 5, buyPrice: 4000, sellPrice: 8000 }
-          ] as Product[];
-          setProducts(base);
-          localStorage.setItem('fuxion_products', JSON.stringify(base));
+
+          setProducts(prev => {
+            // Prioridad Nube: Si el producto está en la nube, usamos ese.
+            // Si el producto está solo en local, lo conservamos.
+            const combined = [...mappedCloud];
+            prev.forEach(localItem => {
+              const exists = combined.find(c => 
+                String(c.id) === String(localItem.id) || 
+                c.name.toLowerCase() === localItem.name.toLowerCase()
+              );
+              if (!exists) {
+                combined.push(localItem);
+              }
+            });
+            return combined;
+          });
         }
 
         setIsLoaded(true);
