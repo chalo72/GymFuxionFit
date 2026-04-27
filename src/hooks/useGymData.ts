@@ -201,10 +201,12 @@ export function useGymData() {
 
     // 3. Suscripción Realtime — solo si Supabase está configurado
     let membersSub: ReturnType<typeof supabase.channel> | null = null;
+    let productsSub: ReturnType<typeof supabase.channel> | null = null;
+
     if (hasSupabase) {
       try {
         membersSub = supabase
-          .channel('schema-db-changes')
+          .channel('members-changes')
           .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, (payload) => {
             if (payload.eventType === 'INSERT') {
               const m = payload.new as any;
@@ -215,6 +217,32 @@ export function useGymData() {
             }
           })
           .subscribe();
+
+        productsSub = supabase
+          .channel('products-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
+            const p = payload.new as any;
+            const mapped = {
+              ...p,
+              id: String(p.id),
+              buyPrice: p.buy_price || p.buyPrice || 0,
+              sellPrice: p.sell_price || p.sellPrice || 0,
+              minStock: p.min_stock || p.minStock || 0
+            };
+
+            if (payload.eventType === 'INSERT') {
+              setProducts(prev => {
+                const exists = prev.find(i => i.name.toLowerCase() === mapped.name.toLowerCase());
+                return exists ? prev : [mapped, ...prev];
+              });
+            } else if (payload.eventType === 'UPDATE') {
+              setProducts(prev => prev.map(old => old.id === String(p.id) ? mapped : old));
+            } else if (payload.eventType === 'DELETE') {
+              setProducts(prev => prev.filter(old => old.id !== String(payload.old.id)));
+            }
+          })
+          .subscribe();
+
       } catch (subErr) {
         console.warn('Realtime subscription no disponible:', subErr);
       }
@@ -222,6 +250,7 @@ export function useGymData() {
 
     return () => {
       if (membersSub) supabase.removeChannel(membersSub);
+      if (productsSub) supabase.removeChannel(productsSub);
     };
   }, []);
 
