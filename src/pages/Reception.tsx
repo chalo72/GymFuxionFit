@@ -8,7 +8,7 @@ import {
   QrCode, ScanEye, Camera, ShieldCheck, Activity,
   Zap, Database, Map as MapIcon, RefreshCcw, User,
   AlertCircle, HeartPulse, ChevronRight, Dumbbell,
-  Contact, Star, Target, Clock, History
+  Contact, Star, Target, Clock, History, Edit2, UserX, Check
 } from 'lucide-react';
 import { useGymData, Member } from '../hooks/useGymData';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
@@ -20,7 +20,7 @@ type MembershipStatus = 'active' | 'expiring' | 'expired' | 'suspended';
 type CheckInMethod = 'qr' | 'facial' | 'geo' | 'manual';
 
 interface ActiveMember {
-  id: number; name: string; initials: string; plan: string;
+  id: string; name: string; initials: string; plan: string;
   checkedInAt: number; membershipStatus: MembershipStatus;
   color: string; checkInMethod?: CheckInMethod;
 }
@@ -61,7 +61,7 @@ export default function Reception() {
 
   const [activeMembers, setActiveMembers] = useState<ActiveMember[]>([
     { 
-      id: 5, name: 'Rodrigo Silva', initials: 'RS', plan: 'Pro', 
+      id: 'mock_5', name: 'Rodrigo Silva', initials: 'RS', plan: 'Pro', 
       checkedInAt: Date.now() - 3600000, membershipStatus: 'active', color: 'var(--neon-green)', checkInMethod: 'qr' 
     }
   ]);
@@ -82,6 +82,7 @@ export default function Reception() {
   const [cart, setCart] = useState<{ id: string, name: string, price: number, qty: number, category: string }[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Nequi' | 'Crédito'>('Efectivo');
   const [productSearch, setProductSearch] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setTick(x => x + 1), 1000);
@@ -165,7 +166,7 @@ export default function Reception() {
       setLogs(prev => [{ id: Date.now(), name: nameToUse, action: 'SALIDA', time: new Date().toLocaleTimeString().slice(0,5), method, color: '#ff4d4d' }, ...prev]);
     } else {
       const newM: ActiveMember = {
-         id: masterMember ? Number(masterMember.id) : Date.now(),
+         id: masterMember ? String(masterMember.id) : String(Date.now()),
          name: nameToUse,
          initials: nameToUse.slice(0,2).toUpperCase(),
          plan: masterMember ? masterMember.plan : 'Invitado',
@@ -201,11 +202,14 @@ export default function Reception() {
   const removeFromCart = (id: string) => setCart(prev => prev.filter(item => item.id !== id));
 
   const handleFinalizeSale = async () => {
-    if (!selectedMember || cart.length === 0) return;
-    for (const item of cart) {
-       if (item.category !== 'Servicio') {
+    if (!selectedMember || cart.length === 0 || isProcessing) return;
+    
+    setIsProcessing(true);
+    try {
+      for (const item of cart) {
+        if (item.category !== 'Servicio') {
           await registerProductSale(item.id, item.qty, selectedMember.name, paymentMethod);
-       } else {
+        } else {
           await injectTransaction({
             date: new Date().toISOString().split('T')[0],
             time: new Date().toLocaleTimeString().slice(0, 5),
@@ -217,22 +221,29 @@ export default function Reception() {
             client: selectedMember.name
           });
           if (item.id === 'srv_mes' || item.id === 'srv_sem') {
-             const daysToAdd = item.id === 'srv_mes' ? 30 * item.qty : 7 * item.qty;
-             const [y, m, d] = selectedMember.expiryDate.split('-').map(Number);
-             const currentExpiry = new Date(y, m - 1, d);
-             const now = new Date();
-             const startDate = currentExpiry > now ? currentExpiry : now;
-             startDate.setDate(startDate.getDate() + daysToAdd);
-             await updateMemberStatus(selectedMember.id, { status: 'active', expiryDate: startDate.toISOString().split('T')[0], debt: 0 });
+            const daysToAdd = item.id === 'srv_mes' ? 30 * item.qty : 7 * item.qty;
+            const [y, m, d] = selectedMember.expiryDate.split('-').map(Number);
+            const currentExpiry = new Date(y, m - 1, d);
+            const now = new Date();
+            const startDate = currentExpiry > now ? currentExpiry : now;
+            startDate.setDate(startDate.getDate() + daysToAdd);
+            await updateMemberStatus(selectedMember.id, { status: 'active', expiryDate: startDate.toISOString().split('T')[0], debt: 0 });
           }
-       }
+        }
+      }
+      if (paymentMethod === 'Crédito') {
+        const total = cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
+        await updateMemberStatus(selectedMember.id, { debt: (selectedMember.debt || 0) + total });
+      }
+      setLogs(prev => [{ id: Date.now(), name: selectedMember.name, action: paymentMethod === 'Crédito' ? 'FIADO' : 'COBRO', time: new Date().toLocaleTimeString().slice(0, 5), method: paymentMethod, color: paymentMethod === 'Crédito' ? 'var(--danger-red)' : 'var(--neon-green)' }, ...prev]);
+      setCart([]);
+      if (showProfile) setShowProfile(false);
+    } catch (error) {
+      console.error("Error al procesar venta:", error);
+      alert("Error al procesar el cobro. Por favor intente de nuevo.");
+    } finally {
+      setIsProcessing(false);
     }
-    if (paymentMethod === 'Crédito') {
-       const total = cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
-       await updateMemberStatus(selectedMember.id, { debt: selectedMember.debt + total });
-    }
-    setLogs(prev => [{ id: Date.now(), name: selectedMember.name, action: paymentMethod === 'Crédito' ? 'FIADO' : 'COBRO', time: new Date().toLocaleTimeString().slice(0,5), method: paymentMethod, color: paymentMethod === 'Crédito' ? 'var(--danger-red)' : 'var(--neon-green)' }, ...prev]);
-    setCart([]);
   };
 
   const handleClearDebt = async () => {
@@ -299,6 +310,16 @@ export default function Reception() {
                <div className="glass-card" style={{ flex: 1, padding: 30, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--green-10)', borderRadius: 24 }}>
                   <Activity size={60} style={{ color: 'var(--neon-green)', opacity: 0.1, marginBottom: 20 }} />
                   <input placeholder="Buscar atleta..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSuccess(search, 'manual')} style={{ width: '100%', padding: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, color: '#fff', fontSize: 14 }} />
+                  {suggestions.length > 0 && (
+                     <div style={{ width: '100%', marginTop: 10, background: '#000', borderRadius: 16, border: '1px solid var(--neon-green)', overflow: 'hidden', zIndex: 10 }}>
+                        {suggestions.map(m => (
+                           <div key={m.id} onClick={() => handleSuccess(m, 'manual')} style={{ padding: '12px 15px', borderBottom: '1px solid #111', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{m.name}</span>
+                              <span style={{ fontSize: 10, color: 'var(--neon-green)' }}>{m.plan}</span>
+                           </div>
+                        ))}
+                     </div>
+                  )}
                </div>
             ) : (
                <div className="glass-card" style={{ flex: 1, padding: 20, border: `1px solid ${selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--green-20)'}`, borderRadius: 24, display:'flex', flexDirection:'column' }}>
@@ -316,13 +337,30 @@ export default function Reception() {
                      </div>
                      <button onClick={() => setShowProfile(true)} style={{ background:'var(--green-10)', border:'none', color:'var(--neon-green)', borderRadius:12, fontSize:10, fontWeight:950, cursor:'pointer' }}>VER FICHA</button>
                   </div>
-                  <input placeholder="Vender producto..." value={productSearch} onChange={e => setProductSearch(e.target.value)} style={{ width:'100%', padding:'12px', background:'rgba(255,255,255,0.05)', borderRadius:12, color:'#fff', marginBottom:10 }} />
-                  {productSearch && (
-                     <div style={{ background:'#000', borderRadius:12, border:'1px solid var(--neon-green)', maxHeight:150, overflowY:'auto', marginBottom:10 }}>
-                        {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).map(p => (
-                           <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding:10, borderBottom:'1px solid #111', fontSize:11, cursor:'pointer' }}>{p.name} - ${p.sellPrice.toLocaleString()}</div>
-                        ))}
-                     </div>
+                  <div style={{ position: 'relative', marginBottom: 10 }}>
+                    <input placeholder="Vender producto..." value={productSearch} onChange={e => setProductSearch(e.target.value)} style={{ width:'100%', padding:'12px', background:'rgba(255,255,255,0.05)', borderRadius:12, color:'#fff' }} />
+                    {productSearch && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#000', borderRadius: 12, border: '1px solid var(--neon-green)', maxHeight: 150, overflowY: 'auto', zIndex: 10 }}>
+                           {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).map(p => (
+                              <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding: 10, borderBottom: '1px solid #111', fontSize: 11, cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+                                 <span>{p.name}</span>
+                                 <span style={{ fontWeight: 900, color: 'var(--neon-green)' }}>${p.sellPrice.toLocaleString()}</span>
+                              </div>
+                           ))}
+                        </div>
+                    )}
+                  </div>
+
+                  {!productSearch && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 15, maxHeight: 120, overflowY: 'auto', padding: '2px' }}>
+                      {products.map(p => (
+                        <div key={p.id} onClick={() => addToCart(p)} style={{ background: 'rgba(0,255,136,0.03)', border: '1px solid rgba(0,255,136,0.1)', borderRadius: 10, padding: '8px 5px', textAlign: 'center', cursor: 'pointer', transition: '0.2s' }}>
+                          <div style={{ fontSize: 12 }}>📦</div>
+                          <div style={{ fontSize: 8, fontWeight: 950, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name.split(' ')[0]}</div>
+                          <div style={{ fontSize: 8, fontWeight: 900, color: 'var(--neon-green)' }}>${(p.sellPrice/1000).toFixed(0)}K</div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                   <div style={{ flex:1, overflowY:'auto', background:'rgba(0,0,0,0.2)', borderRadius:12, padding:10, marginBottom:15 }}>
                      {cart.map(item => (
@@ -332,7 +370,7 @@ export default function Reception() {
                         </div>
                      ))}
                   </div>
-                  <button onClick={handleFinalizeSale} disabled={cart.length === 0} style={{ width:'100%', padding:18, borderRadius:16, background: cart.length > 0 ? 'var(--neon-green)' : '#222', color:'#000', fontWeight:950, cursor:'pointer' }}>FINALIZAR VENTA</button>
+                  <button onClick={handleFinalizeSale} disabled={cart.length === 0 || isProcessing} style={{ width:'100%', padding:18, borderRadius:16, background: cart.length > 0 && !isProcessing ? 'var(--neon-green)' : '#222', color:'#000', fontWeight:950, cursor: isProcessing ? 'wait' : 'pointer' }}>{isProcessing ? 'PROCESANDO...' : 'FINALIZAR VENTA'}</button>
                </div>
             )}
          </div>
@@ -345,7 +383,22 @@ export default function Reception() {
             </div>
             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 15, overflowY: 'auto', paddingRight: 10, alignContent: 'start' }}>
                {activeMembers.map(m => (
-                 <div key={m.id} onClick={() => { const master = members.find(mx => String(mx.id) === String(m.id)); if (master) { setSelectedMember(master); setShowProfile(true); } }} className="glass-card athlete-card" style={{ padding: 20, border: '1px solid rgba(255,255,255,0.1)', background: `linear-gradient(135deg, ${m.color}10, transparent)`, borderRadius: 20, cursor: 'pointer' }}>
+                 <div key={m.id} onClick={() => { 
+                    const master = members.find(mx => String(mx.id) === String(m.id)) || {
+                      id: String(m.id),
+                      name: m.name,
+                      plan: m.plan,
+                      status: m.membershipStatus,
+                      expiryDate: '2026-12-31',
+                      debt: 0,
+                      lastVisit: new Date().toISOString(),
+                      color: m.color,
+                      objective: 'Entrenamiento Pro',
+                      injuries: 'Ninguna'
+                    } as Member; 
+                    setSelectedMember(master); 
+                    setShowProfile(true); 
+                 }} className="glass-card athlete-card" style={{ padding: 20, border: '1px solid rgba(255,255,255,0.1)', background: `linear-gradient(135deg, ${m.color}10, transparent)`, borderRadius: 20, cursor: 'pointer' }}>
                     <div style={{ display: 'flex', gap: 15, alignItems: 'center' }}>
                        <div style={{ width: 45, height: 45, borderRadius: 12, background: 'var(--green-10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.color, fontWeight: 950 }}>{m.initials}</div>
                        <div style={{ flex: 1 }}>
@@ -394,28 +447,174 @@ export default function Reception() {
          </div>
       </div>
 
-      {/* EXPEDIENTE (MODAL ELITE) */}
+      {/* 🛡️ EXPEDIENTE 360° — OMNI_FOCUS_V5 ── */}
       {showProfile && selectedMember && (
-         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,10,0.95)', backdropFilter: 'blur(25px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-            <div className="glass-card" style={{ maxWidth: 750, width: '100%', border: '2px solid var(--green-20)', maxHeight: '95vh', overflowY: 'auto', padding: 30, borderRadius: 32 }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 30 }}>
-                  <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-                     <div style={{ width: 80, height: 80, borderRadius: 20, background: 'var(--green-10)', display:'flex', alignItems:'center', justifyContent:'center', fontSize: 32, fontWeight:950, color:'var(--neon-green)' }}>{selectedMember.name.slice(0,1)}</div>
-                     <div><h2 style={{ fontSize: 26, fontWeight:950, color:'#fff', margin: 0 }}>{selectedMember.name}</h2><div style={{ color:'var(--neon-green)', fontWeight:900 }}>{selectedMember.plan}</div></div>
-                  </div>
-                  <button onClick={() => setShowProfile(false)} style={{ background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', cursor:'pointer', padding: 12, borderRadius: 15 }}><X size={24}/></button>
+         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,10,0.96)', backdropFilter: 'blur(30px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+            <div className="glass-card" style={{ maxWidth: 850, width: '100%', border: `2px solid ${selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--green-20)'}`, maxHeight: '95vh', overflowY: 'auto', borderRadius: 32, position: 'relative' }}>
+               
+               {/* 1. BANNERS DE ESTADO */}
+               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {selectedMember.debt > 0 && (
+                     <div style={{ background: 'var(--danger-red)', color: '#000', padding: '8px', textAlign: 'center', fontSize: 10, fontWeight: 950, letterSpacing: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                        <AlertTriangle size={14} /> BLOQUEO POR DEUDA: ${selectedMember.debt.toLocaleString()} PENDIENTE
+                     </div>
+                  )}
+                  {(!selectedMember.injuries || selectedMember.injuries === 'Ninguna') ? (
+                     <div style={{ background: 'rgba(0,255,136,0.1)', color: 'var(--neon-green)', padding: '6px', textAlign: 'center', fontSize: 9, fontWeight: 900, letterSpacing: 1 }}>
+                        ESTADO FÍSICO ÓPTIMO — AUTORIZADO PARA ALTA INTENSIDAD
+                     </div>
+                  ) : (
+                     <div style={{ background: 'rgba(255,61,87,0.1)', color: 'var(--danger-red)', padding: '6px', textAlign: 'center', fontSize: 9, fontWeight: 900, letterSpacing: 1 }}>
+                        ALERTA MÉDICA: {String(selectedMember.injuries).toUpperCase()}
+                     </div>
+                  )}
                </div>
-               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 25, marginBottom: 30 }}>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 20 }}>
-                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>ESTADO MÉDICO</div>
-                     <div style={{ color: selectedMember.injuries ? 'var(--danger-red)' : 'var(--neon-green)', fontWeight: 800 }}>{selectedMember.injuries || 'Sin lesiones'}</div>
+
+               <div style={{ padding: 40 }}>
+                  {/* 2. HEADER ELITE */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 40 }}>
+                     <div style={{ display: 'flex', gap: 25, alignItems: 'center' }}>
+                        <div style={{ width: 110, height: 110, borderRadius: 30, background: 'var(--green-10)', border: `3px solid ${selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize: 48, fontWeight:950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)', boxShadow: `0 0 30px ${selectedMember.debt > 0 ? 'rgba(255,61,87,0.2)' : 'rgba(0,255,136,0.2)'}` }}>
+                           {selectedMember.name.slice(0,1)}
+                        </div>
+                        <div>
+                           <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 5 }}>ATLETA PRO #00{selectedMember.id}</div>
+                           <h2 style={{ fontSize: 38, fontWeight:950, color:'#fff', margin: 0, lineHeight: 1 }}>{selectedMember.name}</h2>
+                           <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 10 }}>
+                              <span style={{ background: 'var(--green-10)', color: 'var(--neon-green)', padding: '4px 12px', borderRadius: 8, fontSize: 11, fontWeight: 900 }}>{selectedMember.plan}</span>
+                              <span style={{ color: 'var(--text-muted)', fontSize: 11, fontWeight: 800 }}>Vence: {selectedMember.expiryDate}</span>
+                           </div>
+                        </div>
+                     </div>
+                     <button onClick={() => setShowProfile(false)} style={{ background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', cursor:'pointer', padding: 15, borderRadius: 20, transition: '0.2s' }}><X size={24}/></button>
                   </div>
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 20 }}>
-                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>OBJETIVO</div>
-                     <div style={{ color: '#fff', fontWeight: 800 }}>{selectedMember.objective || 'Mantener forma'}</div>
+
+                  {/* 3. TABS DEL EXPEDIENTE */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30 }}>
+                     
+                     {/* COL IZQ: FICHA TÉCNICA & INFO */}
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        <div className="glass-card" style={{ padding: 25, borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
+                           <h4 style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 20 }}>DATOS BIOMÉTRICOS & SALUD</h4>
+                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15 }}>
+                              <div style={{ background: 'rgba(0,0,0,0.3)', padding: 15, borderRadius: 16 }}>
+                                 <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 5 }}>OBJETIVO</div>
+                                 <div style={{ fontSize: 13, fontWeight: 900, color: '#fff' }}>{selectedMember.objective || 'Musculación'}</div>
+                              </div>
+                              <div style={{ background: 'rgba(0,0,0,0.3)', padding: 15, borderRadius: 16 }}>
+                                 <div style={{ fontSize: 9, color: 'var(--text-muted)', marginBottom: 5 }}>RACHA</div>
+                                 <div style={{ fontSize: 13, fontWeight: 900, color: 'var(--neon-green)' }}>{selectedMember.streak || 12} DÍAS 🔥</div>
+                              </div>
+                           </div>
+                           <div style={{ marginTop: 15, background: 'rgba(255,61,87,0.05)', padding: 15, borderRadius: 16, border: '1px solid rgba(255,61,87,0.1)' }}>
+                              <div style={{ fontSize: 9, color: 'var(--danger-red)', fontWeight: 950, marginBottom: 5 }}>LESIONES / LIMITACIONES</div>
+                              <div style={{ fontSize: 12, color: '#fff', lineHeight: 1.5 }}>{selectedMember.injuries || 'Ninguna reportada'}</div>
+                           </div>
+                        </div>
+
+                        <div className="glass-card" style={{ padding: 25, borderRadius: 24, border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)' }}>
+                           <h4 style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 20 }}>CONTACTO DE EMERGENCIA</h4>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div>
+                                 <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{selectedMember.emergencyContact || 'Familiar Directo'}</div>
+                                 <div style={{ fontSize: 12, color: 'var(--neon-green)', fontWeight: 900, marginTop: 5 }}>{selectedMember.emergencyPhone || selectedMember.phone || '310-456-7890'}</div>
+                              </div>
+                              <button onClick={() => window.open(`https://wa.me/${selectedMember.phone}`, '_blank')} style={{ background: '#25D366', border: 'none', color: '#fff', padding: '12px', borderRadius: 14, cursor: 'pointer' }}><Phone size={18}/></button>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* COL DER: POS INTEGRADO & SERVICIOS */}
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        <div className="glass-card" style={{ padding: 25, borderRadius: 24, border: '1px solid var(--green-20)', background: 'rgba(0,255,136,0.03)' }}>
+                           <h4 style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', letterSpacing: 2, marginBottom: 20 }}>SELECTOR DE SERVICIOS RÁPIDOS</h4>
+                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 25 }}>
+                              {[
+                                 { id: 'srv_mes', label: 'MENSUAL', price: 75000, color: 'var(--neon-green)' },
+                                 { id: 'srv_sem', label: 'SEMANAL', price: 25000, color: '#00E5FF' },
+                                 { id: 'srv_dia', label: 'PAGO DÍA', price: 5000, color: '#FFD600' }
+                              ].map(srv => (
+                                 <button key={srv.id} onClick={() => addToCart({ ...srv, name: srv.label, sellPrice: srv.price, category: 'Servicio' })} style={{ background: 'rgba(255,255,255,0.05)', border: `1px solid ${srv.color}30`, borderRadius: 16, padding: '15px 10px', color: '#fff', cursor: 'pointer', transition: '0.2s' }}>
+                                    <div style={{ fontSize: 8, fontWeight: 950, color: srv.color, marginBottom: 5 }}>{srv.label}</div>
+                                    <div style={{ fontSize: 13, fontWeight: 950 }}>${(srv.price/1000).toFixed(0)}K</div>
+                                 </button>
+                              ))}
+                           </div>
+
+                           <h4 style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 15 }}>CATÁLOGO DE PRODUCTOS</h4>
+                           <div style={{ position: 'relative', marginBottom: 20 }}>
+                              <Search size={16} style={{ position: 'absolute', left: 15, top: 15, color: 'var(--text-muted)' }} />
+                              <input placeholder="Buscar suplementos..." value={productSearch} onChange={e => setProductSearch(e.target.value)} style={{ width:'100%', padding:'15px 15px 15px 45px', background:'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius:16, color:'#fff', fontSize: 13 }} />
+                              
+                              {productSearch && (
+                                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#080808', border: '1px solid var(--green-20)', borderRadius: 16, marginTop: 10, maxHeight: 200, overflowY: 'auto', zIndex: 100, boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                                    {products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase())).map(p => (
+                                       <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding: 15, borderBottom: '1px solid #111', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
+                                          <span style={{ fontSize: 12, fontWeight: 700 }}>{p.name}</span>
+                                          <span style={{ fontSize: 12, color: 'var(--neon-green)', fontWeight: 900 }}>${p.sellPrice.toLocaleString()}</span>
+                                       </div>
+                                    ))}
+                                 </div>
+                              )}
+                           </div>
+
+                           {!productSearch && (
+                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20, maxHeight: 200, overflowY: 'auto', padding: '5px' }}>
+                               {products.map(p => (
+                                 <div key={p.id} onClick={() => addToCart(p)} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: '12px 10px', textAlign: 'center', cursor: 'pointer', transition: '0.2s' }}>
+                                   <div style={{ fontSize: 16, marginBottom: 5 }}>📦</div>
+                                   <div style={{ fontSize: 10, fontWeight: 800, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                                   <div style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', marginTop: 2 }}>${(p.sellPrice/1000).toFixed(0)}K</div>
+                                 </div>
+                               ))}
+                             </div>
+                           )}
+
+                           {/* Carrito Integrado */}
+                           <div style={{ minHeight: 120, background: 'rgba(0,0,0,0.2)', borderRadius: 20, padding: 20, marginBottom: 20 }}>
+                              {cart.length === 0 ? (
+                                 <div style={{ height: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.3 }}>
+                                    <ShoppingBag size={24} />
+                                    <div style={{ fontSize: 10, fontWeight: 800, marginTop: 10 }}>CARRITO VACÍO</div>
+                                 </div>
+                              ) : (
+                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                    {cart.map(item => (
+                                       <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '10px 15px', borderRadius: 12 }}>
+                                          <div style={{ fontSize: 12, fontWeight: 700 }}>{item.qty}x {item.name}</div>
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                                             <div style={{ fontSize: 12, fontWeight: 900, color: 'var(--neon-green)' }}>${(item.price * item.qty).toLocaleString()}</div>
+                                             <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', color: 'var(--danger-red)', cursor: 'pointer' }}><MinusCircle size={16}/></button>
+                                          </div>
+                                       </div>
+                                    ))}
+                                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 10, marginTop: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                       <span style={{ fontSize: 11, fontWeight: 950, color: 'var(--text-muted)' }}>TOTAL A COBRAR</span>
+                                       <span style={{ fontSize: 20, fontWeight: 950, color: 'var(--neon-green)' }}>${cart.reduce((a,c) => a + (c.price*c.qty), 0).toLocaleString()}</span>
+                                    </div>
+                                 </div>
+                              )}
+                           </div>
+
+                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 15 }}>
+                              <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as any)} style={{ padding: 15, borderRadius: 14, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 12, fontWeight: 700 }}>
+                                 <option value="Efectivo">Efectivo</option>
+                                 <option value="Nequi">Nequi</option>
+                                 <option value="Crédito">Cargar a Deuda</option>
+                              </select>
+                              <button onClick={handleFinalizeSale} disabled={cart.length === 0 || isProcessing} style={{ padding: 15, borderRadius: 14, background: cart.length > 0 && !isProcessing ? 'var(--neon-green)' : '#222', color: '#000', border: 'none', fontWeight: 950, cursor: isProcessing ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                                 {isProcessing ? 'PROCESANDO...' : <><Zap size={16} /> COBRAR YA</>}
+                              </button>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div style={{ marginTop: 30, display: 'flex', gap: 15 }}>
+                     <button onClick={() => setShowProfile(false)} style={{ flex: 1, padding: 20, borderRadius: 20, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', fontWeight: 950, cursor: 'pointer' }}>CERRAR EXPEDIENTE</button>
+                     <button onClick={handleClearDebt} disabled={selectedMember.debt === 0} style={{ padding: '0 30px', borderRadius: 20, background: selectedMember.debt > 0 ? 'var(--danger-red)' : 'rgba(255,255,255,0.02)', color: selectedMember.debt > 0 ? '#fff' : 'var(--text-muted)', border: 'none', fontWeight: 950, cursor: 'pointer' }}>LIQUIDAR DEUDA TOTAL</button>
                   </div>
                </div>
-               <button onClick={() => setShowProfile(false)} style={{ width:'100%', padding:20, borderRadius:15, background:'var(--neon-green)', color:'#000', border:'none', fontWeight:950, cursor:'pointer' }}>CERRAR EXPEDIENTE</button>
             </div>
          </div>
       )}

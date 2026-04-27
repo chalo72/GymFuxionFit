@@ -44,7 +44,7 @@
 - ✅ **Fix Estructural Inventario**: Corregido error de JSX y cierre de componentes en `Inventory.tsx`.
 - ✅ **Optimización de Tipado Global**: Actualización de la interfaz `Member` en `useGymData.ts` para soportar objetivos y progreso técnico.
 - ✅ **Resolución de Conflictos en TrainerDashboard**: Definición de tipos para sesiones de entrenamiento y corrección de importaciones.
-- ✅ **Corrección de Estilos en Recepción**: Eliminación de propiedades CSS inválidas y ajuste de tipos en el carrito de ventas.
+- ✅ **Fix Estructural Recepción**: Reparada lógica de apertura de tarjeta de cliente para miembros en sala y añadida lista de sugerencias de búsqueda faltante.
 - ✅ **Saneamiento de Horarios**: Eliminación de propiedades duplicadas en `Schedule.tsx` para asegurar un renderizado limpio.
 
 ---

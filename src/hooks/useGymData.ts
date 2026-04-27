@@ -148,9 +148,25 @@ export function useGymData() {
         }
 
         const { data: cloudProducts, error: pErr } = await supabase.from('products').select('*');
-        if (!pErr && cloudProducts) {
-          setProducts(cloudProducts);
-          localStorage.setItem('fuxion_products', JSON.stringify(cloudProducts));
+        if (!pErr && cloudProducts && cloudProducts.length > 0) {
+          // Mapeo de snake_case (DB) a CamelCase (UI)
+          const mappedProducts = cloudProducts.map((p: any) => ({
+            ...p,
+            buyPrice: p.buy_price || p.buyPrice || 0,
+            sellPrice: p.sell_price || p.sellPrice || 0,
+            minStock: p.min_stock || p.minStock || 0
+          }));
+          setProducts(mappedProducts);
+          localStorage.setItem('fuxion_products', JSON.stringify(mappedProducts));
+        } else if (!pErr) {
+          // Fallback a básicos si está vacío
+          const base = [
+            { id: 'p_agua', name: 'Agua 500ml', category: 'drinks', stock: 50, minStock: 10, buyPrice: 1000, sellPrice: 2000 },
+            { id: 'p_gatorade', name: 'Gatorade', category: 'drinks', stock: 24, minStock: 6, buyPrice: 3000, sellPrice: 4500 },
+            { id: 'p_proteina', name: 'Proteína shake', category: 'supplements', stock: 15, minStock: 5, buyPrice: 4000, sellPrice: 8000 }
+          ] as Product[];
+          setProducts(base);
+          localStorage.setItem('fuxion_products', JSON.stringify(base));
         }
 
         setIsLoaded(true);
@@ -312,10 +328,83 @@ export function useGymData() {
        localStorage.setItem('gym_water_config', JSON.stringify(newCfg));
     },
     
-    // CRUD Productos
-    addProduct: (p: Omit<Product, 'id'>) => setProducts(prev => [{ ...p, id: 'p_' + Date.now() }, ...prev]),
-    updateProduct: (id: string, p: Partial<Product>) => setProducts(prev => prev.map(item => item.id === id ? { ...item, ...p } : item)),
-    deleteProduct: (id: string) => setProducts(prev => prev.filter(p => p.id !== id)),
+    // CRUD Productos con Sincronización Cloud y Mapeo SnakeCase
+    addProduct: async (p: Omit<Product, 'id'>) => {
+      // 1. Crear producto temporal para respuesta instantánea (Offline-First)
+      const tempId = 'temp_' + Date.now();
+      const newProduct: Product = { ...p, id: tempId };
+      
+      // Actualización optimista del estado local
+      setProducts(prev => [newProduct, ...prev]);
+      
+      // Mapeo UI -> DB
+      const dbProduct = {
+        name: p.name,
+        category: p.category,
+        stock: p.stock,
+        min_stock: p.minStock,
+        buy_price: p.buyPrice,
+        sell_price: p.sellPrice
+      };
+
+      try {
+        const { data, error } = await supabase.from('products').insert([dbProduct]).select();
+        
+        if (error) {
+          console.warn("Sync warning (Guardado localmente):", error.message);
+          // No retornamos aquí, el producto ya está en el estado local
+          return;
+        }
+
+        if (data && data[0]) {
+          const cloudProduct = {
+            ...data[0],
+            buyPrice: data[0].buy_price,
+            sellPrice: data[0].sell_price,
+            minStock: data[0].min_stock
+          } as Product;
+          
+          // Reemplazar el temporal con el oficial de la nube para mantener coherencia de IDs
+          setProducts(prev => prev.map(item => item.id === tempId ? cloudProduct : item));
+        }
+      } catch (err) {
+        console.error("Error crítico de red, producto queda solo en local:", err);
+      }
+    },
+    updateProduct: async (id: string, p: Partial<Product>) => {
+      // Mapeo UI -> DB
+      const dbUpdates: any = { ...p };
+      if (p.minStock !== undefined) dbUpdates.min_stock = p.minStock;
+      if (p.buyPrice !== undefined) dbUpdates.buy_price = p.buyPrice;
+      if (p.sellPrice !== undefined) dbUpdates.sell_price = p.sellPrice;
+      
+      // Eliminar las versiones camelCase para evitar errores de columna no encontrada
+      delete dbUpdates.minStock;
+      delete dbUpdates.buyPrice;
+      delete dbUpdates.sellPrice;
+
+      setProducts(prev => prev.map(item => item.id === id ? { ...item, ...p } : item));
+      
+      const { error } = await supabase.from('products').update(dbUpdates).eq('id', id);
+      if (error) {
+        console.error("Error al actualizar producto en Supabase:", error);
+        alert(`Error de actualización: ${error.message}`);
+      }
+    },
+    deleteProduct: async (id: string) => {
+      const originalProducts = [...products];
+      // Actualización Optimista
+      setProducts(prev => prev.filter(p => p.id !== id));
+      
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) {
+        console.error("Error al eliminar producto en Supabase:", error);
+        alert(`Error al eliminar: ${error.message}`);
+        setProducts(originalProducts);
+      } else {
+        localStorage.setItem('fuxion_products', JSON.stringify(originalProducts.filter(p => p.id !== id)));
+      }
+    },
 
     // CRUD Metas
     goals,

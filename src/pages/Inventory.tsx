@@ -19,6 +19,12 @@ export default function Inventory() {
   const [filter, setFilter] = useState('all');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Estados para Modal de Producto
   const [showProductModal, setShowProductModal] = useState(false);
@@ -219,7 +225,7 @@ export default function Inventory() {
                           <td style={{ padding: '16px 24px' }}>
                              <div style={{ display: 'flex', gap: 8 }}>
                                 <button onClick={() => { setEditingProduct(product); setProductForm({...product}); setShowProductModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', borderRadius:6, padding:8, cursor:'pointer', color:'#fff' }}><Edit3 size={14}/></button>
-                                <button onClick={() => deleteProduct(product.id)} style={{ background:'rgba(255,77,77,0.1)', border:'none', borderRadius:6, padding:8, cursor:'pointer', color:'#ff4d4d' }}><X size={14}/></button>
+                                <button onClick={() => { if(window.confirm(`¿ELIMINAR ${product.name.toUpperCase()}?`)) deleteProduct(product.id); }} style={{ background:'rgba(255,77,77,0.1)', border:'none', borderRadius:6, padding:8, cursor:'pointer', color:'#ff4d4d' }}><X size={14}/></button>
                              </div>
                           </td>
                        </tr>
@@ -278,14 +284,25 @@ export default function Inventory() {
                  </div>
                  <div style={{ display:'flex', gap:10, marginTop:10 }}>
                     <button onClick={() => setShowProductModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:950, cursor:'pointer' }}>CANCELAR</button>
-                    <button onClick={() => {
-                        if (editingProduct) updateProduct(editingProduct.id, productForm);
-                        else addProduct(productForm);
-                        setShowProductModal(false);
-                    }} style={{ flex:1, padding:14, borderRadius:12, background:'var(--neon-green)', border:'none', color:'#000', fontWeight:950, cursor:'pointer' }}>GUARDAR_ITEM</button>
+                     <button onClick={async () => {
+                         if (editingProduct) {
+                           await updateProduct(editingProduct.id, productForm);
+                           showToast('✅ Producto actualizado');
+                         } else {
+                           await addProduct(productForm);
+                           showToast('✅ Producto guardado en la nube');
+                         }
+                         setShowProductModal(false);
+                     }} style={{ flex:1, padding:14, borderRadius:12, background:'var(--neon-green)', border:'none', color:'#000', fontWeight:950, cursor:'pointer' }}>GUARDAR_ITEM</button>
                  </div>
               </div>
            </div>
+        </div>
+      )}
+      {/* ── TOAST NOTIFICATION ── */}
+      {toast && (
+        <div style={{ position:'fixed', top:24, right:24, zIndex:20000, padding:'12px 20px', borderRadius:16, background:'var(--space-dark)', border:'1px solid var(--neon-green)', color:'var(--neon-green)', fontSize:13, fontWeight:800, boxShadow:'0 0 30px rgba(0,255,136,0.2)' }}>
+          {toast}
         </div>
       )}
     </div>
