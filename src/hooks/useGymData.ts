@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { gymDatabase } from '../lib/database';
 import { supabase, hasSupabase } from '../lib/supabase';
+import { trioSync } from '../lib/trioSync';
 
 /* ══════════════════════════════════════════
    GLOBAL_SYNC_SERVICE V.1.0
@@ -234,7 +235,7 @@ export function useGymData() {
       hash: 'TX_' + Math.random().toString(16).slice(2, 6).toUpperCase()
     };
     setTransactions(prev => [newTx, ...prev]);
-    await gymDatabase.setDocument('transactions', String(newTx.id), newTx);
+    await trioSync.create('transactions', newTx);
     return newTx;
   };
 
@@ -245,7 +246,7 @@ export function useGymData() {
     if (updates.expiryDate) dbUpdates.expiry_date = updates.expiryDate;
     if (updates.biometricStatus) dbUpdates.biometric_status = updates.biometricStatus;
 
-    await gymDatabase.setDocument('members', id, dbUpdates);
+    await trioSync.update('members', id, dbUpdates);
   };
 
   const clearMemberDebt = async (memberId: string) => {
@@ -271,7 +272,7 @@ export function useGymData() {
     const newStock = product.stock - qty;
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, stock: newStock } : p));
     
-    await gymDatabase.setDocument('products', productId, { stock: newStock });
+    await trioSync.update('products', productId, { stock: newStock });
 
     await injectTransaction({
       date: new Date().toISOString().split('T')[0],
@@ -325,25 +326,15 @@ export function useGymData() {
       const newProduct: Product = { ...p, id: tempId };
       setProducts(prev => [newProduct, ...prev]);
       
-      const dbProduct = {
-        name: p.name, category: p.category, stock: p.stock,
-        min_stock: p.minStock, buy_price: p.buyPrice, sell_price: p.sellPrice
-      };
-
-      await gymDatabase.setDocument('products', tempId, dbProduct);
+      await trioSync.create('products', { ...p, id: tempId });
     },
     updateProduct: async (id: string, p: Partial<Product>) => {
-      const dbUpdates: any = { ...p };
-      if (p.minStock !== undefined) dbUpdates.min_stock = p.minStock;
-      if (p.buyPrice !== undefined) dbUpdates.buy_price = p.buyPrice;
-      if (p.sellPrice !== undefined) dbUpdates.sell_price = p.sellPrice;
-      
       setProducts(prev => prev.map(item => item.id === id ? { ...item, ...p } : item));
-      await gymDatabase.setDocument('products', id, dbUpdates);
+      await trioSync.update('products', id, p);
     },
     deleteProduct: async (id: string) => {
       setProducts(prev => prev.filter(p => p.id !== id));
-      await gymDatabase.deleteDocument('products', id);
+      await trioSync.delete('products', id);
     },
 
     goals,
@@ -395,17 +386,11 @@ export function useGymData() {
       const newMember = { ...m, id: tempId };
       setMembers(prev => [newMember, ...prev]);
 
-      const dbMember = {
-        name: m.name, email: m.email, phone: m.phone, plan: m.plan, status: m.status, joined: m.joined,
-        expiry_date: m.expiryDate || m.expiry, next_payment: m.nextPayment, pay_method: m.payMethod,
-        trainer: m.trainer, biometric_status: m.biometricStatus || 'pending'
-      };
-
-      await gymDatabase.setDocument('members', tempId, dbMember);
+      await trioSync.create('members', { ...m, id: tempId });
     },
     deleteMember: async (id: string) => {
       setMembers(prev => prev.filter(m => m.id !== id));
-      await gymDatabase.deleteDocument('members', id);
+      await trioSync.delete('members', id);
     },
     syncError
   };

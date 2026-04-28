@@ -17,15 +17,31 @@ export class SupabaseAdapter implements DatabaseAdapter {
   }
 
   async getDocument<T>(collection: string, id: string): Promise<T | null> {
-    const { data, error } = await supabase.from(collection).select('*').eq('id', id).single();
-    if (error) return null;
-    return data as T;
+    // Intentamos buscar por 'id' (minúsculas) primero
+    let result = await supabase.from(collection).select('*').eq('id', id).single();
+    
+    // Si falla, intentamos por 'ID' (mayúsculas) por paridad de esquema
+    if (result.error) {
+      result = await supabase.from(collection).select('*').eq('ID', id).single();
+    }
+    
+    if (result.error) return null;
+    return result.data as T;
   }
 
   async setDocument<T>(collection: string, id: string, data: T): Promise<void> {
-    // Usamos upsert para simplificar set/update
-    const { error } = await supabase.from(collection).upsert({ ...data, id });
-    if (error) throw error;
+    // 🛡️ TRIO SYNC: Asegurar que el ID se envíe en ambos formatos para evitar errores de esquema
+    const payload = { 
+      ...data, 
+      id: id, 
+      ID: id 
+    };
+    
+    const { error } = await supabase.from(collection).upsert(payload);
+    if (error) {
+      console.error(`❌ Error en upsert (${collection}):`, error);
+      throw error;
+    }
   }
 
   async deleteDocument(collection: string, id: string): Promise<void> {
@@ -34,17 +50,33 @@ export class SupabaseAdapter implements DatabaseAdapter {
   }
 
   subscribe<T>(name: string, callback: (data: T[]) => void): () => void {
+    // 🛡️ TRIO SYNC STEP 1: Unified Broadcast (Misma frecuencia para todos)
+    const channelId = `${name}-global-sync`;
+    
+    // Limpieza preventiva: Si el canal ya existe (por re-renders rápidos), lo removemos
+    const existing = supabase.getChannels().find(c => c.topic === `realtime:${channelId}`);
+    if (existing) {
+      supabase.removeChannel(existing);
+    }
+
     const channel = supabase
-      .channel(`${name}-all-changes`)
+      .channel(channelId)
       .on('postgres_changes', { event: '*', schema: 'public', table: name }, async () => {
-        // En Supabase, para simplificar el adapter, volvemos a pedir la colección completa 
-        // o podrías implementar lógica de parcheo incremental aquí.
-        const data = await this.getCollection<T>(name);
-        callback(data);
+        try {
+          const data = await this.getCollection<T>(name);
+          callback(data);
+        } catch (err) {
+          console.error(`❌ Error en actualización realtime (${name}):`, err);
+        }
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`📡 Suscrito a Realtime: ${channelId}`);
+        }
+      });
 
     return () => {
+      console.log(`🔌 Desconectando Realtime: ${channelId}`);
       supabase.removeChannel(channel);
     };
   }

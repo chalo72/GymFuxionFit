@@ -1,6 +1,6 @@
 # 📑 NEXUS SYSTEM MANIFEST — GymFuxionFit
-> **Versión del Sistema**: v5.8.3 (SECURITY-ENFORCED)
-> **Última Actualización**: 2026-04-28 02:58
+> **Versión del Sistema**: v6.1.0 (TRIO-SYNC-ENFORCED)
+> **Última Actualización**: 2026-04-28 09:10
 > **Estado General**: 🟢 PROTECTED — Isolation Shield Activo (dbGuardian)
 
 ---
@@ -45,11 +45,9 @@
 - ✅ **Optimización de Tipado Global**: Actualización de la interfaz `Member` en `useGymData.ts` para soportar objetivos y progreso técnico.
 - ✅ **Resolución de Conflictos en TrainerDashboard**: Definición de tipos para sesiones de entrenamiento y corrección de importaciones.
 - ✅ **Fix Estructural Recepción**: Reparada lógica de apertura de tarjeta de cliente para miembros en sala y añadida lista de sugerencias de búsqueda faltante.
-- ✅ **Fix de Sincronización de Productos**: Resolución del error "NULL VALUE IN COLUMN ID" mediante inyección de ID numérico explícito.
-- ✅ **Activación de Skills Maestras**: Integración de protocolos de Despliegue Profesional, Sincronización de DB y Paridad de Datos.
-- ✅ **Mapeo de Datos Robusto**: Compatibilidad total con IDs en mayúsculas/minúsculas en Supabase.
-- ✅ **Optimización de Rescate**: Protocolo de emergencia mejorado para productos estancados en local.
-- ✅ **Isolation Shield (dbGuardian)**: Bloqueo automático de acceso a producción desde entorno local (v5.8.3).
+- ✅ **Trio Sync Engine (v6.1.0)**: Resolución definitiva de desincronización mediante canales globales y triple escritura Supabase/Firebase/Local.
+- ✅ **Paridad de Esquema ID/id**: El adaptador ahora es inmune a discrepancias de mayúsculas en las columnas de la base de datos.
+- ✅ **Isolation Shield (dbGuardian)**: Bloqueo automático de acceso a producción desde entorno local (v6.1.0).
 
 ---
 

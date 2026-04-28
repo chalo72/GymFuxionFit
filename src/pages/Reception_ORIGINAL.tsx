@@ -390,7 +390,7 @@ export default function Reception() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 15, maxHeight: 180, overflowY: 'auto', padding: '5px' }}>
                       {products.slice(0, 12).map(p => (
                         <div key={p.id} onClick={() => addToCart(p)} className="quick-product-card" style={{ position: 'relative', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, padding: '10px 5px', textAlign: 'center', cursor: 'pointer', transition: '0.3s' }}>
-                          <div style={{ fontSize: 14, marginBottom: 4 }}>{p.category === 'Suplementos' ? '💊' : p.category === 'Bebidas' ? '🥤' : '📦'}</div>
+                          <div style={{ fontSize: 14, marginBottom: 4 }}>{p.category === 'supplements' ? '💊' : p.category === 'drinks' ? '🥤' : '📦'}</div>
                           <div style={{ fontSize: 9, fontWeight: 950, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                           <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', marginTop: 2 }}>${(p.sellPrice/1000).toFixed(0)}K</div>
                           {p.stock <= p.minStock && (

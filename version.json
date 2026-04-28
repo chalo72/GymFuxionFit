@@ -1,6 +1,6 @@
 {
-  "version": "6.0.0",
+  "version": "6.1.0",
   "name": "GymFuxionFit",
-  "buildDate": "2026-04-28T05:20:00Z",
-  "notes": "🚀 ENGINE_FUSION_V1: Activado motor Dual (Firebase + Appwrite) con Interfaz Premium Fuxion-Glass v5.0."
+  "buildDate": "2026-04-28T09:10:00Z",
+  "notes": "🚀 TRIO_SYNC_ENGINE v1.0: Activado motor de sincronización de 3 capas con Unified Broadcast y paridad de esquema id/ID."
 }

@@ -14,7 +14,7 @@ export interface DatabaseAdapter {
   deleteDocument(collection: string, id: string): Promise<void>;
   
   // Tiempo Real
-  subscribe<T>(collection: string, callback: (data: T[], eventType: 'INSERT' | 'UPDATE' | 'DELETE') => void): () => void;
+  subscribe<T>(collection: string, callback: (data: T[]) => void): () => void;
 }
 
 // Singleton para la instancia activa
