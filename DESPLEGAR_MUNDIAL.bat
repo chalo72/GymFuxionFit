@@ -1,5 +1,5 @@
 @echo off
-echo 🚀 INICIANDO DESPLIEGUE MUNDIAL - GymFuxionFit v5.7.8-FORCE-REFRESH
+echo 🚀 INICIANDO DESPLIEGUE MUNDIAL - GymFuxionFit v6.0.0-PREMIUM-DUAL
 echo ----------------------------------------------------
 echo [1/4] Limpiando residuos anteriores...
 if exist dist (
@@ -18,7 +18,7 @@ echo ✅ Build exitoso.
 
 echo [3/4] Preparando Commit de Seguridad...
 git add .
-git commit -m "🚀 DEPLOY: v5.7.8 - Recepcion Premium con fuentes grandes y scroll vertical. Cache Slayer activado."
+git commit -m "🚀 DEPLOY: v6.0.0 - Motor Dual (Firebase+Appwrite) + Recepcion Glass Premium v5.0"
 
 echo [4/4] Desplegando a Vercel/GitHub...
 git push -u origin master

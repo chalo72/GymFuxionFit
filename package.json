@@ -1,12 +1,13 @@
 {
   "name": "gymfuxionfit",
-  "version": "1.0.0",
+  "version": "5.2.1",
   "type": "module",
   "description": "GymFuxionFit — Ecosistema Fitness de Nueva Generación",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync:prod": "node scripts/sync-prod-to-local.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.104.0",

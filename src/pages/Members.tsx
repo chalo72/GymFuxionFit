@@ -89,7 +89,7 @@ function StatusBadge({ s }: { s: Status }) {
 }
 
 function PlanBadge({ p }: { p: string }) {
-  const c = PLANS[p.toLowerCase()] || PLANS.pro;
+  const c = PLANS[p?.toLowerCase() || 'pro'] || PLANS.pro;
   return (
     <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, color:c.color, background:`${c.color}15`, border:`1px solid ${c.color}30` }}>
       {c.label}
@@ -405,7 +405,7 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
            {/* Perfil Header */}
            <div style={{ display: 'flex', gap: 24, alignItems: 'center', marginBottom: 35 }}>
               <div style={{ width: 100, height: 100, borderRadius: 28, background: 'var(--green-10)', border: '2px solid var(--neon-green)', display:'flex', alignItems:'center', justifyContent:'center', fontSize: 36, fontWeight:950, color:'var(--neon-green)' }}>
-                {client.name.charAt(0)}
+                {client.name?.charAt(0) || '?'}
               </div>
               <div>
                  <h2 style={{ fontSize: 32, fontWeight:950, color:'#fff', marginBottom: 6 }}>{client.name}</h2>
@@ -519,8 +519,10 @@ export default function Members() {
 
   /* Filtro */
   const filtered = useMemo(() => clients.filter(c => {
-    const q = search.toLowerCase();
-    const matchSearch = c.name.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q) || c.phone?.includes(q);
+    const q = search?.toLowerCase() || '';
+    const matchSearch = (c.name?.toLowerCase() || '').includes(q) || 
+                       (c.email?.toLowerCase() || '').includes(q) || 
+                       (c.phone || '').includes(q);
     const matchPlan   = filterPlan === 'all'   || c.plan   === filterPlan;
     const matchStatus = filterStatus === 'all' || c.status === filterStatus;
     return matchSearch && matchPlan && matchStatus;
@@ -532,7 +534,7 @@ export default function Members() {
     active:   clients.filter(c => c.status === 'active').length,
     expiring: clients.filter(c => c.status === 'expiring').length,
     expired:  clients.filter(c => c.status === 'expired').length,
-    revenue:  clients.filter(c => c.status !== 'suspended').reduce((a, c) => a + (PLANS[c.plan?.toLowerCase()]?.price || 0), 0),
+    revenue:  clients.filter(c => c.status !== 'suspended').reduce((a, c) => a + (PLANS[c.plan?.toLowerCase() || 'pro']?.price || 0), 0),
   };
 
   /* Guardar nuevo/editar */
@@ -678,7 +680,7 @@ export default function Members() {
                   <td style={{ padding:'14px 16px' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
                       <div style={{ width:36, height:36, borderRadius:'50%', background:`${c.color}20`, border:`1.5px solid ${c.color}50`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:c.color, flexShrink:0 }}>
-                        {c.name.charAt(0)}
+                        {c.name?.charAt(0) || '?'}
                       </div>
                       <div>
                         <div style={{ fontSize:13.5, fontWeight:700, color:'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>

@@ -27,8 +27,19 @@
         }
 
         // 3. Forzar refresco si hay cambio de versión detectado por el Manifiesto
-        // Esto se complementa con las cabeceras de vercel.json
         console.log("🛡️ Escudo Anti-Caché Activado");
+
+        // 🚨 REPORTERO DE ERRORES CRÍTICOS (Para pantalla en blanco)
+        window.onerror = function(msg, url, line, col, error) {
+          var div = document.createElement('div');
+          div.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:white;color:black;z-index:100000;padding:20px;font-family:monospace;border-bottom:5px solid red;font-size:12px;';
+          div.innerHTML = '<h3 style="color:red;margin:0">🚨 ERROR DE CARGA DETECTADO</h3>' +
+                          '<p><b>Mensaje:</b> ' + msg + '</p>' +
+                          '<p><b>Archivo:</b> ' + url + '</p>' +
+                          '<p><b>Línea:</b> ' + line + ':' + col + '</p>' +
+                          '<button onclick="location.reload()" style="padding:10px;background:black;color:white;border:none;cursor:pointer">REINTENTAR</button>';
+          document.body.appendChild(div);
+        };
       })();
     </script>
   </head>

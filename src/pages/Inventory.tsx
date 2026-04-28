@@ -66,7 +66,8 @@ export default function Inventory() {
     return list.filter(item => 
       item &&
       (filter === 'all' || (item as any).category === filter) &&
-      (item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || (item as any).id?.toString().toLowerCase().includes(searchTerm.toLowerCase()))
+      (item.name?.toLowerCase() || '').includes(searchTerm?.toLowerCase() || '') || 
+      (item as any).id?.toString().toLowerCase().includes(searchTerm?.toLowerCase() || '')
     );
   }, [activeTab, assets, products, filter, searchTerm]);
 
@@ -211,7 +212,7 @@ export default function Inventory() {
                                 </div>
                                 <div>
                                    <div style={{ fontSize: 13, fontWeight: 950, color: '#fff' }}>{product.name}</div>
-                                   <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)' }}>{product.category.toUpperCase()}</div>
+                                   <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)' }}>{(product.category || 'GENERAL').toUpperCase()}</div>
                                 </div>
                              </div>
                           </td>
@@ -231,7 +232,7 @@ export default function Inventory() {
                           <td style={{ padding: '16px 24px' }}>
                              <div style={{ display: 'flex', gap: 8 }}>
                                 <button onClick={() => { setEditingProduct(product); setProductForm({...product}); setShowProductModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', borderRadius:6, padding:8, cursor:'pointer', color:'#fff' }}><Edit3 size={14}/></button>
-                                <button onClick={() => { if(window.confirm(`¿ELIMINAR ${product.name.toUpperCase()}?`)) deleteProduct(product.id); }} style={{ background:'rgba(255,77,77,0.1)', border:'none', borderRadius:6, padding:8, cursor:'pointer', color:'#ff4d4d' }}><X size={14}/></button>
+                                <button onClick={() => { if(window.confirm(`¿ELIMINAR ${(product.name || 'PRODUCTO').toUpperCase()}?`)) deleteProduct(product.id); }} style={{ background:'rgba(255,77,77,0.1)', border:'none', borderRadius:6, padding:8, cursor:'pointer', color:'#ff4d4d' }}><X size={14}/></button>
                              </div>
                           </td>
                        </tr>

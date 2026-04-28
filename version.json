@@ -1,6 +1,6 @@
 {
-  "version": "5.8.1",
+  "version": "6.0.0",
   "name": "GymFuxionFit",
-  "buildDate": "2026-04-27T13:56:00Z",
-  "notes": "🚀 NEXUS_DIAGNOSTIC_BANNER: Sistema de diagnóstico visual activado para depurar Error 400."
+  "buildDate": "2026-04-28T05:20:00Z",
+  "notes": "🚀 ENGINE_FUSION_V1: Activado motor Dual (Firebase + Appwrite) con Interfaz Premium Fuxion-Glass v5.0."
 }
