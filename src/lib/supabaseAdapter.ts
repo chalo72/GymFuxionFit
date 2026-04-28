@@ -53,8 +53,10 @@ export class SupabaseAdapter implements DatabaseAdapter {
     // 🛡️ TRIO SYNC STEP 1: Unified Broadcast (Misma frecuencia para todos)
     const channelId = `${name}-global-sync`;
     
-    // Limpieza preventiva: Si el canal ya existe (por re-renders rápidos), lo removemos
-    const existing = supabase.getChannels().find(c => c.topic === `realtime:${channelId}`);
+    // Limpieza agresiva: buscamos tanto el nombre del canal como el tópico
+    const allChannels = supabase.getChannels();
+    const existing = allChannels.find(c => c.topic === `realtime:${channelId}` || c.topic === channelId || (c as any).name === channelId);
+    
     if (existing) {
       supabase.removeChannel(existing);
     }

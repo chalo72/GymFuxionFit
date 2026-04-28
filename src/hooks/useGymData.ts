@@ -319,14 +319,16 @@ export function useGymData() {
     },
     
     addProduct: async (p: Omit<Product, 'id'>) => {
-      const exists = products.find(existing => existing.name.toLowerCase() === p.name.toLowerCase());
-      if (exists) return alert(`⚠️ El producto "${p.name}" ya existe.`);
-
-      const tempId = String(Date.now());
-      const newProduct: Product = { ...p, id: tempId };
+      const tempId = crypto.randomUUID();
+      const newProduct = { ...p, id: tempId };
+      
       setProducts(prev => [newProduct, ...prev]);
       
-      await trioSync.create('products', { ...p, id: tempId });
+      try {
+        await trioSync.create('products', { ...p, id: tempId });
+      } catch (error) {
+        console.error("Error sync products:", error);
+      }
     },
     updateProduct: async (id: string, p: Partial<Product>) => {
       setProducts(prev => prev.map(item => item.id === id ? { ...item, ...p } : item));
@@ -338,12 +340,12 @@ export function useGymData() {
     },
 
     goals,
-    addGoal: (g: Omit<FinancialGoal, 'id'>) => setGoals(prev => [{ ...g, id: 'g_' + Date.now() }, ...prev]),
+    addGoal: (g: Omit<FinancialGoal, 'id'>) => setGoals(prev => [{ ...g, id: crypto.randomUUID() }, ...prev]),
     updateGoal: (id: string, g: Partial<FinancialGoal>) => setGoals(prev => prev.map(item => item.id === id ? { ...item, ...g } : item)),
     deleteGoal: (id: string) => setGoals(prev => prev.filter(g => g.id !== id)),
 
     obligations,
-    addObligation: (o: Omit<Obligation, 'id'>) => setObligations(prev => [{ ...o, id: 'ob_' + Date.now() }, ...prev]),
+    addObligation: (o: Omit<Obligation, 'id'>) => setObligations(prev => [{ ...o, id: crypto.randomUUID() }, ...prev]),
     updateObligation: (id: string, o: Partial<Obligation>) => setObligations(prev => prev.map(item => item.id === id ? { ...item, ...o } : item)),
     deleteObligation: (id: string) => setObligations(prev => prev.filter(o => o.id !== id)),
     payObligation: (id: string) => {
@@ -362,7 +364,7 @@ export function useGymData() {
     },
 
     staff,
-    addStaff: (s: Omit<Staff, 'id'>) => setStaff(prev => [{ ...s, id: 's_' + Date.now() }, ...prev]),
+    addStaff: (s: Omit<Staff, 'id'>) => setStaff(prev => [{ ...s, id: crypto.randomUUID() }, ...prev]),
     updateStaff: (id: string, s: Partial<Staff>) => setStaff(prev => prev.map(item => item.id === id ? { ...item, ...s } : item)),
     deleteStaff: (id: string) => setStaff(prev => prev.filter(s => s.id !== id)),
     generateMonthlyPayroll: () => {
@@ -370,7 +372,7 @@ export function useGymData() {
       staff.forEach(s => {
         if (s.status === 'active') {
           setObligations(prev => [{
-            id: `p_${s.id}_${Date.now()}`,
+            id: crypto.randomUUID(),
             name: `PAGO NÓMINA: ${s.name} (${currentMonth})`,
             amount: s.salary,
             dueDate: new Date().toISOString().split('T')[0],
@@ -382,11 +384,16 @@ export function useGymData() {
     },
 
     addMember: async (m: Omit<Member, 'id'>) => {
-      const tempId = 'm_' + Date.now();
+      const tempId = crypto.randomUUID();
       const newMember = { ...m, id: tempId };
+      
       setMembers(prev => [newMember, ...prev]);
-
-      await trioSync.create('members', { ...m, id: tempId });
+      
+      try {
+        await trioSync.create('members', { ...m, id: tempId });
+      } catch (error) {
+        console.error("Error sync members:", error);
+      }
     },
     deleteMember: async (id: string) => {
       setMembers(prev => prev.filter(m => m.id !== id));
@@ -395,4 +402,3 @@ export function useGymData() {
     syncError
   };
 }
-

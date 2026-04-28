@@ -26,7 +26,7 @@ export const trioSync = {
     };
 
     // 3. Ejecutar via database adapter (que ya hace el dual write)
-    const id = data.id || String(Date.now());
+    const id = data.id || crypto.randomUUID();
     await gymDatabase.setDocument(table, id, enriched);
     
     return { ...enriched, id };
