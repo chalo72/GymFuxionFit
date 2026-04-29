@@ -3,13 +3,14 @@
  * Filtra operaciones en tiempo real basándose en el entorno y la URL de la DB.
  */
 
-const PRODUCTION_URL_PATTERN = /yaeoyqcculiovxwehztn\.supabase\.co/i;
+const PROD_SUPABASE = /yaeoyqcculiovxwehztn\.supabase\.co/i;
+const PROD_FIREBASE = /app-fuxionfitgym/i;
 
 export type DbOperation = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'UPSERT';
 
 export function dbGuardian(url: string | undefined, operation: DbOperation): boolean {
   const isDevelopment = import.meta.env.MODE === 'development';
-  const isProductionDB = url ? PRODUCTION_URL_PATTERN.test(url) : false;
+  const isProductionDB = url ? (PROD_SUPABASE.test(url) || PROD_FIREBASE.test(url)) : false;
   const allowRemoteWrite = import.meta.env.VITE_ALLOW_REMOTE_DB === 'true';
 
   // REGLA DE ORO: En local, si es Prod DB y NO es lectura -> BLOQUEAR

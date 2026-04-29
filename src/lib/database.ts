@@ -65,26 +65,28 @@ let mainDatabase: DatabaseAdapter;
 const hasFirebase = !!import.meta.env.VITE_FIREBASE_API_KEY;
 const hasAppwrite = !!import.meta.env.VITE_APPWRITE_ENDPOINT;
 
-// 🛡️ REGLA DE ORO ANTIGRAVITY: Supabase es siempre la Fuente de Verdad Primaria
-const supabaseAdapter = new SupabaseAdapter();
+// 🛡️ REGLA DE ORO ANTIGRAVITY: Firebase es ahora la Fuente de Verdad Primaria
+const firebaseAdapter = hasFirebase ? new FirebaseAdapter(firebaseConfig) : null;
+const appwriteAdapter = hasAppwrite ? new AppwriteAdapter(appwriteConfig.endpoint, appwriteConfig.project, appwriteConfig.database) : null;
 
 try {
-  if (hasFirebase || hasAppwrite) {
-    console.log("💎 MODO HÍBRIDO ACTIVADO: Supabase (Primario) + Respaldo Cloud");
-    
-    // Si hay Firebase, lo usamos como Shadow principal. Si no, Appwrite.
-    const shadowAdapter = hasFirebase 
-      ? new FirebaseAdapter(firebaseConfig)
-      : new AppwriteAdapter(appwriteConfig.endpoint, appwriteConfig.project, appwriteConfig.database);
-
-    mainDatabase = new MultiAdapter(supabaseAdapter, shadowAdapter);
+  if (firebaseAdapter && appwriteAdapter) {
+    console.log("💎 [NEXUS]: MODO HÍBRIDO ELITE — Firebase (Primario) + Appwrite (Shadow)");
+    mainDatabase = new MultiAdapter(firebaseAdapter, appwriteAdapter);
+  } else if (firebaseAdapter) {
+    console.log("🔥 [NEXUS]: MODO SINGLE — Usando Firebase como motor primario.");
+    mainDatabase = firebaseAdapter;
+  } else if (appwriteAdapter) {
+    console.log("🖋️ [NEXUS]: MODO SINGLE — Usando Appwrite como motor primario.");
+    mainDatabase = appwriteAdapter;
   } else {
-    console.log("🔌 MODO SINGLE: Usando Supabase como único motor.");
-    mainDatabase = supabaseAdapter;
+    // 🛡️ MODO CRÍTICO: Si no hay otros motores, usamos Supabase pero con aviso de riesgo
+    console.warn("⚠️ [NEXUS]: ALERTA CRÍTICA — No se detectaron llaves de Firebase/Appwrite. Cayendo a Supabase.");
+    mainDatabase = new SupabaseAdapter();
   }
 } catch (e) {
-  console.error("❌ Error inicializando adaptadores premium, cayendo a Supabase puro:", e);
-  mainDatabase = supabaseAdapter;
+  console.error("❌ [NEXUS]: Error FATAL en inicialización de adaptadores:", e);
+  mainDatabase = new SupabaseAdapter();
 }
 
 mainDatabase.init();

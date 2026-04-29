@@ -1,6 +1,6 @@
 {
-  "version": "6.1.1",
+  "version": "6.2.1-CRITICAL-FIX",
   "name": "GymFuxionFit",
-  "buildDate": "2026-04-28T16:40:00Z",
-  "notes": "🚀 v6.1.1: Parche de Redundancia de ID activado. Soporte mejorado para esquemas estrictos de Supabase y reporte de errores en vivo."
+  "buildDate": "2026-04-29T11:30:00Z",
+  "notes": "🚨 v6.2.1-CRITICAL-FIX: Activación de MODO CRÍTICO. Implementado Cache Slayer Protocol para limpiar Service Workers rebeldes. Cierre de alerta persistente por sesión. Blindaje de logs en base de datos."
 }

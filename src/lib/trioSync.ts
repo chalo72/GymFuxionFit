@@ -9,11 +9,11 @@ import { dbGuardian } from './dbGuardian';
 
 export const trioSync = {
   /**
-   * Crear un documento en Supabase (Primario) y Firebase (Shadow)
+   * Crear un documento en Firebase (Primario) y Appwrite (Shadow)
    */
   create: async (table: string, data: any, user?: any) => {
     // 1. Guardian: ¿Tiene permiso?
-    const url = import.meta.env.VITE_SUPABASE_URL;
+    const url = import.meta.env.VITE_FIREBASE_PROJECT_ID;
     if (!dbGuardian(url, 'INSERT')) {
       throw new Error('🛡️ Guardian: Inserción bloqueada en este entorno.');
     }
@@ -36,7 +36,7 @@ export const trioSync = {
    * Actualizar documento en todas las capas
    */
   update: async (table: string, id: string, changes: any) => {
-    const url = import.meta.env.VITE_SUPABASE_URL;
+    const url = import.meta.env.VITE_FIREBASE_PROJECT_ID;
     if (!dbGuardian(url, 'UPDATE')) {
       throw new Error('🛡️ Guardian: Actualización bloqueada.');
     }
@@ -54,7 +54,7 @@ export const trioSync = {
    * Eliminar documento en todas las capas
    */
   delete: async (table: string, id: string) => {
-    const url = import.meta.env.VITE_SUPABASE_URL;
+    const url = import.meta.env.VITE_FIREBASE_PROJECT_ID;
     if (!dbGuardian(url, 'DELETE')) {
       throw new Error('🛡️ Guardian: Eliminación bloqueada.');
     }

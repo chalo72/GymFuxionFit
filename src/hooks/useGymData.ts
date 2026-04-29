@@ -9,7 +9,7 @@ import { trioSync } from '../lib/trioSync';
 ══════════════════════════════════════════ */
 
 export interface Transaction {
-  id: number; date: string; time: string; description: string;
+  id: string | number; date: string; time: string; description: string;
   category: string; type: 'income' | 'expense'; amount: number; method: string; client?: string;
   evidenceUrl?: string;
   goalId?: string;
@@ -232,7 +232,7 @@ export function useGymData() {
   const injectTransaction = async (tx: Omit<Transaction, 'id' | 'hash'>) => {
     const newTx: Transaction = {
       ...tx,
-      id: Date.now(),
+      id: crypto.randomUUID(),
       hash: 'TX_' + Math.random().toString(16).slice(2, 6).toUpperCase()
     };
     setTransactions(prev => [newTx, ...prev]);

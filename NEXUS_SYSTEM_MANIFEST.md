@@ -1,14 +1,15 @@
 # 📑 NEXUS SYSTEM MANIFEST — GymFuxionFit
-> **Versión del Sistema**: v6.1.0 (TRIO-SYNC-ENFORCED)
-> **Última Actualización**: 2026-04-28 09:10
-> **Estado General**: 🟢 PROTECTED — Isolation Shield Activo (dbGuardian)
+> **Versión del Sistema**: v6.2.1 (CRITICAL-FIX-RECOVERY)
+> **Última Actualización**: 2026-04-29 11:30
+> **Estado General**: 🔴 CRITICAL MODE — Cache Slayer Protocol Active
 
 ---
 
 ## 🏗️ ARQUITECTURA TÉCNICA
 - **Frontend**: React 19 + TypeScript + Vite.
 - **Estética**: High-End Glassmorphism (Green/Black/Gray).
-- **Base de Datos**: Híbrida (Supabase Cloud + IndexedDB Local).
+- **Base de Datos**: Híbrida Elite (Firebase Primario + Appwrite Shadow).
+- **Modo Rescate**: Supabase configurado como fallback de emergencia.
 - **Persistencia**: Protocolo Antigravity de 3 capas (Disco, Git, Cloud).
 
 ---
@@ -45,10 +46,13 @@
 - ✅ **Optimización de Tipado Global**: Actualización de la interfaz `Member` en `useGymData.ts` para soportar objetivos y progreso técnico.
 - ✅ **Resolución de Conflictos en TrainerDashboard**: Definición de tipos para sesiones de entrenamiento y corrección de importaciones.
 - ✅ **Fix Estructural Recepción**: Reparada lógica de apertura de tarjeta de cliente para miembros en sala y añadida lista de sugerencias de búsqueda faltante.
-- ✅ **Trio Sync Engine (v6.1.0)**: Resolución definitiva de desincronización mediante canales globales y triple escritura Supabase/Firebase/Local.
-- ✅ **Paridad de Esquema ID/id**: El adaptador ahora es inmune a discrepancias de mayúsculas en las columnas de la base de datos.
-- ✅ **Parche de Redundancia v6.1.1**: Captura de errores en vivo en la UI y triple inyección de ID (id, ID, $id) para compatibilidad total con Supabase.
+- ✅ **Trio Sync Engine (v6.2.0)**: Resolución definitiva de desincronización mediante migración a arquitectura Firebase/Appwrite.
+- ✅ **Paridad de Esquema ID/id**: El adaptador ahora es inmune a discrepancias de mayúsculas en la UI y triple inyección de ID (id, ID, $id).
 - ✅ **Isolation Shield (dbGuardian)**: Bloqueo automático de acceso a producción desde entorno local (v6.1.0).
+- ✅ **Migración Elite v6.2.0**: Firebase establecido como Fuente de Verdad Primaria. Appwrite activado como motor de respaldo Shadow. Supabase desactivado del flujo crítico por inconsistencias.
+- ✅ **Modo Crítico v6.2.1**: Implementado protocolo Cache Slayer (unregister Service Worker) y cierre de alerta persistente vía sessionStorage.
+- ✅ **Fix Estructural SyncAlert**: Añadido botón de cierre y auto-ocultado (12s).
+- ✅ **UUID Enforced**: Todas las entidades ahora generan UUIDs vía `crypto.randomUUID()`.
 
 ---
 

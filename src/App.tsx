@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import { useGymData } from './hooks/useGymData';
@@ -57,14 +57,40 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   const { syncError } = useGymData();
+  const [showSyncError, setShowSyncError] = useState(() => {
+    // 🛡️ MODO CRÍTICO: No mostrar si ya se cerró en esta sesión
+    return sessionStorage.getItem('hide_sync_alert') !== 'true';
+  });
+
+  // Auto-ocultar alerta después de 12 segundos (más tiempo para leer)
+  useEffect(() => {
+    if (syncError && sessionStorage.getItem('hide_sync_alert') !== 'true') {
+      setShowSyncError(true);
+      const timer = setTimeout(() => setShowSyncError(false), 12000);
+      return () => clearTimeout(timer);
+    }
+  }, [syncError]);
+
+  const closeAlert = () => {
+    setShowSyncError(false);
+    sessionStorage.setItem('hide_sync_alert', 'true');
+  };
+
+  const forceRefresh = () => {
+    // 🛠️ CACHE SLAYER: Limpieza profunda
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+    }
+    window.location.reload();
+  };
 
   return (
     <Suspense fallback={<LoadingFallback />}>
-      {syncError && (
+      {syncError && showSyncError && (
         <div style={{
           background: 'var(--danger-red)',
-          color: '#000',
-          padding: '8px 20px',
+          color: '#fff',
+          padding: '10px 20px',
           fontSize: 11,
           fontWeight: 950,
           textAlign: 'center',
@@ -75,14 +101,67 @@ function App() {
           zIndex: 9999,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'space-between',
           gap: 12,
-          letterSpacing: 1
+          letterSpacing: 1,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
         }}>
-          ⚠️ ALERTA DE SINCRONIZACIÓN: {syncError.toUpperCase()}
-          <button onClick={() => window.location.reload()} style={{ background: '#000', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: 4, fontSize: 9, fontWeight: 900, cursor: 'pointer' }}>
-            REINTENTAR AHORA
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 14 }}>⚠️</span>
+            <span>ALERTA DE SINCRONIZACIÓN: {syncError.toUpperCase()}</span>
+          </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button 
+              onClick={forceRefresh} 
+              style={{ 
+                background: '#fff', 
+                color: '#000', 
+                border: 'none', 
+                padding: '6px 12px', 
+                borderRadius: 4, 
+                fontSize: 9, 
+                fontWeight: 900, 
+                cursor: 'pointer'
+              }}
+            >
+              LIMPIAR CACHÉ
+            </button>
+
+            <button 
+              onClick={() => window.location.reload()} 
+              style={{ 
+                background: 'rgba(255,255,255,0.1)', 
+                color: '#fff', 
+                border: '1px solid rgba(255,255,255,0.2)', 
+                padding: '6px 12px', 
+                borderRadius: 4, 
+                fontSize: 9, 
+                fontWeight: 900, 
+                cursor: 'pointer'
+              }}
+            >
+              REINTENTAR
+            </button>
+            
+            <button 
+              onClick={closeAlert}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                fontSize: '18px',
+                cursor: 'pointer',
+                padding: '0 5px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 300
+              }}
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
       <Routes>
