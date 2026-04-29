@@ -30,17 +30,19 @@ export class SupabaseAdapter implements DatabaseAdapter {
   }
 
   async setDocument<T>(collection: string, id: string, data: T): Promise<void> {
-    // 🛡️ TRIO SYNC: Asegurar que el ID se envíe en ambos formatos para evitar errores de esquema
+    // 🛡️ TRIO SYNC: Asegurar paridad absoluta de ID (id, ID, $id)
     const payload = { 
       ...data, 
       id: id, 
-      ID: id 
+      ID: id,
+      $id: id 
     };
     
     const { error } = await supabase.from(collection).upsert(payload);
     if (error) {
-      console.error(`❌ Error en upsert (${collection}):`, error);
-      throw error;
+      const detailedError = `Error Supabase (${collection.toUpperCase()}): ${error.message}`;
+      console.error(`❌ ${detailedError}`, error);
+      throw new Error(detailedError);
     }
   }
 

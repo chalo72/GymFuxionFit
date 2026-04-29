@@ -4,7 +4,7 @@ echo 🛠️ INICIANDO REPARACIÓN DE CONFLICTOS...
 echo.
 
 echo 📥 1/4: Trayendo cambios remotos (Pull)...
-git pull origin main --rebase
+git pull origin master --rebase
 if %errorlevel% neq 0 (
     echo ❌ ERROR en Pull. Intentando modo forzado...
 )
@@ -16,7 +16,7 @@ echo 📝 3/4: Creando punto de restauración...
 git commit -m "FIX(Sync): Reparacion de emergencia y actualizacion a v6.1.0"
 
 echo 🚀 4/4: Subiendo a la Nube (Push)...
-git push origin main
+git push origin master
 if %errorlevel% neq 0 (
     echo.
     echo ❌ ERROR CRÍTICO: No se pudo subir el código. 

@@ -177,8 +177,9 @@ export function useGymData() {
         }
 
         setIsLoaded(true);
-      } catch (err) {
+      } catch (err: any) {
         console.error("❌ ERROR CRÍTICO DE SINCRONIZACIÓN:", err);
+        setSyncError(`Error Inicialización: ${err.message || 'Error desconocido'}`);
         setIsLoaded(true);
       }
     };
@@ -246,7 +247,12 @@ export function useGymData() {
     if (updates.expiryDate) dbUpdates.expiry_date = updates.expiryDate;
     if (updates.biometricStatus) dbUpdates.biometric_status = updates.biometricStatus;
 
-    await trioSync.update('members', id, dbUpdates);
+    try {
+      await trioSync.update('members', id, dbUpdates);
+      setSyncError(null);
+    } catch (error: any) {
+      setSyncError(`Error Miembros: ${error.message}`);
+    }
   };
 
   const clearMemberDebt = async (memberId: string) => {
@@ -272,18 +278,12 @@ export function useGymData() {
     const newStock = product.stock - qty;
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, stock: newStock } : p));
     
-    await trioSync.update('products', productId, { stock: newStock });
-
-    await injectTransaction({
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString().slice(0, 5),
-      description: `VENTA: ${qty}x ${product.name}`,
-      category: 'product',
-      type: 'income',
-      amount: product.sellPrice * qty,
-      method: method,
-      client: clientName
-    });
+    try {
+      await trioSync.update('products', productId, { stock: newStock });
+      setSyncError(null);
+    } catch (error: any) {
+      setSyncError(`Error Venta: ${error.message}`);
+    }
     return true;
   };
 
@@ -326,8 +326,10 @@ export function useGymData() {
       
       try {
         await trioSync.create('products', { ...p, id: tempId });
-      } catch (error) {
+        setSyncError(null);
+      } catch (error: any) {
         console.error("Error sync products:", error);
+        setSyncError(`Error Productos: ${error.message}`);
       }
     },
     updateProduct: async (id: string, p: Partial<Product>) => {

@@ -47,6 +47,7 @@
 - ✅ **Fix Estructural Recepción**: Reparada lógica de apertura de tarjeta de cliente para miembros en sala y añadida lista de sugerencias de búsqueda faltante.
 - ✅ **Trio Sync Engine (v6.1.0)**: Resolución definitiva de desincronización mediante canales globales y triple escritura Supabase/Firebase/Local.
 - ✅ **Paridad de Esquema ID/id**: El adaptador ahora es inmune a discrepancias de mayúsculas en las columnas de la base de datos.
+- ✅ **Parche de Redundancia v6.1.1**: Captura de errores en vivo en la UI y triple inyección de ID (id, ID, $id) para compatibilidad total con Supabase.
 - ✅ **Isolation Shield (dbGuardian)**: Bloqueo automático de acceso a producción desde entorno local (v6.1.0).
 
 ---
