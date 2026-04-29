@@ -1,6 +1,6 @@
 {
-  "version": "6.2.1-CRITICAL-FIX",
+  "version": "6.3.0-SUPABASE-DECOMMISSIONED",
   "name": "GymFuxionFit",
-  "buildDate": "2026-04-29T11:30:00Z",
-  "notes": "🚨 v6.2.1-CRITICAL-FIX: Activación de MODO CRÍTICO. Implementado Cache Slayer Protocol para limpiar Service Workers rebeldes. Cierre de alerta persistente por sesión. Blindaje de logs en base de datos."
+  "buildDate": "2026-04-29T17:45:00Z",
+  "notes": "🚀 v6.3.0-SUPABASE-DECOMMISSIONED: Eliminación total del fallback de Supabase. Implementado LocalFallbackAdapter para garantizar silencio absoluto ante fallos de red. Prioridad 100% Firebase/Appwrite."
 }

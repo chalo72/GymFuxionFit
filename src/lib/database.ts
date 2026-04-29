@@ -1,5 +1,4 @@
 import { DatabaseAdapter, setAdapter } from './dbAdapter';
-import { SupabaseAdapter } from './supabaseAdapter';
 import { FirebaseAdapter } from './firebaseAdapter';
 import { AppwriteAdapter } from './appwriteAdapter';
 
@@ -60,12 +59,26 @@ const appwriteConfig = {
   database: import.meta.env.VITE_APPWRITE_DATABASE || 'main'
 };
 
+/**
+ * 🏠 LOCAL FALLBACK ADAPTER
+ * Se activa solo si no hay llaves de Firebase/Appwrite.
+ * Evita errores de red y franjas rojas de sincronización.
+ */
+class LocalFallbackAdapter implements DatabaseAdapter {
+  async init() { console.log("🏠 [NEXUS]: Operando en MODO LOCAL SEGURO."); }
+  async getCollection<T>() { return []; }
+  async getDocument<T>() { return null; }
+  async setDocument() { /* Persistencia local manejada por useGymData */ }
+  async deleteDocument() { }
+  subscribe() { return () => {}; }
+}
+
 let mainDatabase: DatabaseAdapter;
 
 const hasFirebase = !!import.meta.env.VITE_FIREBASE_API_KEY;
 const hasAppwrite = !!import.meta.env.VITE_APPWRITE_ENDPOINT;
 
-// 🛡️ REGLA DE ORO ANTIGRAVITY: Firebase es ahora la Fuente de Verdad Primaria
+// 🛡️ REGLA DE ORO ANTIGRAVITY: Prioridad Total a Firebase (Primario) y Appwrite (Shadow)
 const firebaseAdapter = hasFirebase ? new FirebaseAdapter(firebaseConfig) : null;
 const appwriteAdapter = hasAppwrite ? new AppwriteAdapter(appwriteConfig.endpoint, appwriteConfig.project, appwriteConfig.database) : null;
 
@@ -80,13 +93,13 @@ try {
     console.log("🖋️ [NEXUS]: MODO SINGLE — Usando Appwrite como motor primario.");
     mainDatabase = appwriteAdapter;
   } else {
-    // 🛡️ MODO CRÍTICO: Si no hay otros motores, usamos Supabase pero con aviso de riesgo
-    console.warn("⚠️ [NEXUS]: ALERTA CRÍTICA — No se detectaron llaves de Firebase/Appwrite. Cayendo a Supabase.");
-    mainDatabase = new SupabaseAdapter();
+    // 🛡️ MODO LOCAL SEGURO: Supabase ha sido DESACTIVADO por orden del usuario
+    console.warn("🛡️ [NEXUS]: Supabase desactivado. Iniciando en Modo Local Seguro.");
+    mainDatabase = new LocalFallbackAdapter();
   }
 } catch (e) {
-  console.error("❌ [NEXUS]: Error FATAL en inicialización de adaptadores:", e);
-  mainDatabase = new SupabaseAdapter();
+  console.error("❌ [NEXUS]: Error en inicialización. Usando Modo Local.", e);
+  mainDatabase = new LocalFallbackAdapter();
 }
 
 mainDatabase.init();

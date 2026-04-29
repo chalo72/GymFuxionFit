@@ -29,18 +29,31 @@ export class SupabaseAdapter implements DatabaseAdapter {
     return result.data as T;
   }
 
+  private normalizeName(name: string): string {
+    const map: Record<string, string> = {
+      'products': 'products', // Aseguramos minúsculas para Supabase/Postgres
+      'members': 'members',
+      'transactions': 'transactions'
+    };
+    return map[name.toLowerCase()] || name;
+  }
+
   async setDocument<T>(collection: string, id: string, data: T): Promise<void> {
-    // 🛡️ TRIO SYNC: Asegurar paridad absoluta de ID (id, ID, $id)
+    const table = this.normalizeName(collection);
+    
+    // 🛡️ BLINDAJE TOTAL DE ID: Generamos uno si viene nulo
+    const finalId = id || (data as any).id || (data as any).ID || crypto.randomUUID();
+
     const payload = { 
       ...data, 
-      id: id, 
-      ID: id,
-      $id: id 
+      id: finalId, 
+      ID: finalId,
+      $id: finalId 
     };
     
-    const { error } = await supabase.from(collection).upsert(payload);
+    const { error } = await supabase.from(table).upsert(payload);
     if (error) {
-      const detailedError = `Error Supabase (${collection.toUpperCase()}): ${error.message}`;
+      const detailedError = `Error Supabase (${table.toUpperCase()}): ${error.message}`;
       console.error(`❌ ${detailedError}`, error);
       throw new Error(detailedError);
     }

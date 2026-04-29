@@ -62,6 +62,10 @@ function App() {
     return sessionStorage.getItem('hide_sync_alert') !== 'true';
   });
 
+  const [advancedCriticalMode, setAdvancedCriticalMode] = useState(() => {
+    return localStorage.getItem('advanced_critical_mode') === 'true';
+  });
+
   // Auto-ocultar alerta después de 12 segundos (más tiempo para leer)
   useEffect(() => {
     if (syncError && sessionStorage.getItem('hide_sync_alert') !== 'true') {
@@ -107,8 +111,11 @@ function App() {
           boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 14 }}>⚠️</span>
-            <span>ALERTA DE SINCRONIZACIÓN: {syncError.toUpperCase()}</span>
+            <span style={{ fontSize: 14 }}>🛡️</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 9, opacity: 0.8, letterSpacing: 2 }}>MODO CRÍTICO AVANZADO ACTIVO</span>
+              <span>ALERTA DE SINCRONIZACIÓN: {syncError.toUpperCase()}</span>
+            </div>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -128,6 +135,26 @@ function App() {
               LIMPIAR CACHÉ
             </button>
 
+            <button 
+              onClick={() => {
+                setAdvancedCriticalMode(true);
+                localStorage.setItem('advanced_critical_mode', 'true');
+                closeAlert();
+              }} 
+              style={{ 
+                background: 'rgba(255,255,255,0.1)', 
+                color: '#fff', 
+                border: '1px solid rgba(255,255,255,0.2)', 
+                padding: '6px 12px', 
+                borderRadius: 4, 
+                fontSize: 9, 
+                fontWeight: 900, 
+                cursor: 'pointer'
+              }}
+            >
+              SILENCIAR Y BYPASS
+            </button>
+            
             <button 
               onClick={() => window.location.reload()} 
               style={{ 

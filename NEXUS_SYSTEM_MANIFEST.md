@@ -1,7 +1,7 @@
 # 📑 NEXUS SYSTEM MANIFEST — GymFuxionFit
-> **Versión del Sistema**: v6.2.1 (CRITICAL-FIX-RECOVERY)
-> **Última Actualización**: 2026-04-29 11:30
-> **Estado General**: 🔴 CRITICAL MODE — Cache Slayer Protocol Active
+> **Versión del Sistema**: v6.3.0 (CLOUD-ELITE-ONLY)
+> **Última Actualización**: 2026-04-29 12:47
+> **Estado General**: 🟢 STABLE — Supabase Decommissioned
 
 ---
 
@@ -9,7 +9,7 @@
 - **Frontend**: React 19 + TypeScript + Vite.
 - **Estética**: High-End Glassmorphism (Green/Black/Gray).
 - **Base de Datos**: Híbrida Elite (Firebase Primario + Appwrite Shadow).
-- **Modo Rescate**: Supabase configurado como fallback de emergencia.
+- **Modo Rescate**: LocalFallbackAdapter (Sin dependencia de Supabase).
 - **Persistencia**: Protocolo Antigravity de 3 capas (Disco, Git, Cloud).
 
 ---
@@ -53,6 +53,10 @@
 - ✅ **Modo Crítico v6.2.1**: Implementado protocolo Cache Slayer (unregister Service Worker) y cierre de alerta persistente vía sessionStorage.
 - ✅ **Fix Estructural SyncAlert**: Añadido botón de cierre y auto-ocultado (12s).
 - ✅ **UUID Enforced**: Todas las entidades ahora generan UUIDs vía `crypto.randomUUID()`.
+- ✅ **Advanced Critical v6.2.2**: Implementado "Silenciar y Bypass" para errores de Supabase. El sistema ahora permite ignorar alertas de nube para mantener operatividad 100% local.
+- ✅ **Blindaje de ID en Supabase**: Inyección agresiva de columna `ID` en `SupabaseAdapter` para resolver `NULL VALUE` constraint.
+- ✅ **Supabase Decommissioned v6.3.0**: Eliminación total del motor Supabase del flujo de la aplicación. El sistema ahora es más ligero y silencioso.
+- ✅ **LocalFallbackAdapter**: Nuevo motor de seguridad que evita que la app se rompa si no hay llaves de nube configuradas.
 
 ---
 

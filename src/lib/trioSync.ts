@@ -1,4 +1,3 @@
-import { supabase } from './supabase';
 import { gymDatabase } from './database';
 import { dbGuardian } from './dbGuardian';
 
