@@ -113,6 +113,7 @@ export function useGymData() {
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'live' | 'local' | 'syncing'>('syncing');
   const [waterConfig, setWaterConfig] = useState({
     bagPrice: 200,
     bagsPerPaca: 50,
@@ -186,17 +187,41 @@ export function useGymData() {
 
     initData();
 
+    // 🔗 BROADCAST CHANNEL: Sincronización inter-pestañas
+    const bc = new BroadcastChannel('fuxion_sync_channel');
+    bc.onmessage = (event) => {
+      const { type, data } = event.data;
+      // 🧠 Recibimos mensajes de otras pestañas para actualizar la UI local sin peticiones extra.
+      if (type === 'MEMBERS_UPDATE') setMembers(data);
+      if (type === 'PRODUCTS_UPDATE') setProducts(data);
+      if (type === 'TX_UPDATE') setTransactions(data);
+      if (type === 'GOALS_UPDATE') setGoals(data);
+      if (type === 'OBLIGATIONS_UPDATE') setObligations(data);
+      if (type === 'STAFF_UPDATE') setStaff(data);
+      if (type === 'ASSETS_UPDATE') setAssets(data);
+    };
+
     // 3. Suscripción Realtime Universal
     const unsubMembers = gymDatabase.subscribe<any>('members', (items) => {
+      setSyncStatus('live');
       const mapped = items.map(m => ({
         ...m,
         expiryDate: m.expiry_date || m.expiry || m.expiryDate,
         biometricStatus: m.biometric_status || m.biometricStatus
       }));
-      setMembers(mapped);
+      
+      // Deduplicación inteligente: Solo actualizamos si hay cambios reales
+      setMembers(prev => {
+        const cloudStr = JSON.stringify(mapped);
+        const prevStr = JSON.stringify(prev);
+        if (cloudStr === prevStr) return prev;
+        bc.postMessage({ type: 'MEMBERS_UPDATE', data: mapped });
+        return mapped;
+      });
     });
 
     const unsubProducts = gymDatabase.subscribe<any>('products', (items) => {
+      setSyncStatus('live');
       const mapped = items.map(p => ({
         ...p,
         id: String(p.id || p.$id || p.ID),
@@ -204,17 +229,68 @@ export function useGymData() {
         sellPrice: p.sell_price || p.sellPrice || 0,
         minStock: p.min_stock || p.minStock || 0
       }));
-      setProducts(mapped);
+      
+      setProducts(prev => {
+        const cloudStr = JSON.stringify(mapped);
+        const prevStr = JSON.stringify(prev);
+        if (cloudStr === prevStr) return prev;
+        bc.postMessage({ type: 'PRODUCTS_UPDATE', data: mapped });
+        return mapped;
+      });
     });
 
     const unsubTx = gymDatabase.subscribe<Transaction>('transactions', (items) => {
-      setTransactions(items);
+      setSyncStatus('live');
+      setTransactions(prev => {
+        const cloudStr = JSON.stringify(items);
+        const prevStr = JSON.stringify(prev);
+        if (cloudStr === prevStr) return prev;
+        bc.postMessage({ type: 'TX_UPDATE', data: items });
+        return items;
+      });
+    });
+
+    // 🎯 SUBS: Metas Financieras (Realtime)
+    // 🧠 Escucha cambios en los objetivos de ahorro y expansión.
+    const unsubGoals = gymDatabase.subscribe<FinancialGoal>('goals', (items) => {
+      setSyncStatus('live');
+      setGoals(items);
+      bc.postMessage({ type: 'GOALS_UPDATE', data: items });
+    });
+
+    // 💸 SUBS: Obligaciones (Realtime)
+    // 🧠 Sincroniza facturas pendientes, nóminas y servicios.
+    const unsubObligations = gymDatabase.subscribe<Obligation>('obligations', (items) => {
+      setSyncStatus('live');
+      setObligations(items);
+      bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: items });
+    });
+
+    // 👥 SUBS: Personal/Staff (Realtime)
+    // 🧠 Refleja cambios en el equipo de trabajo instantáneamente.
+    const unsubStaff = gymDatabase.subscribe<Staff>('staff', (items) => {
+      setSyncStatus('live');
+      setStaff(items);
+      bc.postMessage({ type: 'STAFF_UPDATE', data: items });
+    });
+
+    // 🔧 SUBS: Activos/Gimnasio (Realtime)
+    // 🧠 Mantiene el estado de las máquinas y mantenimiento al día.
+    const unsubAssets = gymDatabase.subscribe<GymAsset>('assets', (items) => {
+      setSyncStatus('live');
+      setAssets(items);
+      bc.postMessage({ type: 'ASSETS_UPDATE', data: items });
     });
 
     return () => {
       unsubMembers();
       unsubProducts();
       unsubTx();
+      unsubGoals();
+      unsubObligations();
+      unsubStaff();
+      unsubAssets();
+      bc.close();
     };
   }, []);
 
@@ -351,15 +427,61 @@ export function useGymData() {
     },
 
     goals,
-    addGoal: (g: Omit<FinancialGoal, 'id'>) => setGoals(prev => [{ ...g, id: crypto.randomUUID() }, ...prev]),
-    updateGoal: (id: string, g: Partial<FinancialGoal>) => setGoals(prev => prev.map(item => item.id === id ? { ...item, ...g } : item)),
-    deleteGoal: (id: string) => setGoals(prev => prev.filter(g => g.id !== id)),
+    addGoal: async (g: Omit<FinancialGoal, 'id'>) => {
+      const id = crypto.randomUUID();
+      const newGoal = { ...g, id };
+      setGoals(prev => [newGoal, ...prev]);
+      try {
+        await trioSync.create('goals', newGoal);
+      } catch (e) {
+        console.warn("⚠️ Meta guardada localmente. Sync pendiente.");
+      }
+    },
+    updateGoal: async (id: string, g: Partial<FinancialGoal>) => {
+      setGoals(prev => prev.map(item => item.id === id ? { ...item, ...g } : item));
+      try {
+        await trioSync.update('goals', id, g);
+      } catch (e) {
+        console.warn("⚠️ Actualización de meta local. Sync pendiente.");
+      }
+    },
+    deleteGoal: async (id: string) => {
+      setGoals(prev => prev.filter(g => g.id !== id));
+      try {
+        await trioSync.delete('goals', id);
+      } catch (e) {
+        console.warn("⚠️ Eliminación de meta local. Sync pendiente.");
+      }
+    },
 
     obligations,
-    addObligation: (o: Omit<Obligation, 'id'>) => setObligations(prev => [{ ...o, id: crypto.randomUUID() }, ...prev]),
-    updateObligation: (id: string, o: Partial<Obligation>) => setObligations(prev => prev.map(item => item.id === id ? { ...item, ...o } : item)),
-    deleteObligation: (id: string) => setObligations(prev => prev.filter(o => o.id !== id)),
-    payObligation: (id: string) => {
+    addObligation: async (o: Omit<Obligation, 'id'>) => {
+      const id = crypto.randomUUID();
+      const newOb = { ...o, id };
+      setObligations(prev => [newOb, ...prev]);
+      try {
+        await trioSync.create('obligations', newOb);
+      } catch (e) {
+        console.warn("⚠️ Obligación guardada localmente.");
+      }
+    },
+    updateObligation: async (id: string, o: Partial<Obligation>) => {
+      setObligations(prev => prev.map(item => item.id === id ? { ...item, ...o } : item));
+      try {
+        await trioSync.update('obligations', id, o);
+      } catch (e) {
+        console.warn("⚠️ Actualización de obligación local.");
+      }
+    },
+    deleteObligation: async (id: string) => {
+      setObligations(prev => prev.filter(o => o.id !== id));
+      try {
+        await trioSync.delete('obligations', id);
+      } catch (e) {
+        console.warn("⚠️ Eliminación de obligación local.");
+      }
+    },
+    payObligation: async (id: string) => {
       const ob = obligations.find(o => o.id === id);
       if (!ob || ob.status === 'paid') return;
       setObligations(prev => prev.map(o => o.id === id ? { ...o, status: 'paid' } : o));
@@ -375,9 +497,32 @@ export function useGymData() {
     },
 
     staff,
-    addStaff: (s: Omit<Staff, 'id'>) => setStaff(prev => [{ ...s, id: crypto.randomUUID() }, ...prev]),
-    updateStaff: (id: string, s: Partial<Staff>) => setStaff(prev => prev.map(item => item.id === id ? { ...item, ...s } : item)),
-    deleteStaff: (id: string) => setStaff(prev => prev.filter(s => s.id !== id)),
+    addStaff: async (s: Omit<Staff, 'id'>) => {
+      const id = crypto.randomUUID();
+      const newStaff = { ...s, id };
+      setStaff(prev => [newStaff, ...prev]);
+      try {
+        await trioSync.create('staff', newStaff);
+      } catch (e) {
+        console.warn("⚠️ Personal guardado localmente.");
+      }
+    },
+    updateStaff: async (id: string, s: Partial<Staff>) => {
+      setStaff(prev => prev.map(item => item.id === id ? { ...item, ...s } : item));
+      try {
+        await trioSync.update('staff', id, s);
+      } catch (e) {
+        console.warn("⚠️ Actualización de personal local.");
+      }
+    },
+    deleteStaff: async (id: string) => {
+      setStaff(prev => prev.filter(s => s.id !== id));
+      try {
+        await trioSync.delete('staff', id);
+      } catch (e) {
+        console.warn("⚠️ Eliminación de personal local.");
+      }
+    },
     generateMonthlyPayroll: () => {
       const currentMonth = new Date().toLocaleString('es-ES', { month: 'long' }).toUpperCase();
       staff.forEach(s => {
@@ -410,6 +555,7 @@ export function useGymData() {
       setMembers(prev => prev.filter(m => m.id !== id));
       await trioSync.delete('members', id);
     },
+    syncStatus,
     syncError
   };
 }

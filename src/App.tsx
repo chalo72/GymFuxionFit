@@ -56,7 +56,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
-  const { syncError } = useGymData();
+  const { syncError, syncStatus } = useGymData();
   const [showSyncError, setShowSyncError] = useState(() => {
     // 🛡️ MODO CRÍTICO: No mostrar si ya se cerró en esta sesión
     return sessionStorage.getItem('hide_sync_alert') !== 'true';
@@ -171,6 +171,40 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* 🛰️ NEXUS SYNC INDICATOR */}
+      <div style={{
+        position: 'fixed',
+        bottom: 20,
+        right: 20,
+        zIndex: 9998,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '6px 12px',
+        background: 'rgba(0,0,0,0.8)',
+        backdropFilter: 'blur(10px)',
+        borderRadius: '20px',
+        border: '1px solid rgba(255,255,255,0.1)',
+        fontSize: '9px',
+        fontWeight: '900',
+        color: '#fff',
+        letterSpacing: '1px',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+        pointerEvents: 'none'
+      }}>
+        <div style={{
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+          background: syncStatus === 'live' ? '#00ff88' : 
+                      syncStatus === 'syncing' ? '#ffcc00' : '#888',
+          boxShadow: syncStatus === 'live' ? '0 0 10px #00ff88' : 'none',
+          animation: syncStatus === 'syncing' ? 'pulse 1s infinite' : 'none'
+        }} />
+        {syncStatus?.toUpperCase() || 'OFFLINE'}
+        <style>{`@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }`}</style>
+      </div>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route element={
