@@ -162,8 +162,8 @@ export default function Payments() {
             ))}
           </div>
 
-          <div className="data-table-container">
-            <table className="data-table">
+          <div className="data-table-container" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+            <table className="data-table" style={{ minWidth: 800 }}>
               <thead>
                 <tr>
                   <th>Concepto / Descripción</th>
@@ -286,8 +286,8 @@ export default function Payments() {
       )}
       {/* ── MODAL DE EDICIÓN ── */}
       {editingTx && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-           <div className="glass-card" style={{ width: 400, padding: 32, border: '1px solid var(--neon-green)30' }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px' }}>
+           <div className="glass-card" style={{ width: '100%', maxWidth: 400, maxHeight: '90vh', overflowY: 'auto', padding: 24, border: '1px solid var(--neon-green)30' }}>
               <h3 style={{ fontSize: 18, fontWeight: 950, marginBottom: 24, color: '#fff' }}>EDITAR COBRO / ABONO</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                  <div>
