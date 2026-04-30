@@ -7,15 +7,13 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 
-const transactions = [
-  { id: 'TXN-001', member: 'Alex Guerrero', plan: 'hyrox', amount: 120, date: '2026-04-18', status: 'paid', method: 'Visa *4521' },
-  { id: 'TXN-002', member: 'María López', plan: 'pro', amount: 75, date: '2026-04-17', status: 'paid', method: 'Mastercard *8834' },
-  { id: 'TXN-003', member: 'Diego Fernández', plan: 'hyrox', amount: 120, date: '2026-04-16', status: 'pending', method: 'Transferencia' },
-  { id: 'TXN-004', member: 'Sofía Castillo', plan: 'basic', amount: 40, date: '2026-04-15', status: 'overdue', method: 'Efectivo' },
-  { id: 'TXN-005', member: 'Andrés Mejía', plan: 'pro', amount: 75, date: '2026-04-15', status: 'paid', method: 'Nequi' },
-  { id: 'TXN-006', member: 'Valentina Torres', plan: 'hyrox', amount: 120, date: '2026-04-14', status: 'paid', method: 'Visa *7723' },
-  { id: 'TXN-007', member: 'Carlos Rivas', plan: 'basic', amount: 40, date: '2026-04-13', status: 'paid', method: 'Efectivo' },
-  { id: 'TXN-008', member: 'Lucía Martínez', plan: 'pro', amount: 75, date: '2026-04-12', status: 'pending', method: 'PSE' },
+import { useGymData, Transaction } from '../hooks/useGymData';
+
+const revenueByPlan = [
+  { month: 'Ene', basic: 8200, pro: 11250, hyrox: 9040 },
+  { month: 'Feb', basic: 8400, pro: 12000, hyrox: 9800 },
+  { month: 'Mar', basic: 7800, pro: 11000, hyrox: 9000 },
+  { month: 'Abr', basic: 8600, pro: 12500, hyrox: 11650 },
 ];
 
 const revenueByPlan = [
@@ -43,17 +41,40 @@ const statusLabel = (status: string) => {
   return 'Vencido';
 };
 
+const mapCategoryToPlan = (category: string) => {
+  if (category === 'membership') return 'Mensualidad';
+  if (category === 'daypass') return 'Día (Rutina)';
+  if (category === 'product') return 'Producto';
+  return category.toUpperCase();
+};
+
 export default function Payments() {
+  const { transactions, updateTransaction, deleteTransaction, members } = useGymData();
   const [activeTab, setActiveTab] = useState<'transactions' | 'revenue' | 'plans'>('transactions');
   const [filterStatus, setFilterStatus] = useState('all');
+  
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Transaction>>({});
 
-  const totalMonth = transactions.filter(t => t.status === 'paid').reduce((a, t) => a + t.amount, 0);
-  const pending = transactions.filter(t => t.status === 'pending').reduce((a, t) => a + t.amount, 0);
-  const overdue = transactions.filter(t => t.status === 'overdue').reduce((a, t) => a + t.amount, 0);
+  const incomeTxs = transactions.filter(t => t.type === 'income');
+  
+  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const totalMonth = incomeTxs.filter(t => t.date.startsWith(currentMonthStr)).reduce((a, t) => a + t.amount, 0);
+  const totalToday = incomeTxs.filter(t => t.date === todayStr).reduce((a, t) => a + t.amount, 0);
+  const pendingDebt = members.reduce((a, m) => a + (m.debt || 0), 0);
+  const totalIncome = incomeTxs.reduce((a, t) => a + t.amount, 0);
 
   const filtered = filterStatus === 'all'
-    ? transactions
-    : transactions.filter(t => t.status === filterStatus);
+    ? incomeTxs
+    : incomeTxs.filter(t => t.category === filterStatus);
+
+  const handleSaveEdit = () => {
+    if (editingTx && editForm) {
+      updateTransaction(editingTx.id, editForm);
+      setEditingTx(null);
+    }
+  };
 
   return (
     <div className="animate-fade-in">
@@ -83,29 +104,31 @@ export default function Payments() {
           <div className="kpi-icon cyan"><DollarSign size={20} /></div>
           <div className="kpi-label">Recaudado este Mes</div>
           <div className="kpi-value">${totalMonth.toLocaleString()}</div>
-          <div className="kpi-change positive"><TrendingUp size={12} /> +15.8%</div>
+          <div className="kpi-change positive"><TrendingUp size={12} /> Actualizado</div>
         </div>
         <div className="kpi-card orange animate-fade-in animate-delay-2">
           <div className="kpi-icon orange"><Clock size={20} /></div>
-          <div className="kpi-label">Pagos Pendientes</div>
-          <div className="kpi-value">${pending}</div>
+          <div className="kpi-label">Deuda Acumulada Clientes</div>
+          <div className="kpi-value">${pendingDebt.toLocaleString()}</div>
           <div className="kpi-change positive" style={{ background: 'rgba(255,214,0,0.1)', color: 'var(--warning-yellow)' }}>
-            {transactions.filter(t => t.status === 'pending').length} transacciones
+            Pendiente de Cobro
           </div>
         </div>
         <div className="kpi-card animate-fade-in animate-delay-3" style={{ borderColor: 'rgba(255,61,87,0.2)' }}>
           <div className="kpi-icon red"><AlertCircle size={20} /></div>
-          <div className="kpi-label">Pagos Vencidos</div>
-          <div className="kpi-value" style={{ color: 'var(--danger-red)' }}>${overdue}</div>
-          <div className="kpi-change negative">
-            {transactions.filter(t => t.status === 'overdue').length} membresía(s)
+          <div className="kpi-label">Ingreso Total Histórico</div>
+          <div className="kpi-value" style={{ color: 'var(--neon-green)' }}>${totalIncome.toLocaleString()}</div>
+          <div className="kpi-change positive">
+            {incomeTxs.length} cobros registrados
           </div>
         </div>
-        <div className="kpi-card green animate-fade-in animate-delay-4">
-          <div className="kpi-icon green"><CreditCard size={20} /></div>
-          <div className="kpi-label">Proyectado Mes</div>
-          <div className="kpi-value">$38,750</div>
-          <div className="kpi-change positive"><TrendingUp size={12} /> meta 94%</div>
+        <div className="kpi-card green animate-fade-in animate-delay-4" style={{ borderColor: 'rgba(0,255,136,0.3)', boxShadow: '0 0 20px rgba(0,255,136,0.1)' }}>
+          <div className="kpi-icon green"><DollarSign size={20} /></div>
+          <div className="kpi-label" style={{ color: '#fff', fontWeight: 700 }}>RECAUDO DE HOY</div>
+          <div className="kpi-value" style={{ color: 'var(--neon-green)', fontSize: '2rem' }}>${totalToday.toLocaleString()}</div>
+          <div className="kpi-change positive" style={{ background: 'var(--neon-green)', color: '#000', fontWeight: 900 }}>
+            <TrendingUp size={12} /> Cierre Diario
+          </div>
         </div>
       </div>
 
@@ -127,14 +150,14 @@ export default function Payments() {
           {/* ─── FILTERS ─── */}
           <div className="glass-card" style={{ padding: '12px 16px', marginBottom: 16, display: 'flex', gap: 8, alignItems: 'center' }}>
             <Filter size={16} style={{ color: 'var(--text-muted)' }} />
-            {['all', 'paid', 'pending', 'overdue'].map((f) => (
+            {['all', 'membership', 'daypass', 'product'].map((f) => (
               <button
                 key={f}
                 className={`chart-tab ${filterStatus === f ? 'active' : ''}`}
                 onClick={() => setFilterStatus(f)}
                 style={{ padding: '4px 12px' }}
               >
-                {f === 'all' ? 'Todos' : f === 'paid' ? 'Pagados' : f === 'pending' ? 'Pendientes' : 'Vencidos'}
+                {f === 'all' ? 'Todos los Cobros' : f === 'membership' ? 'Mensualidades / Semanas' : f === 'daypass' ? 'Días de Rutina' : 'Productos'}
               </button>
             ))}
           </div>
@@ -143,38 +166,35 @@ export default function Payments() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Miembro</th>
-                  <th>Plan</th>
+                  <th>Concepto / Descripción</th>
+                  <th>Cliente</th>
+                  <th>Categoría</th>
                   <th>Monto</th>
                   <th>Método</th>
                   <th>Fecha</th>
-                  <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((t) => (
+                {filtered.sort((a,b) => new Date(b.date + 'T' + b.time).getTime() - new Date(a.date + 'T' + a.time).getTime()).map((t) => (
                   <tr key={t.id}>
-                    <td style={{ fontFamily: 'monospace', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
-                      {t.id}
+                    <td style={{ fontWeight: 600, color: '#fff' }}>
+                      {t.description}
                     </td>
                     <td>
                       <div className="member-cell">
-                        <div className="member-avatar">
-                          {t.member.split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <span style={{ fontWeight: 600 }}>{t.member}</span>
+                        <span style={{ fontWeight: 600 }}>{t.client || 'General'}</span>
                       </div>
                     </td>
-                    <td><span className={`plan-badge ${t.plan}`}>{t.plan === 'basic' ? 'Básico' : t.plan === 'pro' ? 'Pro' : 'HYROX'}</span></td>
-                    <td style={{ fontWeight: 700, color: 'var(--neon-green)' }}>${t.amount}</td>
+                    <td><span className={`plan-badge`} style={{ background: 'rgba(0,255,136,0.1)', color: 'var(--neon-green)' }}>{mapCategoryToPlan(t.category)}</span></td>
+                    <td style={{ fontWeight: 700, color: 'var(--neon-green)' }}>${t.amount.toLocaleString()}</td>
                     <td style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{t.method}</td>
-                    <td style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{t.date}</td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: 'var(--text-xs)' }}>{t.date} {t.time}</td>
                     <td>
-                      <span className={`status-badge ${statusClass(t.status)}`}>
-                        {statusIcon(t.status)}
-                        {statusLabel(t.status)}
-                      </span>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={() => { setEditingTx(t); setEditForm(t); }} style={{ padding: '6px', background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer' }}>Editar</button>
+                        <button onClick={() => { if(confirm('¿Eliminar este cobro?')) deleteTransaction(t.id); }} style={{ padding: '6px', background: 'rgba(255,61,87,0.1)', border: 'none', borderRadius: 8, color: 'var(--danger-red)', cursor: 'pointer' }}>Borrar</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -262,6 +282,58 @@ export default function Payments() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {/* ── MODAL DE EDICIÓN ── */}
+      {editingTx && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+           <div className="glass-card" style={{ width: 400, padding: 32, border: '1px solid var(--neon-green)30' }}>
+              <h3 style={{ fontSize: 18, fontWeight: 950, marginBottom: 24, color: '#fff' }}>EDITAR COBRO / ABONO</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                 <div>
+                    <label style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>DESCRIPCIÓN (EJE: Abono rutina diaria)</label>
+                    <input className="input-field" value={editForm.description || ''} onChange={e => setEditForm({...editForm, description: e.target.value})} style={{ width: '100%', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
+                 </div>
+                 <div>
+                    <label style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>CLIENTE</label>
+                    <input className="input-field" value={editForm.client || ''} onChange={e => setEditForm({...editForm, client: e.target.value})} style={{ width: '100%', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
+                 </div>
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                       <label style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>MONTO PAGADO ($)</label>
+                       <input type="number" className="input-field" value={editForm.amount || 0} onChange={e => setEditForm({...editForm, amount: Number(e.target.value)})} style={{ width: '100%', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--neon-green)', fontWeight: 950 }} />
+                    </div>
+                    <div>
+                       <label style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>MÉTODO</label>
+                       <select value={editForm.method || 'Efectivo'} onChange={e => setEditForm({...editForm, method: e.target.value})} style={{ width: '100%', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}>
+                          <option value="Efectivo">Efectivo</option>
+                          <option value="Nequi">Nequi</option>
+                          <option value="Bancolombia">Bancolombia</option>
+                          <option value="Transferencia">Transferencia</option>
+                       </select>
+                    </div>
+                 </div>
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div>
+                       <label style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>FECHA</label>
+                       <input type="date" className="input-field" value={editForm.date || ''} onChange={e => setEditForm({...editForm, date: e.target.value})} style={{ width: '100%', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }} />
+                    </div>
+                    <div>
+                       <label style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>CATEGORÍA</label>
+                       <select value={editForm.category || 'daypass'} onChange={e => setEditForm({...editForm, category: e.target.value})} style={{ width: '100%', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}>
+                          <option value="daypass">Día de Rutina</option>
+                          <option value="membership">Mensualidad / Semanal</option>
+                          <option value="product">Producto</option>
+                          <option value="other">Abono General</option>
+                       </select>
+                    </div>
+                 </div>
+                 <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                    <button onClick={() => setEditingTx(null)} style={{ flex: 1, padding: 14, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontWeight: 950, cursor: 'pointer' }}>CANCELAR</button>
+                    <button onClick={handleSaveEdit} style={{ flex: 1, padding: 14, borderRadius: 12, background: 'var(--neon-green)', border: 'none', color: '#000', fontWeight: 950, cursor: 'pointer' }}>GUARDAR CAMBIOS</button>
+                 </div>
+              </div>
+           </div>
         </div>
       )}
     </div>

@@ -386,6 +386,22 @@ export function useGymData() {
     injectTransaction, updateMemberStatus, clearMemberDebt,
     registerProductSale,
     withdrawFromGoal,
+    updateTransaction: async (id: string | number, t: Partial<Transaction>) => {
+      setTransactions(prev => prev.map(item => item.id === id ? { ...item, ...t } : item));
+      try {
+        await trioSync.update('transactions', String(id), t);
+      } catch (e) {
+        console.warn("⚠️ Actualización de transacción local. Sync pendiente.");
+      }
+    },
+    deleteTransaction: async (id: string | number) => {
+      setTransactions(prev => prev.filter(tx => tx.id !== id));
+      try {
+        await trioSync.delete('transactions', String(id));
+      } catch (e) {
+        console.warn("⚠️ Eliminación de transacción local. Sync pendiente.");
+      }
+    },
     
     waterConfig,
     updateWaterConfig: (cfg: Partial<typeof waterConfig>) => {
