@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { validateDatabaseConnection } from './dbGuardian';
+import { validateDatabaseConnection, dbGuardian } from './dbGuardian';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();

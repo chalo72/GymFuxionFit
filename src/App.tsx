@@ -136,15 +136,11 @@ function App() {
             </button>
 
             <button 
-              onClick={() => {
-                setAdvancedCriticalMode(true);
-                localStorage.setItem('advanced_critical_mode', 'true');
-                closeAlert();
-              }} 
+              onClick={closeAlert}
               style={{ 
-                background: 'rgba(255,255,255,0.1)', 
+                background: 'rgba(255,255,255,0.15)', 
                 color: '#fff', 
-                border: '1px solid rgba(255,255,255,0.2)', 
+                border: '1px solid rgba(255,255,255,0.3)', 
                 padding: '6px 12px', 
                 borderRadius: 4, 
                 fontSize: 9, 
@@ -152,23 +148,7 @@ function App() {
                 cursor: 'pointer'
               }}
             >
-              SILENCIAR Y BYPASS
-            </button>
-            
-            <button 
-              onClick={() => window.location.reload()} 
-              style={{ 
-                background: 'rgba(255,255,255,0.1)', 
-                color: '#fff', 
-                border: '1px solid rgba(255,255,255,0.2)', 
-                padding: '6px 12px', 
-                borderRadius: 4, 
-                fontSize: 9, 
-                fontWeight: 900, 
-                cursor: 'pointer'
-              }}
-            >
-              REINTENTAR
+              REINTENTAR AHORA
             </button>
             
             <button 

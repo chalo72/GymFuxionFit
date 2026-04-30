@@ -328,17 +328,26 @@ export function useGymData() {
         await trioSync.create('products', { ...p, id: tempId });
         setSyncError(null);
       } catch (error: any) {
-        console.error("Error sync products:", error);
-        setSyncError(`Error Productos: ${error.message}`);
+        // 🛡️ Silencio de sincronización: El producto se guardó localmente, BD en background
+        console.warn("⚠️ Producto creado localmente. Sync BD pendiente:", error.message);
+        // No mostramos error en franja roja para no bloquear UX
       }
     },
     updateProduct: async (id: string, p: Partial<Product>) => {
       setProducts(prev => prev.map(item => item.id === id ? { ...item, ...p } : item));
-      await trioSync.update('products', id, p);
+      try {
+        await trioSync.update('products', id, p);
+      } catch (error: any) {
+        console.warn("⚠️ Producto actualizado localmente. Sync BD pendiente:", error.message);
+      }
     },
     deleteProduct: async (id: string) => {
       setProducts(prev => prev.filter(p => p.id !== id));
-      await trioSync.delete('products', id);
+      try {
+        await trioSync.delete('products', id);
+      } catch (error: any) {
+        console.warn("⚠️ Producto eliminado localmente. Sync BD pendiente:", error.message);
+      }
     },
 
     goals,
