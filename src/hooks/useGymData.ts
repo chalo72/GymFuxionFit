@@ -555,6 +555,38 @@ export function useGymData() {
       setMembers(prev => prev.filter(m => m.id !== id));
       await trioSync.delete('members', id);
     },
+    
+    // 🚀 NEXUS PUSH: Fuerza la subida de TODO lo local a la nube
+    forceSyncAll: async () => {
+      setSyncStatus('syncing');
+      try {
+        console.log("🚀 [NEXUS]: Iniciando empuje masivo a la nube...");
+        
+        // Sincronizar Miembros
+        for (const m of members) {
+          await trioSync.create('members', m);
+        }
+        
+        // Sincronizar Productos
+        for (const p of products) {
+          await trioSync.create('products', p);
+        }
+        
+        // Sincronizar Transacciones (últimas 50 para evitar saturación)
+        for (const tx of transactions.slice(0, 50)) {
+          await trioSync.create('transactions', tx);
+        }
+
+        setSyncStatus('live');
+        console.log("✅ [NEXUS]: Sincronización masiva completada con éxito.");
+        return true;
+      } catch (error) {
+        console.error("❌ [NEXUS]: Error en empuje masivo:", error);
+        setSyncStatus('local');
+        return false;
+      }
+    },
+
     syncStatus,
     syncError
   };
