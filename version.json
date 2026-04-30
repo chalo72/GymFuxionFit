@@ -1,6 +1,12 @@
 {
-  "version": "6.3.0-SUPABASE-DECOMMISSIONED",
-  "name": "GymFuxionFit",
-  "buildDate": "2026-04-29T17:45:00Z",
-  "notes": "🚀 v6.3.0-SUPABASE-DECOMMISSIONED: Eliminación total del fallback de Supabase. Implementado LocalFallbackAdapter para garantizar silencio absoluto ante fallos de red. Prioridad 100% Firebase/Appwrite."
+  "version": "6.3.1",
+  "build": 20260429,
+  "status": "ADVANCED_SYNC_ACTIVE",
+  "author": "Antigravity Nexus",
+  "features": [
+    "Full Bidirectional Real-time Sync",
+    "Nexus Push (Force Sync All)",
+    "Safe StatusBadge Fallback",
+    "Line-by-Line Master Documentation"
+  ]
 }

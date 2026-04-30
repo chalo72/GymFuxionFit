@@ -80,9 +80,20 @@ const STATUS_CFG: Record<Status,{label:string;color:string;bg:string}> = {
 };
 
 function StatusBadge({ s }: { s: Status }) {
-  const c = STATUS_CFG[s];
+  // 🧠 Escudo de seguridad: Si el estado no existe o es inválido, usamos 'active' por defecto.
+  // ⚖️ Esto evita el error "Cannot read properties of undefined (reading 'color')".
+  const c = STATUS_CFG[s] || STATUS_CFG.active;
+  
   return (
-    <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, color:c.color, background:c.bg, border:`1px solid ${c.color}40` }}>
+    <span style={{ 
+      fontSize:11, 
+      fontWeight:700, 
+      padding:'3px 10px', 
+      borderRadius:20, 
+      color: c.color, 
+      background: c.bg, 
+      border: `1px solid ${c.color}40` 
+    }}>
       {c.label}
     </span>
   );
