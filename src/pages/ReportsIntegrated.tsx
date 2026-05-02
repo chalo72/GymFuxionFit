@@ -232,7 +232,7 @@ export default function IntegratedReports() {
           </div>
 
           {/* DISTRIBUCIÓN DE TRABAJO */}
-          <div style({ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
             <div style={{
               padding: 24,
               background: 'rgba(255,255,255,0.02)',
