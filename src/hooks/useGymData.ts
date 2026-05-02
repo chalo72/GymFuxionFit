@@ -101,6 +101,14 @@ export interface Member {
   biometricStatus?: 'pending' | 'completed';
   lastScan?: string;
   trainingLogs?: { date: string; session: string; intensity: number; notes: string }[];
+  workoutHistory?: any[];
+  nutritionHistory?: any[];
+  plans?: any[];
+  todaysMeals?: any[];
+  activeProgram?: any;
+  sessionHistory?: any[];
+  weeklyMetrics?: any[];
+  trainingMetrics?: any;
 }
 
 export function useGymData() {
@@ -118,6 +126,16 @@ export function useGymData() {
     bagPrice: 200,
     bagsPerPaca: 50,
     pacaCost: 6000
+  });
+  const [plansConfig, setPlansConfig] = useState(() => {
+    const saved = localStorage.getItem('fuxion_plans_config');
+    return saved ? JSON.parse(saved) : {
+      dia: 5000,
+      semana: 25000,
+      mes_basico: 45000,
+      mes_pro: 75000,
+      mes_hyrox: 120000
+    };
   });
 
   // ─── CARGA INICIAL Y PERSISTENCIA (HYBRID SYNC) ───
@@ -380,9 +398,14 @@ export function useGymData() {
     });
   };
 
+  const updatePlansConfig = (newConfig: any) => {
+    setPlansConfig(newConfig);
+    localStorage.setItem('fuxion_plans_config', JSON.stringify(newConfig));
+  };
+
   return { 
-    transactions, assets, members, products,
-    setAssets, setMembers, setProducts,
+    transactions, assets, members, products, plansConfig, waterConfig,
+    setAssets, setMembers, setProducts, updatePlansConfig,
     injectTransaction, updateMemberStatus, clearMemberDebt,
     registerProductSale,
     withdrawFromGoal,

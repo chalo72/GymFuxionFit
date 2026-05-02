@@ -16,12 +16,6 @@ const revenueByPlan = [
   { month: 'Abr', basic: 8600, pro: 12500, hyrox: 11650 },
 ];
 
-const revenueByPlan = [
-  { month: 'Ene', basic: 8200, pro: 11250, hyrox: 9040 },
-  { month: 'Feb', basic: 8400, pro: 12000, hyrox: 9800 },
-  { month: 'Mar', basic: 7800, pro: 11000, hyrox: 9000 },
-  { month: 'Abr', basic: 8600, pro: 12500, hyrox: 11650 },
-];
 
 const statusIcon = (status: string) => {
   if (status === 'paid') return <CheckCircle2 size={14} />;

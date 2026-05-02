@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Users, Brain, Zap, Apple, Activity, Heart, MessageSquare,
   Plus, ChevronRight, CheckCircle2, Clock, TrendingUp, TrendingDown,
@@ -130,6 +131,7 @@ const aiAssistants: AiAssistant[] = [
    COMPONENTE PRINCIPAL
 ══════════════════════════════════════ */
 export default function TrainerDashboard() {
+  const navigate = useNavigate();
   const { members, updateMemberStatus } = useGymData();
   const [selectedClient, setSelectedClient] = useState<Member | null>(members[0] || null);
   
@@ -264,9 +266,14 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                 {members.length} Atletas Activos
               </div>
             </div>
-            <button className="btn btn-primary" style={{ padding: '8px 12px', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 15px rgba(0,255,136,0.2)' }}>
-              <Plus size={16} />
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-secondary" title="Reportes Consolidados" onClick={() => navigate('/reports')} style={{ padding: '8px 12px', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}>
+                <BarChart3 size={16} />
+              </button>
+              <button className="btn btn-primary" style={{ padding: '8px 12px', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 15px rgba(0,255,136,0.2)' }}>
+                <Plus size={16} />
+              </button>
+            </div>
           </div>
           {/* Status rápido para el negocio */}
           <div style={{
@@ -289,11 +296,12 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
         {/* Client list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
           {members.map(member => {
-            const isSelected = selectedClient?.id === member.id;
-            const color = member.plan.toLowerCase().includes('hyrox') ? '#FF6B35' : '#00FF88';
+            if (!member) return null;
+            const isSelected = selectedClient?.id === member?.id;
+            const color = (member?.plan || '').toLowerCase().includes('hyrox') ? '#FF6B35' : '#00FF88';
             return (
               <button
-                key={member.id}
+                key={member?.id}
                 onClick={() => { setSelectedClient(member); setActiveTab('progress'); setSessionMode(false); setSessionTime(0); }}
                 style={{
                   width: '100%', textAlign: 'left',
@@ -311,16 +319,15 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                   width: 40, height: 40, borderRadius: 'var(--radius-full)',
                   background: `linear-gradient(135deg, ${color}, ${color}88)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 800, fontSize: 'var(--text-xs)', flexShrink: 0,
                   color: '#000',
                 }}>
-                  {member.name.slice(0, 2).toUpperCase()}
+                  {(member?.name || 'NN').slice(0, 2).toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.name}</span>
-                    {member.alerts && member.alerts.length > 0 && <AlertTriangle size={12} style={{ color: 'var(--danger-red)', flexShrink: 0 }} />}
-                    {(!member.weight || member.biometricStatus !== 'completed') && (
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member?.name || 'N/A'}</span>
+                    {member?.alerts && member.alerts.length > 0 && <AlertTriangle size={12} style={{ color: 'var(--danger-red)', flexShrink: 0 }} />}
+                    {(!member?.weight || member?.biometricStatus !== 'completed') && (
                       <div title="Perfil Incompleto" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger-red)', boxShadow: '0 0 5px var(--danger-red)' }} />
                     )}
                   </div>
@@ -328,12 +335,12 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                     <span style={{
                       fontSize: '0.65rem', fontWeight: 700, padding: '1px 6px',
                       borderRadius: 'var(--radius-full)', 
-                      background: member.status === 'active' ? 'rgba(0,230,118,0.1)' : 'rgba(255,61,87,0.1)', 
-                      color: member.status === 'active' ? 'var(--success-green)' : 'var(--danger-red)',
+                      background: (member?.status || 'inactive') === 'active' ? 'rgba(0,230,118,0.1)' : 'rgba(255,61,87,0.1)', 
+                      color: (member?.status || 'inactive') === 'active' ? 'var(--success-green)' : 'var(--danger-red)',
                     }}>
-                      {member.status.toUpperCase()}
+                      {(member?.status || 'inactive').toUpperCase()}
                     </span>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>🔥{member.streak || 0}d</span>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>🔥{member?.streak || 0}d</span>
                   </div>
                 </div>
                 <ChevronRight size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
@@ -364,10 +371,9 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                 background: `linear-gradient(135deg, #00FF88, #00FF8888)`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontWeight: 800, fontSize: 'var(--text-xl)', color: '#000',
-                border: `2px solid var(--neon-green)`,
                 boxShadow: `0 0 20px rgba(0,255,136,0.4)`,
               }}>
-                {selectedClient.name.slice(0, 2).toUpperCase()}
+                {(selectedClient.name || 'NN').slice(0, 2).toUpperCase()}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
@@ -378,10 +384,10 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                     background: selectedClient.status === 'active' ? 'rgba(0,230,118,0.1)' : 'rgba(255,61,87,0.1)',
                     color: selectedClient.status === 'active' ? 'var(--success-green)' : 'var(--danger-red)',
                   }}>
-                    {selectedClient.status.toUpperCase()}
+                    {(selectedClient.status || 'inactive').toUpperCase()}
                   </span>
-                  <span className={`plan-badge ${selectedClient.plan.toLowerCase()}`}>
-                    {selectedClient.plan}
+                  <span className={`plan-badge ${(selectedClient.plan || 'pro').toLowerCase()}`}>
+                    {selectedClient.plan || 'Pro'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: 20, fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
@@ -407,6 +413,14 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
               </div>
               {/* Acciones rápidas */}
               <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className="btn btn-secondary"
+                  title="Ver Dashboard del Cliente"
+                  style={{ gap: 8, background: 'rgba(0, 255, 136, 0.15)', border: '1px solid rgba(0, 255, 136, 0.3)', color: 'var(--neon-green)' }}
+                  onClick={() => navigate('/client/progress')}
+                >
+                  <TrendingUp size={14} /> View Progress
+                </button>
                 <button
                   className="btn btn-secondary"
                   style={{ gap: 8, background: 'rgba(167, 139, 250, 0.15)', border: '1px solid rgba(167, 139, 250, 0.3)', color: '#A78BFA' }}
@@ -688,7 +702,7 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                 <table className="data-table">
                   <thead><tr><th>Fecha</th><th>Sesión</th><th>Intensidad</th><th>Notas</th></tr></thead>
                   <tbody>
-                    {selectedClient.trainingLogs && selectedClient.trainingLogs.length > 0 ? (
+                    {selectedClient?.trainingLogs?.length ? (
                       selectedClient.trainingLogs.map((log, i) => (
                         <tr key={i}>
                           <td style={{ fontWeight: 600 }}>{log.date}</td>
@@ -891,7 +905,7 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
             {/* Suggestions */}
             {/* Insights dinámicos */}
             <div style={{ fontWeight: 600, fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Insights para {selectedClient?.name.split(' ')[0]}:
+              Insights para {(selectedClient?.name || 'Usuario').split(' ')[0]}:
             </div>
             {selectedClient?.injuries && selectedClient.injuries !== 'Ninguna' && (
               <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.3)', fontSize: 'var(--text-xs)', color: 'var(--danger-red)' }}>

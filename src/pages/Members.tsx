@@ -112,11 +112,12 @@ function PlanBadge({ p }: { p: string }) {
    MODAL AGREGAR / EDITAR CLIENTE
 ══════════════════════════════════════════ */
 function ClientModal({
-  initial, onSave, onClose,
+  initial, onSave, onClose, plansConfig
 }: {
   initial: Partial<Client> | null;
   onSave: (data: any) => void;
   onClose: () => void;
+  plansConfig?: any;
 }) {
   const [form, setForm] = useState<any>(
     initial ? { 
@@ -256,7 +257,14 @@ function ClientModal({
               <div>
                 <label style={labelStyle}>Plan de Membresía *</label>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
-                  {(Object.entries(PLANS) as [string, typeof PLANS[string]][]).map(([id, p]) => (
+                  {(Object.entries(PLANS) as [string, typeof PLANS[string]][]).map(([id, p]) => {
+                    let dynamicPrice = p.price;
+                    if (plansConfig) {
+                      if (id === 'basic') dynamicPrice = plansConfig.mes_basico;
+                      if (id === 'pro') dynamicPrice = plansConfig.mes_pro;
+                      if (id === 'hyrox' || id === 'hyrox pro') dynamicPrice = plansConfig.mes_hyrox;
+                    }
+                    return (
                     <div key={id} onClick={() => handlePlanChange(id)} style={{
                       padding:'14px 12px', borderRadius:'var(--radius-lg)', cursor:'pointer',
                       background: form.plan===id ? `${p.color}15` : 'rgba(255,255,255,.03)',
@@ -265,12 +273,12 @@ function ClientModal({
                     }}>
                       <div style={{ fontSize:15, fontWeight:800, color: form.plan===id ? p.color : 'var(--text-primary)', marginBottom:4 }}>{p.label}</div>
                       <div style={{ fontSize:16, fontWeight:900, color: form.plan===id ? p.color : 'var(--text-secondary)' }}>
-                        ${p.price.toLocaleString('es-CO')}
+                        ${dynamicPrice.toLocaleString('es-CO')}
                       </div>
                       <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:4, lineHeight:1.4 }}>{p.desc}</div>
                       {form.plan===id && <Check size={14} color={p.color} style={{ marginTop:6 }}/>}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
 
@@ -514,7 +522,7 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
    PÁGINA PRINCIPAL
 ══════════════════════════════════════════ */
 export default function Members() {
-  const { members: clients, updateMemberStatus, addMember, deleteMember } = useGymData();
+  const { members: clients, updateMemberStatus, addMember, deleteMember, plansConfig } = useGymData();
   const [search,  setSearch]        = useState('');
   const [filterPlan, setFilterPlan] = useState<string | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all');
@@ -545,7 +553,16 @@ export default function Members() {
     active:   clients.filter(c => c.status === 'active').length,
     expiring: clients.filter(c => c.status === 'expiring').length,
     expired:  clients.filter(c => c.status === 'expired').length,
-    revenue:  clients.filter(c => c.status !== 'suspended').reduce((a, c) => a + (PLANS[c.plan?.toLowerCase() || 'pro']?.price || 0), 0),
+    revenue:  clients.filter(c => c.status !== 'suspended').reduce((a, c) => {
+      let price = PLANS[c.plan?.toLowerCase() || 'pro']?.price || 0;
+      if (plansConfig) {
+        const id = c.plan?.toLowerCase() || 'pro';
+        if (id === 'basic') price = plansConfig.mes_basico;
+        if (id === 'pro') price = plansConfig.mes_pro;
+        if (id === 'hyrox' || id === 'hyrox pro') price = plansConfig.mes_hyrox;
+      }
+      return a + price;
+    }, 0),
   };
 
   /* Guardar nuevo/editar */
@@ -754,6 +771,7 @@ export default function Members() {
           initial={editClient}
           onSave={handleSave}
           onClose={() => { setShowModal(false); setEditClient(null); }}
+          plansConfig={plansConfig}
         />
       )}
       {viewClient && (

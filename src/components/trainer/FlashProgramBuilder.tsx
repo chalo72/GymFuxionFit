@@ -10,17 +10,16 @@ interface Exercise {
   defaultReps: string;
 }
 
-const EXERCISE_LIBRARY: Exercise[] = [
-  { id: '1', name: 'Back Squat', category: 'strength', icon: <Dumbbell size={16}/>, defaultSets: '4', defaultReps: '8' },
-  { id: '2', name: 'Deadlift', category: 'strength', icon: <Dumbbell size={16}/>, defaultSets: '3', defaultReps: '5' },
-  { id: '3', name: 'Sled Push', category: 'hyrox', icon: <Flame size={16}/>, defaultSets: '4', defaultReps: '50m' },
-  { id: '4', name: 'Burpees Broad Jump', category: 'hyrox', icon: <Activity size={16}/>, defaultSets: '1', defaultReps: '80m' },
-  { id: '5', name: 'SkiErg', category: 'cardio', icon: <Zap size={16}/>, defaultSets: '1', defaultReps: '1000m' },
-  { id: '6', name: 'Rowing', category: 'cardio', icon: <Activity size={16}/>, defaultSets: '1', defaultReps: '2000m' },
-  { id: '7', name: 'Wall Balls', category: 'hyrox', icon: <Flame size={16}/>, defaultSets: '4', defaultReps: '20' },
-  { id: '8', name: 'Farmer Carry', category: 'hyrox', icon: <Dumbbell size={16}/>, defaultSets: '4', defaultReps: '100m' },
-  { id: '9', name: 'Bench Press', category: 'strength', icon: <Dumbbell size={16}/>, defaultSets: '4', defaultReps: '10' },
-];
+import { EXERCISE_CATALOG } from '../../data/premiumCatalogs';
+
+const EXERCISE_LIBRARY: Exercise[] = EXERCISE_CATALOG.map(ex => ({
+  id: ex.id,
+  name: ex.name,
+  category: ex.muscleGroup === 'Cuerpo Completo' ? 'hyrox' : (ex.equipment.includes('Cardio') ? 'cardio' : 'strength'),
+  icon: ex.muscleGroup === 'Cuerpo Completo' ? <Flame size={16}/> : (ex.equipment.includes('Cardio') ? <Activity size={16}/> : <Dumbbell size={16}/>),
+  defaultSets: ex.difficulty === 'Avanzado' ? '5' : '4',
+  defaultReps: ex.equipment === 'Peso Corporal' ? '15' : '10',
+}));
 
 interface FlashProgramBuilderProps {
   onClose: () => void;

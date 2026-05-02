@@ -28,6 +28,13 @@ const Operations       = lazy(() => import('./pages/Operations'));
 const ClientAppView    = lazy(() => import('./pages/ClientAppView'));
 const Finances         = lazy(() => import('./pages/Finances'));
 const Inventory        = lazy(() => import('./pages/Inventory'));
+const Catalogs         = lazy(() => import('./pages/Catalogs'));
+
+/* ── Dashboards Cliente y Reportes ── */
+const ClientProgress   = lazy(() => import('./pages/ClientProgress'));
+const NutritionProfile = lazy(() => import('./pages/NutritionProfile'));
+const TrainingDashboard2 = lazy(() => import('./pages/TrainingDashboard2'));
+const ReportsIntegrated= lazy(() => import('./pages/ReportsIntegrated'));
 
 /* ── Fallback de carga Glassmorphism ── */
 function LoadingFallback() {
@@ -252,8 +259,16 @@ function App() {
           {/* Admin Operations Center */}
           <Route path="/operations"  element={<Operations />} />
           <Route path="/inventory"   element={<Inventory />} />
+          <Route path="/catalogs"    element={<Catalogs />} />
           {/* Client App Preview */}
           <Route path="/client-app"  element={<ClientAppView />} />
+          
+          {/* Dashboards del Cliente y Reportes */}
+          <Route path="/client/progress" element={<ClientProgress />} />
+          <Route path="/client/nutrition" element={<NutritionProfile />} />
+          <Route path="/client/training" element={<TrainingDashboard2 />} />
+          <Route path="/reports"         element={<ReportsIntegrated />} />
+
           {/* Trainer */}
           <Route path="/trainer"     element={<TrainerDashboard />} />
           {/* Recepción */}

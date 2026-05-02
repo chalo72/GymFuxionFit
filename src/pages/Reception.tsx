@@ -38,7 +38,7 @@ const fmtTime = (s: number) => {
    HYBRID RECEPTION HUB (FUSION v5.0 - PREMIUM GLASS)
    ══════════════════════════════════════════ */
 export default function Reception() {
-  const { members, transactions, clearMemberDebt, injectTransaction, products, registerProductSale, updateMemberStatus } = useGymData();
+  const { members, transactions, clearMemberDebt, injectTransaction, products, registerProductSale, updateMemberStatus, plansConfig } = useGymData();
   const { products: configProducts } = useGymConfig();
 
   /* ── KPIs del día calculados en tiempo real ── */
@@ -592,9 +592,9 @@ export default function Reception() {
                            <h4 style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', letterSpacing: 3, marginBottom: 24 }}>SERVICIOS RÁPIDOS</h4>
                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 32 }}>
                               {[
-                                 { id: 'srv_mes', label: 'MES PRO', price: 75000, color: 'var(--neon-green)', icon: <TrendingUp size={16}/> },
-                                 { id: 'srv_sem', label: 'SEMANAL', price: 25000, color: '#00E5FF', icon: <Calendar size={16}/> },
-                                 { id: 'srv_dia', label: 'DÍA PLAN', price: 5000, color: '#FFD600', icon: <Zap size={16}/> }
+                                 { id: 'srv_mes', label: 'MES PRO', price: plansConfig?.mes_pro || 75000, color: 'var(--neon-green)', icon: <TrendingUp size={16}/> },
+                                 { id: 'srv_sem', label: 'SEMANAL', price: plansConfig?.semana || 25000, color: '#00E5FF', icon: <Calendar size={16}/> },
+                                 { id: 'srv_dia', label: 'DÍA PLAN', price: plansConfig?.dia || 5000, color: '#FFD600', icon: <Zap size={16}/> }
                               ].map(srv => (
                                  <button key={srv.id} onClick={() => addToCart({ ...srv, name: srv.label, sellPrice: srv.price, category: 'Servicio' })} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${srv.color}30`, borderRadius: 20, padding: '22px 10px', color: '#fff', cursor: 'pointer', transition: '0.3s', display:'flex', flexDirection:'column', alignItems:'center', gap: 10 }} className="srv-btn-premium">
                                     <div style={{ color: srv.color }}>{srv.icon}</div>

@@ -183,23 +183,23 @@ export default function Operations() {
         <div>
           <h2 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700 }}>
             Operaciones en Vivo
-            <span style={{ marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--neon-green)', fontWeight: 600 }}>
+            <span style={{ marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-base)', color: 'var(--neon-green)', fontWeight: 600 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--neon-green)', display: 'inline-block', animation: 'glow-pulse 1.5s infinite' }} />
               EN VIVO
             </span>
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', marginTop: 4 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-base)', marginTop: 4 }}>
             Vista completa del gym en tiempo real — Entrenadores · Recepción · Actividad
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {sentMsg && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--green-10)', border: '1px solid var(--green-20)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--neon-green)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'var(--green-10)', border: '1px solid var(--green-20)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--neon-green)' }}>
               <CheckCircle2 size={12} /> {sentMsg}
             </div>
           )}
           {alerts.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.3)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--danger-red)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.3)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--danger-red)' }}>
               <Bell size={12} /> {alerts.length} alertas activas
             </div>
           )}
@@ -224,8 +224,8 @@ export default function Operations() {
             </div>
             <div>
               <div style={{ fontSize: 'var(--text-xl)', fontWeight: 800, color: k.color, lineHeight: 1 }}>{k.value}</div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 2 }}>{k.label}</div>
-              <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{k.sub}</div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: 2 }}>{k.label}</div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{k.sub}</div>
             </div>
           </div>
         ))}
@@ -238,8 +238,8 @@ export default function Operations() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <Dumbbell size={16} style={{ color: 'var(--energy-orange)' }} />
-            <h3 style={{ fontWeight: 700, fontSize: 'var(--text-base)' }}>Entrenadores</h3>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+            <h3 style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>Entrenadores</h3>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
               {trainers.length} activos hoy
             </span>
           </div>
@@ -259,19 +259,19 @@ export default function Operations() {
                   width: 42, height: 42, borderRadius: 'var(--radius-full)', flexShrink: 0,
                   background: `linear-gradient(135deg, ${trainer.color}, ${trainer.color}88)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 800, fontSize: 'var(--text-xs)', color: '#000',
+                  fontWeight: 800, fontSize: 'var(--text-sm)', color: '#000',
                 }}>
                   {trainer.initials}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{trainer.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-base)' }}>{trainer.name}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                     <div style={{
                       width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
                       background: trainer.status === 'session' ? 'var(--danger-red)' : trainer.status === 'available' ? 'var(--success-green)' : 'var(--warning-yellow)',
                       animation: trainer.status === 'session' ? 'glow-pulse 1.2s infinite' : 'none',
                     }} />
-                    <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700,
+                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: 700,
                       color: trainer.status === 'session' ? 'var(--danger-red)' : trainer.status === 'available' ? 'var(--success-green)' : 'var(--warning-yellow)',
                     }}>
                       {trainer.status === 'session' ? 'EN SESIÓN' : trainer.status === 'available' ? 'DISPONIBLE' : 'EN DESCANSO'}
@@ -279,10 +279,10 @@ export default function Operations() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-muted)' }}>
                     ⭐ {trainer.rating}
                   </div>
-                  <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 2 }}>
                     {trainer.sessionsToday}/{trainer.sessionsTotal} sesiones
                   </div>
                 </div>
@@ -293,21 +293,21 @@ export default function Operations() {
                 <div style={{ padding: '10px 12px', background: 'rgba(255,61,87,0.06)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(255,61,87,0.15)', marginBottom: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Cliente en sesión</div>
-                      <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-primary)' }}>{trainer.currentClient}</div>
+                      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>Cliente en sesión</div>
+                      <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--text-primary)' }}>{trainer.currentClient}</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 800, fontSize: 'var(--text-base)', color: 'var(--danger-red)', fontVariantNumeric: 'tabular-nums' }}>
+                      <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)', color: 'var(--danger-red)', fontVariantNumeric: 'tabular-nums' }}>
                         {formatTimer((trainer.sessionTimer ?? 0) + tick)}
                       </div>
-                      <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>duración</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>duración</div>
                     </div>
                   </div>
                   {trainer.aiAssistant && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, padding: '5px 8px', background: 'rgba(255,214,0,0.07)', borderRadius: 'var(--radius-sm)' }}>
                       {aiIcons[trainer.aiAssistant]}
-                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>IA activa:</span>
-                      <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#FFD600' }}>{trainer.aiAssistant}</span>
+                      <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>IA activa:</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#FFD600' }}>{trainer.aiAssistant}</span>
                     </div>
                   )}
                 </div>
@@ -315,7 +315,7 @@ export default function Operations() {
 
               {/* Next appointment */}
               {trainer.nextClient && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 10 }}>
                   <Clock size={11} />
                   <span>Próximo: <strong style={{ color: 'var(--text-secondary)' }}>{trainer.nextClient}</strong> a las <strong style={{ color: 'var(--neon-green)' }}>{trainer.nextTime}</strong></span>
                 </div>
@@ -330,14 +330,14 @@ export default function Operations() {
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   className="btn btn-secondary"
-                  style={{ flex: 1, padding: '6px 10px', fontSize: 'var(--text-xs)', justifyContent: 'center' }}
+                  style={{ flex: 1, padding: '6px 10px', fontSize: 'var(--text-sm)', justifyContent: 'center' }}
                   onClick={() => setMsgModal(trainer)}
                 >
                   <MessageSquare size={12} /> Mensaje
                 </button>
                 <button
                   className="btn btn-ghost"
-                  style={{ flex: 1, padding: '6px 10px', fontSize: 'var(--text-xs)', justifyContent: 'center' }}
+                  style={{ flex: 1, padding: '6px 10px', fontSize: 'var(--text-sm)', justifyContent: 'center' }}
                 >
                   <Eye size={12} /> Ver detalle
                 </button>
@@ -350,8 +350,8 @@ export default function Operations() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <UserCheck size={16} style={{ color: 'var(--neon-green)' }} />
-            <h3 style={{ fontWeight: 700, fontSize: 'var(--text-base)' }}>Recepción</h3>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+            <h3 style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>Recepción</h3>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginLeft: 'auto' }}>
               Control en tiempo real
             </span>
           </div>
@@ -359,13 +359,13 @@ export default function Operations() {
           {/* Ocupación */}
           <div className="glass-card" style={{ padding: '16px 18px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>Ocupación del Gym</div>
+              <div style={{ fontWeight: 700, fontSize: 'var(--text-base)' }}>Ocupación del Gym</div>
               <div style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, color: 'var(--neon-green)' }}>{liveGym + (tick % 3 === 0 ? 0 : 0)}</div>
             </div>
             <div className="progress-bar" style={{ height: 10, marginBottom: 8 }}>
               <div className="progress-bar-fill" style={{ width: `${(liveGym / 60) * 100}%`, background: liveGym / 60 > 0.8 ? 'var(--danger-red)' : undefined }} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
               <span>{liveGym} personas dentro</span>
               <span>{60 - liveGym} lugares disponibles</span>
             </div>
@@ -374,17 +374,17 @@ export default function Operations() {
           {/* Alertas admin */}
           {alerts.length > 0 && (
             <div className="glass-card" style={{ padding: '14px 16px', borderColor: 'rgba(255,61,87,0.2)' }}>
-              <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--danger-red)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--danger-red)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Shield size={14} /> Alertas que Requieren tu Atención
               </div>
               {alerts.map(a => (
                 <div key={a.id} style={{ padding: '10px 12px', background: a.urgent ? 'rgba(255,61,87,0.06)' : 'var(--space-medium)', borderRadius: 'var(--radius-md)', border: a.urgent ? '1px solid rgba(255,61,87,0.2)' : '1px solid rgba(255,255,255,0.04)', marginBottom: 8 }}>
-                  <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, marginBottom: 6 }}>{a.text}</div>
+                  <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, marginBottom: 6 }}>{a.text}</div>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button className="btn btn-secondary" style={{ flex: 1, padding: '5px 8px', fontSize: '0.65rem', justifyContent: 'center', borderRadius: 'var(--radius-sm)' }}>
+                    <button className="btn btn-secondary" style={{ flex: 1, padding: '5px 8px', fontSize: '0.9rem', justifyContent: 'center', borderRadius: 'var(--radius-sm)' }}>
                       {a.action}
                     </button>
-                    <button onClick={() => dismissAlert(a.id)} className="btn btn-ghost" style={{ padding: '5px 8px', fontSize: '0.65rem', borderRadius: 'var(--radius-sm)' }}>
+                    <button onClick={() => dismissAlert(a.id)} className="btn btn-ghost" style={{ padding: '5px 8px', fontSize: '0.9rem', borderRadius: 'var(--radius-sm)' }}>
                       <XCircle size={11} />
                     </button>
                   </div>
@@ -395,14 +395,14 @@ export default function Operations() {
 
           {/* Pagos de hoy */}
           <div className="glass-card" style={{ padding: '16px 18px' }}>
-            <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 14 }}>Ingresos Hoy</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', marginBottom: 14 }}>Ingresos Hoy</div>
             <div style={{ fontSize: 'var(--text-3xl)', fontWeight: 800, color: 'var(--neon-green)', marginBottom: 6 }}>
               ${todayRevenue.toLocaleString()}
             </div>
             <div className="progress-bar" style={{ marginBottom: 8 }}>
               <div className="progress-bar-fill" style={{ width: `${(todayRevenue / 2000) * 100}%` }} />
             </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>62% de la meta diaria ($2,000)</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>62% de la meta diaria ($2,000)</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 14 }}>
               {[
                 { label: 'Nequi', value: '$640', pct: 52 },
@@ -410,9 +410,9 @@ export default function Operations() {
                 { label: 'Efectivo', value: '$220', pct: 17 },
               ].map((m, i) => (
                 <div key={i} style={{ textAlign: 'center', padding: '8px', background: 'var(--space-medium)', borderRadius: 'var(--radius-sm)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--neon-green)' }}>{m.value}</div>
-                  <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: 2 }}>{m.label}</div>
-                  <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{m.pct}%</div>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', color: 'var(--neon-green)' }}>{m.value}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 2 }}>{m.label}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{m.pct}%</div>
                 </div>
               ))}
             </div>
@@ -420,7 +420,7 @@ export default function Operations() {
 
           {/* Staff performance resumen */}
           <div className="glass-card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', marginBottom: 12 }}>Rendimiento Staff Hoy</div>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-base)', marginBottom: 12 }}>Rendimiento Staff Hoy</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[
                 { name: 'Recepción',   metric: '47 check-ins', good: true },
@@ -429,8 +429,8 @@ export default function Operations() {
                 { name: 'Coach Diego', metric: '2 sesiones',    good: false },
               ].map((s, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                  <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600 }}>{s.name}</span>
-                  <span style={{ fontSize: 'var(--text-xs)', color: s.good ? 'var(--success-green)' : 'var(--warning-yellow)', fontWeight: 600 }}>
+                  <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600 }}>{s.name}</span>
+                  <span style={{ fontSize: 'var(--text-sm)', color: s.good ? 'var(--success-green)' : 'var(--warning-yellow)', fontWeight: 600 }}>
                     {s.good ? '✓' : '⚠'} {s.metric}
                   </span>
                 </div>
@@ -443,7 +443,7 @@ export default function Operations() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <Radio size={16} style={{ color: 'var(--neon-green)' }} />
-            <h3 style={{ fontWeight: 700, fontSize: 'var(--text-base)' }}>Feed en Tiempo Real</h3>
+            <h3 style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>Feed en Tiempo Real</h3>
           </div>
 
           <div className="glass-card" style={{ padding: '8px', height: 700, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -461,14 +461,14 @@ export default function Operations() {
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                     <div style={{ marginTop: 1, flexShrink: 0 }}>{feedIcon(event.type)}</div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 'var(--text-xs)', fontWeight: 600, lineHeight: 1.4, color: event.urgent ? 'var(--danger-red)' : 'var(--text-primary)' }}>
+                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, lineHeight: 1.4, color: event.urgent ? 'var(--danger-red)' : 'var(--text-primary)' }}>
                         {event.text}
                       </div>
                       {event.detail && (
-                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 2 }}>{event.detail}</div>
+                        <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: 2 }}>{event.detail}</div>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }}>{event.time}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', flexShrink: 0, marginTop: 2 }}>{event.time}</div>
                   </div>
                 </div>
               ))}
@@ -486,7 +486,7 @@ export default function Operations() {
                 ].map(l => (
                   <div key={l.type} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     {feedIcon(l.type)}
-                    <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{l.label}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{l.label}</span>
                   </div>
                 ))}
               </div>
@@ -495,7 +495,7 @@ export default function Operations() {
 
           {/* Quick admin actions */}
           <div className="glass-card" style={{ padding: '14px 16px' }}>
-            <div style={{ fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
+            <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
               Acciones Rápidas Admin
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -505,7 +505,7 @@ export default function Operations() {
                 { label: 'Contactar Recepción',    icon: MessageSquare,color: 'var(--energy-orange)' },
                 { label: 'Reporte Diario',         icon: TrendingUp,   color: '#A78BFA' },
               ].map((a, i) => (
-                <button key={i} className="btn btn-ghost" style={{ justifyContent: 'flex-start', padding: '8px 10px', fontSize: 'var(--text-xs)', gap: 10, borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <button key={i} className="btn btn-ghost" style={{ justifyContent: 'flex-start', padding: '8px 10px', fontSize: 'var(--text-sm)', gap: 10, borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.04)' }}>
                   <a.icon size={13} style={{ color: a.color }} /> {a.label}
                   <ChevronRight size={11} style={{ marginLeft: 'auto', color: 'var(--text-muted)' }} />
                 </button>
@@ -525,11 +525,11 @@ export default function Operations() {
             <div style={{ fontWeight: 800, fontSize: 'var(--text-lg)', marginBottom: 4 }}>
               Mensaje a {msgModal.name}
             </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginBottom: 20 }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 20 }}>
               El entrenador recibirá una notificación inmediata en su dispositivo.
             </div>
             <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Mensajes Rápidos</div>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 8 }}>Mensajes Rápidos</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
                 {[
                   '📋 Revisar plan del cliente',
@@ -537,14 +537,14 @@ export default function Operations() {
                   '⚠️ Alerta biométrica activa',
                   '✅ Excelente trabajo hoy',
                 ].map(s => (
-                  <button key={s} onClick={() => setMsgText(s)} style={{ padding: '5px 10px', borderRadius: 'var(--radius-full)', border: '1px solid rgba(0,255,136,0.15)', background: msgText === s ? 'var(--green-10)' : 'var(--space-medium)', cursor: 'pointer', fontSize: 'var(--text-xs)', color: msgText === s ? 'var(--neon-green)' : 'var(--text-secondary)' }}>
+                  <button key={s} onClick={() => setMsgText(s)} style={{ padding: '5px 10px', borderRadius: 'var(--radius-full)', border: '1px solid rgba(0,255,136,0.15)', background: msgText === s ? 'var(--green-10)' : 'var(--space-medium)', cursor: 'pointer', fontSize: 'var(--text-sm)', color: msgText === s ? 'var(--neon-green)' : 'var(--text-secondary)' }}>
                     {s}
                   </button>
                 ))}
               </div>
               <textarea
                 className="input-field"
-                style={{ width: '100%', minHeight: 80, resize: 'vertical', padding: 12, fontSize: 'var(--text-sm)' }}
+                style={{ width: '100%', minHeight: 80, resize: 'vertical', padding: 12, fontSize: 'var(--text-base)' }}
                 placeholder="Escribe un mensaje personalizado..."
                 value={msgText}
                 onChange={e => setMsgText(e.target.value)}

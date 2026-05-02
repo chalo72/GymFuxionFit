@@ -8,38 +8,66 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
 } from 'recharts';
 import { TrendingUp, TrendingDown, Users, CreditCard, Activity, Target } from 'lucide-react';
 
-const monthlyRevenue = [
-  { month: 'Ene', revenue: 28500, members: 980 },
-  { month: 'Feb', revenue: 30200, members: 1020 },
-  { month: 'Mar', revenue: 27800, members: 1010 },
-  { month: 'Abr', revenue: 32000, members: 1050 },
-  { month: 'May', revenue: 35600, members: 1095 },
-  { month: 'Jun', revenue: 33400, members: 1110 },
-  { month: 'Jul', revenue: 36200, members: 1145 },
-  { month: 'Ago', revenue: 34800, members: 1160 },
-  { month: 'Sep', revenue: 37500, members: 1190 },
-  { month: 'Oct', revenue: 35900, members: 1200 },
-  { month: 'Nov', revenue: 38200, members: 1230 },
-  { month: 'Dic', revenue: 38750, members: 1247 },
-];
-
-const planDistribution = [
-  { plan: 'Básico', count: 520, color: '#00F0FF' },
-  { plan: 'Pro', count: 450, color: '#FF6B35' },
-  { plan: 'HYROX', count: 277, color: '#00E676' },
-];
-
-const metrics = [
-  { icon: CreditCard, label: 'ARPU', value: '$31.07', change: '+8.2%', up: true },
-  { icon: Users, label: 'Tasa de Churn', value: '6.8%', change: '-1.2%', up: true },
-  { icon: Activity, label: 'LTV Promedio', value: '$744', change: '+15%', up: true },
-  { icon: Target, label: 'CAC', value: '$18.50', change: '-22%', up: true },
-];
+import { useMemo } from 'react';
+import { useGymData } from '../hooks/useGymData';
 
 export default function Analytics() {
+  const { transactions, members } = useGymData();
+
+  const { monthlyRevenue, planDistribution, metrics } = useMemo(() => {
+    // 1. Distribution of Plans
+    const plans: Record<string, number> = { Básico: 0, Pro: 0, HYROX: 0, VIP: 0, Estudiante: 0, Otro: 0 };
+    members.forEach(m => {
+      const p = m.plan || 'Otro';
+      if (plans[p] !== undefined) plans[p]++;
+      else plans['Otro']++;
+    });
+    
+    const colors = ['#00F0FF', '#FF6B35', '#00E676', '#A78BFA', '#FFD600', '#888888'];
+    const distData = Object.entries(plans)
+      .filter(([_, count]) => count > 0)
+      .map(([plan, count], i) => ({ plan, count, color: colors[i % colors.length] }));
+
+    // 2. Monthly Revenue (Last 6-12 months from transactions)
+    const revMap: Record<string, number> = {};
+    transactions.filter(t => t.type === 'income').forEach(t => {
+      if (!t.date) return;
+      const monthStr = t.date.substring(0, 7); // "YYYY-MM"
+      revMap[monthStr] = (revMap[monthStr] || 0) + t.amount;
+    });
+
+    const sortedMonths = Object.keys(revMap).sort();
+    const monthlyData = sortedMonths.slice(-12).map(mStr => {
+      // Convert "YYYY-MM" to readable format
+      const date = new Date(mStr + '-02'); // Add 2nd day to avoid timezone shifting
+      const monthName = date.toLocaleString('es-CO', { month: 'short' });
+      return { 
+        month: monthName.charAt(0).toUpperCase() + monthName.slice(1), 
+        revenue: revMap[mStr],
+        members: members.filter(m => m.joinDate && m.joinDate <= mStr + '-31').length || members.length
+      };
+    });
+
+    // 3. KPI Metrics
+    const totalRevenue = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+    const activeCount = members.filter(m => m.status === 'active').length || 1;
+    const arpu = totalRevenue / activeCount;
+
+    const computedMetrics = [
+      { icon: CreditCard, label: 'ARPU (Ingreso Prom. por Usuario)', value: `$${Math.round(arpu).toLocaleString()}`, change: 'Histórico', up: true },
+      { icon: Users, label: 'Total Atletas Activos', value: `${activeCount}`, change: 'Actual', up: true },
+      { icon: Activity, label: 'Ingreso Bruto Total', value: `$${totalRevenue.toLocaleString()}`, change: 'Todas las ventas', up: true },
+      { icon: Target, label: 'Tasa de Actividad', value: `${Math.round((activeCount / (members.length || 1)) * 100)}%`, change: 'Miembros activos', up: true },
+    ];
+
+    return { monthlyRevenue: monthlyData, planDistribution: distData, metrics: computedMetrics };
+  }, [transactions, members]);
+
+
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
@@ -134,7 +162,7 @@ export default function Analytics() {
                 />
                 <Bar dataKey="count" name="Miembros" radius={[0, 8, 8, 0]}>
                   {planDistribution.map((entry, i) => (
-                    <Bar key={i} dataKey="count" fill={entry.color} />
+                    <Cell key={`cell-${i}`} fill={entry.color} />
                   ))}
                 </Bar>
               </BarChart>

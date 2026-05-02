@@ -1402,8 +1402,13 @@ img {
   }
 
   .kpi-row {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 15px;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
   }
 
   .page-content {
@@ -1559,10 +1564,10 @@ img {
     width: 100% !important;
   }
 
-  /* Evitar que las cajas se ensanchen */
-  div {
-    max-width: 100% !important;
-    box-sizing: border-box !important;
+  /* Evitar que las cajas principales se ensanchen, pero sin romper el scroll */
+  .glass-card, .dashboard-grid, .page-content, .main-content {
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   /* Tablas: Forzar el scroll lateral si es necesario */
@@ -1570,6 +1575,7 @@ img {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
     width: 100% !important;
+    display: block;
   }
 }
 

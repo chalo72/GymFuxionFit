@@ -19,6 +19,7 @@ const adminNav = [
     { to: '/schedule',    icon: CalendarRange,   label: 'Calendario' },
     { to: '/classes',     icon: CalendarDays,    label: 'Clases' },
     { to: '/trainer',     icon: Dumbbell,        label: 'Entrenador Hub', badge: 'Elite' },
+    { to: '/catalogs',    icon: Dumbbell,        label: 'Catálogos Expertos' },
   ]},
   { section: 'IA & Biometría', items: [
     { to: '/ai-coach',   icon: Brain,   label: 'AI Coach' },
@@ -35,6 +36,12 @@ const adminNav = [
   { section: 'Sistema', items: [
     { to: '/client-app', icon: Smartphone, label: 'App Cliente' },
     { to: '/settings',   icon: Settings,   label: 'Configuración' },
+  ]},
+  { section: 'Dashboards Cliente', items: [
+    { to: '/client/progress', icon: TrendingUp, label: 'Mi Progreso' },
+    { to: '/client/nutrition',icon: Apple,      label: 'Nutrición Cliente' },
+    { to: '/client/training', icon: Dumbbell,   label: 'Entrenamientos' },
+    { to: '/reports',         icon: BarChart3,  label: 'Reportes Globales' },
   ]},
 ];
 
@@ -69,18 +76,37 @@ const receptionNav = [
   ]},
 ];
 
-const roleNavMap = { admin: adminNav, trainer: trainerNav, receptionist: receptionNav };
+const clientNav = [
+  { section: 'Mi Área Personal', items: [
+    { to: '/client/progress', icon: TrendingUp, label: 'Mi Progreso' },
+    { to: '/client/nutrition',icon: Apple,      label: 'Nutrición' },
+    { to: '/client/training', icon: Dumbbell,   label: 'Entrenamiento' },
+    { to: '/reports',         icon: BarChart3,  label: 'Mis Reportes' },
+  ]},
+];
+
+const roleNavMap: Record<string, any> = { 
+  admin: adminNav, 
+  trainer: trainerNav, 
+  receptionist: receptionNav, 
+  client: clientNav,
+  athlete: clientNav 
+};
 
 const roleColors: Record<string, string> = {
   admin: '#00FF88',
   trainer: '#FF6B35',
   receptionist: '#A78BFA',
+  client: '#00d0ff',
+  athlete: '#00d0ff',
 };
 
 const roleLabels: Record<string, string> = {
   admin: 'Super Admin',
   trainer: 'Entrenador',
   receptionist: 'Recepcionista',
+  client: 'Cliente',
+  athlete: 'Atleta',
 };
 
 export default function Sidebar({ 
