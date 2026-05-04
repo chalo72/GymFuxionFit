@@ -55,8 +55,8 @@ const firebaseConfig = {
 
 const appwriteConfig = {
   endpoint: import.meta.env.VITE_APPWRITE_ENDPOINT,
-  project: import.meta.env.VITE_APPWRITE_PROJECT,
-  database: import.meta.env.VITE_APPWRITE_DATABASE || 'main'
+  project: import.meta.env.VITE_APPWRITE_PROJECT_ID,
+  database: import.meta.env.VITE_APPWRITE_DATABASE_ID || 'main'
 };
 
 /**
@@ -78,23 +78,23 @@ let mainDatabase: DatabaseAdapter;
 const hasFirebase = !!import.meta.env.VITE_FIREBASE_API_KEY;
 const hasAppwrite = !!import.meta.env.VITE_APPWRITE_ENDPOINT;
 
-// 🛡️ REGLA DE ORO ANTIGRAVITY: Prioridad Total a Firebase (Primario) y Appwrite (Shadow)
+// 🛡️ REGLA DE ORO ANTIGRAVITY: Prioridad Total a Appwrite (Capitán) y Firebase (Suplente)
 const firebaseAdapter = hasFirebase ? new FirebaseAdapter(firebaseConfig) : null;
 const appwriteAdapter = hasAppwrite ? new AppwriteAdapter(appwriteConfig.endpoint, appwriteConfig.project, appwriteConfig.database) : null;
 
 try {
-  if (firebaseAdapter && appwriteAdapter) {
-    console.log("💎 [NEXUS]: MODO HÍBRIDO ELITE — Firebase (Primario) + Appwrite (Shadow)");
-    mainDatabase = new MultiAdapter(firebaseAdapter, appwriteAdapter);
-  } else if (firebaseAdapter) {
-    console.log("🔥 [NEXUS]: MODO SINGLE — Usando Firebase como motor primario.");
-    mainDatabase = firebaseAdapter;
+  if (appwriteAdapter && firebaseAdapter) {
+    console.log("💎 [NEXUS]: MODO HÍBRIDO ELITE — Appwrite (Capitán) + Firebase (Suplente)");
+    mainDatabase = new MultiAdapter(appwriteAdapter, firebaseAdapter);
   } else if (appwriteAdapter) {
-    console.log("🖋️ [NEXUS]: MODO SINGLE — Usando Appwrite como motor primario.");
+    console.log("🖋️ [NEXUS]: MODO SINGLE — Usando Appwrite como Capitán principal.");
     mainDatabase = appwriteAdapter;
+  } else if (firebaseAdapter) {
+    console.log("🔥 [NEXUS]: MODO SINGLE — Usando Firebase de emergencia.");
+    mainDatabase = firebaseAdapter;
   } else {
-    // 🛡️ MODO LOCAL SEGURO: Supabase ha sido DESACTIVADO por orden del usuario
-    console.warn("🛡️ [NEXUS]: Supabase desactivado. Iniciando en Modo Local Seguro.");
+    // 🛡️ MODO LOCAL SEGURO: Sin bases de datos cloud
+    console.warn("🛡️ [NEXUS]: Sin conexión Cloud. Iniciando en Modo Local Seguro.");
     mainDatabase = new LocalFallbackAdapter();
   }
 } catch (e) {

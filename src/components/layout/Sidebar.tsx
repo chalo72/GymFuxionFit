@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, CalendarDays, BarChart3, Settings,
   Dumbbell, Zap, Scan, Kanban, Apple, Brain, Trophy, CreditCard,
   Watch, CalendarRange, UserCheck, LogOut, ShieldCheck, Radio, Smartphone,
-  TrendingUp, Package, X, ChevronLeft, ChevronRight
+  TrendingUp, Package, X, ChevronLeft, ChevronRight, BookOpen
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -18,8 +18,7 @@ const adminNav = [
     { to: '/members',     icon: Users,           label: 'Miembros', badge: 245 },
     { to: '/schedule',    icon: CalendarRange,   label: 'Calendario' },
     { to: '/classes',     icon: CalendarDays,    label: 'Clases' },
-    { to: '/trainer',     icon: Dumbbell,        label: 'Entrenador Hub', badge: 'Elite' },
-    { to: '/catalogs',    icon: Dumbbell,        label: 'Catálogos Expertos' },
+    { to: '/catalogs',    icon: BookOpen,        label: 'Catálogos Expertos' },
   ]},
   { section: 'IA & Biometría', items: [
     { to: '/ai-coach',   icon: Brain,   label: 'AI Coach' },
@@ -169,7 +168,7 @@ export default function Sidebar({
             <span className="sidebar-section-label">{group.section}</span>
             {group.items.map(item => (
               <NavLink
-                key={item.to}
+                key={`${group.section}__${item.to}`}
                 to={item.to}
                 className={`sidebar-item ${location.pathname === item.to ? 'active' : ''}`}
               >
