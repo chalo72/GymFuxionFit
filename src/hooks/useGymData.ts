@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext, createElement, ReactNode } from 'react';
 import { gymDatabase } from '../lib/database';
 import { supabase, hasSupabase } from '../lib/supabase';
 import { trioSync } from '../lib/trioSync';
@@ -122,7 +122,7 @@ export interface Member {
   trainingMetrics?: any;
 }
 
-export function useGymData() {
+function useGymDataInternal() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [assets, setAssets] = useState<GymAsset[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -646,4 +646,17 @@ export function useGymData() {
     syncStatus,
     syncError
   };
+}
+
+const GymDataContext = createContext<ReturnType<typeof useGymDataInternal> | null>(null);
+
+export function GymDataProvider({ children }: { children: ReactNode }) {
+  const data = useGymDataInternal();
+  return createElement(GymDataContext.Provider, { value: data }, children);
+}
+
+export function useGymData() {
+  const ctx = useContext(GymDataContext);
+  if (!ctx) return useGymDataInternal();
+  return ctx;
 }

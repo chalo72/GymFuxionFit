@@ -93,7 +93,8 @@ export default function Reception() {
 
   useEffect(() => {
     if (search.length > 1 && activeTab === 'manual') {
-      const filtered = members.filter(m => m.name.toLowerCase().includes(search.toLowerCase())).slice(0, 5);
+      const searchNormalized = search.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const filtered = members.filter(m => m.name && m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(searchNormalized)).slice(0, 5);
       setSuggestions(filtered);
     } else {
       setSuggestions([]);
