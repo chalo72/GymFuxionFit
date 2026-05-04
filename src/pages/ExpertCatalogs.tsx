@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useCatalogs } from '../hooks/useCatalogs';
-import { Dumbbell, Pill, Utensils, Search, Filter, X, PlayCircle, Info, CheckCircle2, ChevronRight, Edit3, Trash2, Plus, Image as ImageIcon, Video, Activity } from 'lucide-react';
+import { Dumbbell, Pill, Utensils, Search, X, PlayCircle, Info, CheckCircle2, ChevronRight, Edit3, Trash2, Plus, Image as ImageIcon, Video, Activity } from 'lucide-react';
 
 export default function ExpertCatalogs() {
   const { catalogs, addCatalogItem, updateCatalogItem, deleteCatalogItem } = useCatalogs();
