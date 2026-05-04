@@ -74,10 +74,10 @@ export default function Catalogs() {
   };
 
   const renderExercises = () => {
-    const filtered = catalogs.exercises.filter(e => e.name.toLowerCase().includes(search.toLowerCase()) || e.muscleGroup.toLowerCase().includes(search.toLowerCase()));
+    const filtered = catalogs.exercises.filter((e: any) => e.name.toLowerCase().includes(search.toLowerCase()) || e.muscleGroup.toLowerCase().includes(search.toLowerCase()));
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-        {filtered.map(ex => (
+        {filtered.map((ex: any) => (
           <div key={ex.id} onClick={() => openModal(ex, 'exercises')} className="glass-card" style={{ padding: 16, cursor: 'pointer', border: '1px solid rgba(0,255,136,0.1)', transition: 'all 0.3s', position: 'relative', overflow: 'hidden' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(0,255,136,0.5)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(0,255,136,0.1)'}>
             {ex.imageUrl && <div style={{ height: 100, margin: '-16px -16px 16px -16px', background: `url(${ex.imageUrl}) center/cover` }} />}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
@@ -93,10 +93,10 @@ export default function Catalogs() {
   };
 
   const renderFunctional = () => {
-    const filtered = (catalogs.functional || []).filter(f => f.name.toLowerCase().includes(search.toLowerCase()) || f.type.toLowerCase().includes(search.toLowerCase()));
+    const filtered = (catalogs.functional || []).filter((f: any) => f.name.toLowerCase().includes(search.toLowerCase()) || f.type.toLowerCase().includes(search.toLowerCase()));
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-        {filtered.map(f => (
+        {filtered.map((f: any) => (
           <div key={f.id} onClick={() => openModal(f, 'functional')} className="glass-card" style={{ padding: 16, cursor: 'pointer', border: '1px solid rgba(255,61,87,0.1)', transition: 'all 0.3s', position: 'relative', overflow: 'hidden' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,61,87,0.5)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,61,87,0.1)'}>
             {f.imageUrl && <div style={{ height: 100, margin: '-16px -16px 16px -16px', background: `url(${f.imageUrl}) center/cover` }} />}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
@@ -113,10 +113,10 @@ export default function Catalogs() {
   };
 
   const renderSupplements = () => {
-    const filtered = catalogs.supplements.filter(s => s.name.toLowerCase().includes(search.toLowerCase()) || s.type.toLowerCase().includes(search.toLowerCase()));
+    const filtered = catalogs.supplements.filter((s: any) => s.name.toLowerCase().includes(search.toLowerCase()) || s.type.toLowerCase().includes(search.toLowerCase()));
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 16 }}>
-        {filtered.map(sup => (
+        {filtered.map((sup: any) => (
           <div key={sup.id} onClick={() => openModal(sup, 'supplements')} className="glass-card" style={{ padding: 16, cursor: 'pointer', border: '1px solid rgba(167,139,250,0.1)', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(167,139,250,0.5)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(167,139,250,0.1)'}>
             {sup.imageUrl && <div style={{ height: 100, margin: '-16px -16px 16px -16px', background: `url(${sup.imageUrl}) center/cover` }} />}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
@@ -132,10 +132,10 @@ export default function Catalogs() {
   };
 
   const renderNutrition = () => {
-    const filtered = catalogs.nutrition.filter(n => n.name.toLowerCase().includes(search.toLowerCase()) || n.category.toLowerCase().includes(search.toLowerCase()));
+    const filtered = catalogs.nutrition.filter((n: any) => n.name.toLowerCase().includes(search.toLowerCase()) || n.category.toLowerCase().includes(search.toLowerCase()));
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 16 }}>
-        {filtered.map(nut => (
+        {filtered.map((nut: any) => (
           <div key={nut.id} onClick={() => openModal(nut, 'nutrition')} className="glass-card" style={{ padding: 16, cursor: 'pointer', border: '1px solid rgba(255,214,0,0.1)', transition: 'all 0.3s' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(255,214,0,0.5)'} onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,214,0,0.1)'}>
             {nut.imageUrl && <div style={{ height: 120, margin: '-16px -16px 16px -16px', background: `url(${nut.imageUrl}) center/cover` }} />}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>

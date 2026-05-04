@@ -163,10 +163,10 @@ export default function Sidebar({
 
       {/* ─── NAVIGATION ─── */}
       <nav className="sidebar-nav">
-        {navGroups.map(group => (
+        {navGroups.map((group: any) => (
           <div key={group.section}>
             <span className="sidebar-section-label">{group.section}</span>
-            {group.items.map(item => (
+            {group.items.map((item: any) => (
               <NavLink
                 key={`${group.section}__${item.to}`}
                 to={item.to}

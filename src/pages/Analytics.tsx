@@ -48,7 +48,7 @@ export default function Analytics() {
       return { 
         month: monthName.charAt(0).toUpperCase() + monthName.slice(1), 
         revenue: revMap[mStr],
-        members: members.filter(m => m.joinDate && m.joinDate <= mStr + '-31').length || members.length
+        members: members.filter((m: any) => m.joinDate && m.joinDate <= mStr + '-31').length || members.length
       };
     });
 

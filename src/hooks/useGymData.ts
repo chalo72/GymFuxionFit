@@ -425,8 +425,6 @@ export function useGymData() {
         console.warn("⚠️ Eliminación de transacción local. Sync pendiente.");
       }
     },
-    
-    waterConfig,
     updateWaterConfig: (cfg: Partial<typeof waterConfig>) => {
        const newCfg = { ...waterConfig, ...cfg };
        setWaterConfig(newCfg);

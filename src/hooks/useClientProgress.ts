@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useGymData } from './useGymData';
-import { useGymData } from './useGymData';
 
 export interface WorkoutSession {
   id?: string;

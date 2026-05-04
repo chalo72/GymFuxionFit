@@ -269,7 +269,7 @@ export default function TrainingDashboard() {
                     <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10, color: 'var(--neon-green)' }}>
                       Ejercicios Realizados:
                     </div>
-                    {session.exercises_list.map((ex, i) => (
+                    {session.exercises_list.map((ex: any, i: number) => (
                       <div key={i} style={{
                         fontSize: 11,
                         padding: '6px 0',
