@@ -28,7 +28,7 @@ const Operations       = lazy(() => import('./pages/Operations'));
 const ClientAppView    = lazy(() => import('./pages/ClientAppView'));
 const Finances         = lazy(() => import('./pages/Finances'));
 const Inventory        = lazy(() => import('./pages/Inventory'));
-const Catalogs         = lazy(() => import('./pages/Catalogs'));
+const Catalogs         = lazy(() => import('./pages/ExpertCatalogs'));
 
 /* ── Dashboards Cliente y Reportes ── */
 const ClientProgress   = lazy(() => import('./pages/ClientProgress'));
