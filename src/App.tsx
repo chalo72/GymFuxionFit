@@ -29,6 +29,10 @@ const ClientAppView    = lazy(() => import('./pages/ClientAppView'));
 const Finances         = lazy(() => import('./pages/Finances'));
 const Inventory        = lazy(() => import('./pages/Inventory'));
 const Catalogs         = lazy(() => import('./pages/ExpertCatalogs'));
+const EvaluacionInicial = lazy(() => import('./pages/EvaluacionInicial'));
+const GerencialKPIs     = lazy(() => import('./pages/GerencialKPIs'));
+const ElitePlanner      = lazy(() => import('./pages/ElitePlanner'));
+const EliteRecovery     = lazy(() => import('./pages/EliteRecovery'));
 
 /* ── Dashboards Cliente y Reportes ── */
 const ClientProgress   = lazy(() => import('./pages/ClientProgress'));
@@ -260,6 +264,10 @@ function App() {
           <Route path="/operations"  element={<Operations />} />
           <Route path="/inventory"   element={<Inventory />} />
           <Route path="/catalogs"    element={<Catalogs />} />
+          <Route path="/evaluacion"  element={<EvaluacionInicial />} />
+          <Route path="/kpis"        element={<GerencialKPIs />} />
+          <Route path="/elite-plan"  element={<ElitePlanner />} />
+          <Route path="/elite-rec"   element={<EliteRecovery />} />
           {/* Client App Preview */}
           <Route path="/client-app"  element={<ClientAppView />} />
           

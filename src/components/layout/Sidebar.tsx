@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, CalendarDays, BarChart3, Settings,
   Dumbbell, Zap, Scan, Kanban, Apple, Brain, Trophy, CreditCard,
   Watch, CalendarRange, UserCheck, LogOut, ShieldCheck, Radio, Smartphone,
-  TrendingUp, Package, X, ChevronLeft, ChevronRight, BookOpen
+  TrendingUp, Package, X, ChevronLeft, ChevronRight, BookOpen, ClipboardList, PieChart, Shield, HeartPulse, BrainCircuit
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -19,6 +19,9 @@ const adminNav = [
     { to: '/schedule',    icon: CalendarRange,   label: 'Calendario' },
     { to: '/classes',     icon: CalendarDays,    label: 'Clases' },
     { to: '/catalogs',    icon: BookOpen,        label: 'Catálogos Expertos' },
+    { to: '/evaluacion',  icon: ClipboardList,   label: 'Entrevista Inicial', badge: 'NUEVO' },
+    { to: '/elite-plan',  icon: BrainCircuit,    label: 'Plan de Entrenamiento', badge: 'PRO' },
+    { to: '/elite-rec',   icon: HeartPulse,      label: 'Descanso y Energía', badge: 'VITAL' },
   ]},
   { section: 'IA & Biometría', items: [
     { to: '/ai-coach',   icon: Brain,   label: 'AI Coach' },
@@ -28,6 +31,7 @@ const adminNav = [
   ]},
   { section: 'Negocio', items: [
     { to: '/analytics', icon: BarChart3,  label: 'Analíticas' },
+    { to: '/kpis',      icon: PieChart,   label: 'KPIs Gerenciales', badge: 'NEW' },
     { to: '/finances',  icon: TrendingUp, label: 'Finanzas' },
     { to: '/inventory', icon: Package,    label: 'Inventario' },
     { to: '/payments',  icon: CreditCard, label: 'Pagos' },
@@ -47,6 +51,9 @@ const adminNav = [
 const trainerNav = [
   { section: 'Mi Espacio', items: [
     { to: '/trainer', icon: LayoutDashboard, label: 'Mis Clientes' },
+    { to: '/evaluacion', icon: ClipboardList,   label: 'Entrevista Inicial', badge: 'NUEVO' },
+    { to: '/elite-plan', icon: BrainCircuit,    label: 'Plan de Entrenamiento', badge: 'PRO' },
+    { to: '/elite-rec',  icon: HeartPulse,      label: 'Descanso y Energía', badge: 'VITAL' },
     { to: '/schedule', icon: CalendarRange,  label: 'Mi Agenda' },
     { to: '/classes',  icon: CalendarDays,   label: 'Clases' },
   ]},

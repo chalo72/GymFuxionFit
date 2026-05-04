@@ -1,15 +1,15 @@
 {
-  "version": "6.3.3",
+  "version": "6.4.4",
   "build": 20260504,
-  "status": "ADVANCED_SYNC_ACTIVE",
+  "status": "ELITE_STABILITY_FIXED",
   "author": "Antigravity Nexus",
   "features": [
-    "Full Bidirectional Real-time Sync",
-    "Nexus Push (Force Sync All)",
-    "Safe StatusBadge Fallback",
-    "Line-by-Line Master Documentation",
-    "Catalogs Expert - Tri-Layer Persistence (localStorage + Appwrite + Firebase)",
-    "Sidebar Fix - Unique Keys + BookOpen Icon",
-    "Fix Vercel Case Sensitivity Deploy - ExpertCatalogs.tsx"
+    "Elite Coach Copilot - Advisory Panel & Scripts",
+    "Lever-Based Exercise Logic (Femur/Arms)",
+    "Elite Logbook v1.0 - Tempo & RPE/RIR",
+    "Elite Anamnesis & Initial Evaluation 360",
+    "Pre-Training Semaphore & Fatigue Alerts",
+    "Elite Planner & Recovery Synergy",
+    "TypeScript Integrity - Fixed Build Errors for Vercel"
   ]
 }

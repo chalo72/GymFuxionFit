@@ -100,6 +100,17 @@ export interface Member {
   progress?: number;
   biometricStatus?: 'pending' | 'completed';
   lastScan?: string;
+  mobilityAnkle?: string;
+  mobilityHip?: string;
+  mobilityThoracic?: string;
+  mobilityShoulders?: string;
+  coreStability?: string;
+  bracingAbility?: string;
+  posturalCompensations?: string;
+  clinicalHistory?: string;
+  femurLength?: string;
+  armLength?: string;
+  techniqueNotes?: string;
   trainingLogs?: { date: string; session: string; intensity: number; notes: string }[];
   workoutHistory?: any[];
   nutritionHistory?: any[];

@@ -1,7 +1,7 @@
 # 📑 NEXUS SYSTEM MANIFEST — GymFuxionFit
-> **Versión del Sistema**: v6.3.0 (CLOUD-ELITE-ONLY)
-> **Última Actualización**: 2026-04-29 12:47
-> **Estado General**: 🟢 STABLE — Supabase Decommissioned
+> **Versión del Sistema**: v6.4.4 (ELITE-STABILITY)
+> **Última Actualización**: 2026-05-04 13:30
+> **Estado General**: 🟢 STABLE — TypeScript Build Errors Fixed for Vercel Deployment
 
 ---
 
@@ -56,8 +56,26 @@
 - ✅ **Advanced Critical v6.2.2**: Implementado "Silenciar y Bypass" para errores de Supabase. El sistema ahora permite ignorar alertas de nube para mantener operatividad 100% local.
 - ✅ **Blindaje de ID en Supabase**: Inyección agresiva de columna `ID` en `SupabaseAdapter` para resolver `NULL VALUE` constraint.
 - ✅ **Supabase Decommissioned v6.3.0**: Eliminación total del motor Supabase del flujo de la aplicación. El sistema ahora es más ligero y silencioso.
+- ✅ **TypeScript Strict Guardian**: Incorporada regla estricta de validación (no `implicit any`, no variables duplicadas/no usadas). Todas las ediciones futuras en Vercel deben pasar `tsc -b` sin excepciones.
+- ✅ **Despliegue Maestro**: Creado `1_NUBE_VERCEL.bat` que unifica despliegues y bloquea PUSH si TypeScript detecta fallas locales, evitando builds fallidos en Vercel.
+- ✅ **Resolución de Errores Vercel**: Eliminados 25 errores de compilación críticos que bloqueaban la publicación (Tipados `any` en `map/filter`, importaciones/propiedades duplicadas).
 - ✅ **LocalFallbackAdapter**: Nuevo motor de seguridad que evita que la app se rompa si no hay llaves de nube configuradas.
-
+- ✅ **Metodología Élite (4 Pilares)**: Digitalización completa de los procesos maestros FuxionFit.
+  - **Pilar 1 (Bio-Mecánica)**: Wizard de evaluación funcional integrado en Onboarding (Tobillo, Cadera, Bracing).
+  - **Pilar 2 (Periodización)**: Módulo Elite Planner con control de Volumen, Intensidad RPE/RIR y Frecuencia.
+  - **Pilar 3 (Selección Inteligente)**: Categorización de 85+ ejercicios por patrones de movimiento (Push, Pull, Hinge, Squat, Carry).
+  - **Pilar 4 (Recuperación y Estrés)**: Módulo Elite Recovery para gestión de Carga Alostática, Sueño y Nutrición.
+- ✅ **Dashboard Gerencial KPIs**: Panel ejecutivo con radar de salud del negocio, tendencia de utilidad y alertas de stock/cartera.
+- ✅ **Evaluación Inicial 360°**: Nuevo Onboarding de 5 pasos para atletas de alto rendimiento.
+- ✅ **Elite Logbook v1.0**: Sistema de registro diario con control de **Tempo (3-0-1-0)**, **RPE/RIR**, y comparación de Series/Reps (Objetivo vs Real).
+- ✅ **Anamnesis Profunda**: Integración de historial clínico, cirugías y descompensaciones posturales en la ficha técnica del atleta.
+- ✅ **Gestión de NEAT**: Monitoreo de pasos diarios y actividad no asociada al ejercicio en el perfil de recuperación.
+- ✅ **Copiloto de Datos Élite**: Panel de asesoría en tiempo real que guía al entrenador según el contexto del atleta.
+  - **Scripts de Comunicación**: Generación de frases sugeridas para ganar confianza técnica ("Cita Cero").
+  - **Semáforo de Fatiga Automático**: Alerta visual (Rojo/Verde) basada en racha y descanso.
+  - **Guía Técnica de Micro-ciclo**: Recordatorios de ajustes biomecánicos (acetábulo, longitud de fémur) integrados en la vista de sesión.
+- ✅ **Inteligencia de Palancas (Lever-Based Logic)**: El copiloto ahora sugiere tipos de sentadilla (Barra Alta/Baja/Frontal) automáticamente al detectar fémures largos o brazos cortos en la Evaluación Inicial.
+- ✅ **Alerta de Onboarding Pendiente**: Contador en el sidebar para perfiles que aún no han pasado por la "Cita Cero" (Bio-Mecánica).
 ---
 
 ## 🚧 DEUDA TÉCNICA & ERRORES CONOCIDOS

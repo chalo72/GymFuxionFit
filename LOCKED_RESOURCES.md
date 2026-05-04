@@ -8,9 +8,12 @@ Este archivo registra los módulos y archivos que han alcanzado un estado de est
 - [x] `src/hooks/useGymData.ts` - Lógica de datos core y sincronización financiera.
 - [x] `src/index.css` - Sistema de diseño Glassmorphism y variables de color.
 - [x] `src/components/layout/Sidebar.tsx` - Navegación principal.
+- [x] `src/pages/ExpertCatalogs.tsx` - Módulo maestro de conocimientos protegido contra bugs de mayúsculas (quantum evasion).
+- [x] `1_NUBE_VERCEL.bat` - Escudo de Despliegue. Prohibido eliminar o alterar su función de verificación (Build).
 
 ## 📜 Reglas de Evolución Incremental
 1. **No Overwrite**: Prohibido usar `write_to_file` para editar archivos en esta lista. Usar solo `replace_file_content` o `multi_replace_file_content` con bloques mínimos.
 2. **Preservación Estética**: Cualquier nueva funcionalidad debe heredar estilos existentes, no redefinirlos.
 3. **Validación Previa**: Leer el archivo completo antes de proponer un cambio parcial.
 4. **Respeto al Autor**: Mantener los comentarios de arquitectura (OMNI_RECEPTION, etc.) intactos.
+5. **TypeScript Strict Code**: NUNCA añadir variables sin usar (`noUnusedLocals`). SIEMPRE tipar explícitamente parámetros en mapas o filtros (`map((item: any) => ...)`). Vercel rechaza código implícito.

@@ -4,7 +4,7 @@ import {
   Users, Brain, Zap, Apple, Activity, Heart, MessageSquare,
   Plus, ChevronRight, CheckCircle2, Clock, TrendingUp, TrendingDown,
   Dumbbell, Target, Star, AlertTriangle, Send, ChevronLeft,
-  FileText, BarChart3, Scale, Flame, Mic, X, Play, StopCircle,
+  FileText, BarChart3, Scale, Flame, Mic, X, Play, StopCircle, BrainCircuit
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -48,9 +48,13 @@ interface AiAssistant {
 
 interface SessionExercise {
   name: string;
-  sets: string;
-  reps: string;
+  targetSets: string;
+  targetReps: string;
+  actualSets: string;
+  actualReps: string;
   weight: string;
+  rpe: string;
+  tempo: string;
   notes: string;
 }
 
@@ -155,12 +159,14 @@ export default function TrainerDashboard() {
     motivacion: [],
   });
   const [sessionExercises, setSessionExercises] = useState<SessionExercise[]>([
-    { name: 'SkiErg', sets: '1', reps: '1000m', weight: 'Máx', notes: '' },
-    { name: 'Sled Push', sets: '1', reps: '50m', weight: '102kg', notes: '' },
+    { name: 'Sentadilla Libre', targetSets: '3', targetReps: '8-10', actualSets: '', actualReps: '', weight: '80kg', rpe: '8', tempo: '3-0-1-0', notes: 'Mantener talones' },
+    { name: 'Press Banca', targetSets: '3', targetReps: '6-8', actualSets: '', actualReps: '', weight: '60kg', rpe: '9', tempo: '3-0-1-0', notes: 'Control excéntrico' },
   ]);
   const [noteText, setNoteText] = useState('');
 const [showFlashBuilder, setShowFlashBuilder] = useState(false);
   const [showMeasuresModal, setShowMeasuresModal] = useState(false);
+  const [showScript, setShowScript] = useState(false);
+  const [showTechnicalGuide, setShowTechnicalGuide] = useState(false);
 
   const handleSaveMeasures = (data: any) => {
     if (!selectedClient) return;
@@ -287,8 +293,10 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
             </div>
             <div style={{ width: 1, background: 'rgba(255,255,255,0.05)' }} />
             <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 800, color: 'var(--danger-red)' }}>{attentionCount}</div>
-                <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Alertas</div>
+                <div style={{ fontSize: 'var(--text-sm)', fontWeight: 800, color: 'var(--energy-orange)' }}>
+                  {members.filter(m => !m.femurLength || m.biometricStatus !== 'completed').length}
+                </div>
+                <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pendientes</div>
             </div>
           </div>
         </div>
@@ -452,12 +460,89 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
               </div>
             </div>
 
+            {/* 🤖 ELITE COACH COPILOT — ADVISORY PANEL */}
+            <div style={{
+              marginTop: 16, padding: '16px 20px', 
+              background: 'linear-gradient(90deg, rgba(0,255,136,0.05) 0%, rgba(167,139,250,0.05) 100%)',
+              border: '1px solid rgba(0,255,136,0.1)', borderRadius: 16,
+              display: 'flex', gap: 20, alignItems: 'center'
+            }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 12, background: 'rgba(0,255,136,0.1)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-green)'
+              }}>
+                <BrainCircuit size={24} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--neon-green)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>ASISTENTE DE DATOS · CONSEJO DEL DÍA</div>
+                <div style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>
+                  {selectedClient.biometricStatus !== 'completed' 
+                    ? "Este cliente es nuevo. Vamos a hacerle la 'Entrevista Inicial' para ver cómo se mueve su cuerpo y ganar su confianza."
+                    : selectedClient.femurLength && Number(selectedClient.femurLength) > 50
+                      ? `Tiene fémures largos (${selectedClient.femurLength}cm). Recomiéndale sentadilla con la barra más abajo o frontal para que esté más cómodo.`
+                      : (selectedClient.streak || 0) > 15 
+                        ? "Lleva muchos días seguidos entrenando. Hoy mejor baja un poco la intensidad para evitar que se canse de más."
+                        : "Todo se ve bien hoy. Sigue con el plan de subir cargas poco a poco."
+                  }
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button 
+                  className="btn btn-ghost" 
+                  style={{ fontSize: 11, border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}
+                  onClick={() => setShowScript(!showScript)}
+                >
+                  {showScript ? 'Cerrar Script' : '¿Qué decirle?'}
+                </button>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ fontSize: 11, padding: '8px 16px' }}
+                  onClick={() => setShowTechnicalGuide(!showTechnicalGuide)}
+                >
+                  {showTechnicalGuide ? 'Cerrar Guía' : 'Guía Técnica'}
+                </button>
+              </div>
+            </div>
+
+            {/* Sub-Panel: Scripts de Comunicación */}
+            {showScript && (
+              <div style={{ marginTop: 12, padding: 16, background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)', borderRadius: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--neon-green)', marginBottom: 8 }}>SCRIPT DE COMUNICACIÓN SUGERIDO</div>
+                <p style={{ fontSize: 13, fontStyle: 'italic', color: 'var(--text-secondary)' }}>
+                  "{selectedClient.biometricStatus !== 'completed' 
+                    ? `Hola ${selectedClient.name}, ¡qué bueno tenerte aquí! Antes de empezar a mover peso, vamos a hacer una 'Evaluación Bio-Mecánica'. Quiero entender cómo se mueven tus articulaciones para que cada ejercicio sea 100% eficiente para tu estructura. ¿Empezamos?`
+                    : (selectedClient.streak || 0) > 15 
+                      ? `Alex, he notado que llevas 15 días entrenando a tope. Tu nivel de fatiga acumulada está subiendo. Hoy vamos a regular la carga y enfocarnos en calidad técnica, así evitamos lesiones y progresamos más a largo plazo.`
+                      : `¡A darle Alex! Tu estado es óptimo hoy. El plan marca sobrecarga progresiva en sentadilla. ¿Cómo te sientes para buscar ese nuevo PR?`
+                  }"
+                </p>
+              </div>
+            )}
+
+            {/* Sub-Panel: Guía Técnica */}
+            {showTechnicalGuide && (
+              <div style={{ marginTop: 12, padding: 16, background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.1)', borderRadius: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 900, color: '#A78BFA', marginBottom: 8 }}>CÓMO AJUSTAR EL EJERCICIO</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                     <strong>Tip clave:</strong> {selectedClient.techniqueNotes || 'Ajustar ancho de pies en sentadilla.'}
+                   </div>
+                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                     <strong>Cuerpo:</strong> Fémur {selectedClient.femurLength || 'S/D'}cm • Brazos {selectedClient.armLength || 'S/D'}cm
+                   </div>
+                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                     <strong>Movilidad:</strong> Cadera {selectedClient.mobilityHip || 'Normal'} • Tobillo {selectedClient.mobilityAnkle || 'Normal'}
+                   </div>
+                </div>
+              </div>
+            )}
+
             {/* Resumen de impacto rápido */}
             <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
               {[
-                { label: 'Estado Financiero', value: selectedClient.debt > 0 ? 'Deuda Pendiente' : 'Suscripción OK', color: selectedClient.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' },
-                { label: 'Fatiga Percibida', value: 'Baja (Check-in)', color: 'var(--neon-green)' },
-                { label: 'Próxima Meta', value: selectedClient.objective || 'Sin asignar', color: 'var(--text-primary)' },
+                { label: 'Estado Pagos', value: selectedClient.debt > 0 ? 'Deuda Pendiente' : 'Al día', color: selectedClient.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' },
+                { label: 'Energía de Hoy', value: (selectedClient.streak || 0) > 10 ? '🔴 CANSADO' : '🟢 CON ENERGÍA', color: (selectedClient.streak || 0) > 10 ? 'var(--danger-red)' : 'var(--neon-green)' },
+                { label: 'Objetivo', value: selectedClient.objective || 'Sin asignar', color: 'var(--text-primary)' },
               ].map((s, i) => (
                 <div key={i} style={{
                   flex: 1, padding: '10px 14px', background: 'rgba(255,255,255,0.02)',
@@ -674,17 +759,35 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                       <Plus size={12} /> Añadir Ejercicio
                     </button>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr 1fr 1.5fr', gap: 12, padding: '0 12px', fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      <span>Ejercicio</span>
+                      <span style={{ textAlign: 'center' }}>Objetivo</span>
+                      <span style={{ textAlign: 'center' }}>Real</span>
+                      <span style={{ textAlign: 'center' }}>Carga (kg)</span>
+                      <span style={{ textAlign: 'center' }}>RPE/RIR</span>
+                      <span style={{ textAlign: 'center' }}>Tempo</span>
+                      <span>Notas Técnicas</span>
+                    </div>
                     {sessionExercises.map((ex, i) => (
                       <div key={i} style={{
-                        display: 'grid', gridTemplateColumns: '1fr 80px 80px 100px',
-                        gap: 8, padding: '10px 12px', background: 'var(--space-medium)',
+                        display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr 1fr 1fr 1.5fr',
+                        gap: 12, padding: '12px', background: 'var(--space-medium)',
                         borderRadius: 'var(--radius-md)', alignItems: 'center',
+                        border: '1px solid rgba(255,255,255,0.03)'
                       }}>
-                        <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{ex.name}</div>
-                        <input className="input-field" defaultValue={ex.sets} placeholder="Series" style={{ padding: '6px 8px', fontSize: 'var(--text-xs)', textAlign: 'center' }} />
-                        <input className="input-field" defaultValue={ex.reps} placeholder="Reps" style={{ padding: '6px 8px', fontSize: 'var(--text-xs)', textAlign: 'center' }} />
-                        <input className="input-field" defaultValue={ex.weight} placeholder="Carga" style={{ padding: '6px 8px', fontSize: 'var(--text-xs)', textAlign: 'center' }} />
+                        <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--neon-green)' }}>{ex.name}</div>
+                        <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>{ex.targetSets}x{ex.targetReps}</div>
+                        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                          <input className="input-field" placeholder="S" style={{ width: 35, padding: '6px 0', textAlign: 'center', fontSize: 12 }} />
+                          <input className="input-field" placeholder="R" style={{ width: 35, padding: '6px 0', textAlign: 'center', fontSize: 12 }} />
+                        </div>
+                        <input className="input-field" defaultValue={ex.weight.replace('kg','')} style={{ textAlign: 'center', fontSize: 12 }} />
+                        <select className="input-field" style={{ fontSize: 11 }}>
+                           {[1,2,3,4,5,6,7,8,9,10].map(v => <option key={v} value={v}>RPE {v}</option>)}
+                        </select>
+                        <input className="input-field" defaultValue={ex.tempo} style={{ textAlign: 'center', fontSize: 11 }} />
+                        <input className="input-field" defaultValue={ex.notes} style={{ fontSize: 11 }} />
                       </div>
                     ))}
                   </div>
