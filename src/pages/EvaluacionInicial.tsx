@@ -42,7 +42,8 @@ interface EvalData {
 }
 
 export default function EvaluacionInicial() {
-  const { addMember, staff } = useGymData();
+  const { addMember, updateMemberStatus, members, staff } = useGymData();
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [step, setStep] = useState(1);
   const [saved, setSaved] = useState(false);
   const [data, setData] = useState<EvalData>({
@@ -53,22 +54,41 @@ export default function EvaluacionInicial() {
     objective: '', plan: 'Mensual Básico', trainer: '', daysPerWeek: '3',
   });
 
+  // Cargar miembro si viene de una selección (vía localStorage o similar para simplificar sin Router params ahora)
+  React.useEffect(() => {
+    const pendingId = localStorage.getItem('pending_eval_id');
+    if (pendingId) {
+      const m = members.find(mx => mx.id === pendingId);
+      if (m) {
+        setSelectedMemberId(pendingId);
+        setData(prev => ({
+          ...prev,
+          name: m.name || '',
+          phone: m.phone || '',
+          email: m.email || '',
+          plan: m.plan || 'Mensual Básico'
+        }));
+      }
+      localStorage.removeItem('pending_eval_id');
+    }
+  }, [members]);
+
   const update = (field: keyof EvalData, value: string) => setData(prev => ({ ...prev, [field]: value }));
 
   const imc = data.weight && data.height ? (Number(data.weight) / Math.pow(Number(data.height) / 100, 2)).toFixed(1) : null;
   const imcLabel = imc ? Number(imc) < 18.5 ? 'Bajo Peso' : Number(imc) < 25 ? '✅ Normal' : Number(imc) < 30 ? '⚠️ Sobrepeso' : '🔴 Obesidad' : null;
 
   const trainers = staff ? staff.filter((s: any) => s.status === 'active') : [];
-
+  
   const handleFinish = async () => {
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + 1);
 
-    await addMember({
+    const evalPayload = {
       name: data.name,
       phone: data.phone,
       email: data.email,
-      status: 'active',
+      status: 'active' as const,
       plan: data.plan,
       expiryDate: expiryDate.toISOString().split('T')[0],
       debt: 0,
@@ -94,7 +114,14 @@ export default function EvaluacionInicial() {
       techniqueNotes: data.techniqueNotes,
       notes: data.notes,
       joined: new Date().toISOString().split('T')[0],
-    });
+      biometricStatus: 'completed' as const
+    };
+
+    if (selectedMemberId) {
+      await updateMemberStatus(selectedMemberId, evalPayload);
+    } else {
+      await addMember(evalPayload);
+    }
     setSaved(true);
   };
 

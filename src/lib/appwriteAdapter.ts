@@ -25,7 +25,7 @@ export class AppwriteAdapter implements DatabaseAdapter {
   private normalizeName(name: string): string {
     const map: Record<string, string> = {
       'products': 'Productos',
-      'members': 'Members',
+      'members': 'members',
       'transactions': 'transactions'
     };
     return map[name.toLowerCase()] || name;

@@ -589,12 +589,20 @@ export function useGymData() {
 
     addMember: async (m: Omit<Member, 'id'>) => {
       const tempId = crypto.randomUUID();
-      const newMember = { ...m, id: tempId };
+      const newMember = { 
+        ...m, 
+        id: tempId,
+        biometricStatus: m.biometricStatus || 'pending',
+        joined: m.joined || new Date().toISOString().split('T')[0],
+        visits: 0,
+        debt: m.debt || 0,
+        streak: 0
+      };
       
-      setMembers(prev => [newMember, ...prev]);
+      setMembers(prev => [newMember as Member, ...prev]);
       
       try {
-        await trioSync.create('members', { ...m, id: tempId });
+        await trioSync.create('members', newMember);
       } catch (error) {
         console.error("Error sync members:", error);
       }

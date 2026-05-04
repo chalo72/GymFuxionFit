@@ -8,10 +8,11 @@ import {
   QrCode, ScanEye, Camera, ShieldCheck, Activity,
   Zap, Database, Map as MapIcon, RefreshCcw, User,
   AlertCircle, HeartPulse, ChevronRight, Dumbbell,
-  Contact, Star, Target, Clock, History, Edit2, UserX, Check
+  Contact, Star, Target, Clock, History, Edit2, UserX, Check, UserPlus
 } from 'lucide-react';
 import { useGymData, Member } from '../hooks/useGymData';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
+import QuickRegisterModal from '../components/reception/QuickRegisterModal';
 
 /* ══════════════════════════════════════════
    TIPOS & MOCKS HIDRINOS
@@ -38,7 +39,7 @@ const fmtTime = (s: number) => {
    HYBRID RECEPTION HUB (FUSION v5.0 - PREMIUM GLASS)
    ══════════════════════════════════════════ */
 export default function Reception() {
-  const { members, transactions, clearMemberDebt, injectTransaction, products, registerProductSale, updateMemberStatus, plansConfig } = useGymData();
+  const { members, transactions, clearMemberDebt, injectTransaction, products, registerProductSale, updateMemberStatus, plansConfig, addMember } = useGymData();
   const { products: configProducts } = useGymConfig();
 
   /* ── KPIs del día calculados en tiempo real ── */
@@ -83,6 +84,7 @@ export default function Reception() {
   const [paymentMethod, setPaymentMethod] = useState<'Efectivo' | 'Nequi' | 'Crédito'>('Efectivo');
   const [productSearch, setProductSearch] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showQuickRegister, setShowQuickRegister] = useState(false);
 
   useEffect(() => {
     const t = setInterval(() => setTick(x => x + 1), 1000);
@@ -314,11 +316,22 @@ export default function Reception() {
          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, overflowY: 'auto', paddingRight: 5 }}>
             <div style={{ display: 'flex', gap: 12 }}>
                {[{ id: 'manual', icon: <User size={22}/>, label: 'MANUAL' }, { id: 'qr', icon: <QrCode size={22}/>, label: 'QR SCAN' }].map(t => (
-                 <button key={t.id} onClick={() => setActiveTab(t.id as any)} style={{ flex: 1, padding: '18px 0', borderRadius: 20, background: activeTab === t.id ? 'rgba(0,255,136,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${activeTab === t.id ? 'rgba(0,255,136,0.4)' : 'rgba(255,255,255,0.05)'}`, color: activeTab === t.id ? 'var(--neon-green)' : 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, cursor: 'pointer', transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)', backdropFilter: 'blur(10px)' }}>
-                   {t.icon} <span style={{ fontSize: 11, fontWeight: 950, letterSpacing: 1 }}>{t.label}</span>
-                 </button>
-               ))}
-            </div>
+                  <button key={t.id} onClick={() => setActiveTab(t.id as any)} style={{ flex: 1, padding: '18px 0', borderRadius: 20, background: activeTab === t.id ? 'rgba(0,255,136,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${activeTab === t.id ? 'rgba(0,255,136,0.4)' : 'rgba(255,255,255,0.05)'}`, color: activeTab === t.id ? 'var(--neon-green)' : 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, cursor: 'pointer', transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)', backdropFilter: 'blur(10px)' }}>
+                    {t.icon} <span style={{ fontSize: 11, fontWeight: 950, letterSpacing: 1 }}>{t.label}</span>
+                  </button>
+                ))}
+                <button 
+                  onClick={() => setShowQuickRegister(true)}
+                  style={{ 
+                    flex: 0.8, padding: '18px 0', borderRadius: 20, background: 'rgba(0,255,136,0.2)', 
+                    border: '1px solid rgba(0,255,136,0.5)', color: 'var(--neon-green)', 
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, 
+                    cursor: 'pointer', transition: '0.3s', backdropFilter: 'blur(10px)' 
+                  }}
+                >
+                  <UserPlus size={22}/> <span style={{ fontSize: 11, fontWeight: 950, letterSpacing: 1 }}>NUEVO</span>
+                </button>
+             </div>
 
             {!selectedMember ? (
                <div className="glass-card premium-shadow" style={{ flex: 1, padding: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(0,255,136,0.15)', borderRadius: 28, minHeight: 300, background: 'rgba(0,255,136,0.02)', backdropFilter: 'blur(15px)' }}>
@@ -679,6 +692,51 @@ export default function Reception() {
                </div>
             </div>
          </div>
+      )}
+
+      {/* Quick Register Modal */}
+      {showQuickRegister && (
+        <QuickRegisterModal 
+          onClose={() => setShowQuickRegister(false)}
+          plansConfig={plansConfig}
+          onSave={async (data, amountPaid) => {
+            await addMember(data);
+            
+            if (amountPaid > 0) {
+              await injectTransaction({
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString().slice(0, 5),
+                description: `Plan: ${data.plan} (${data.name})`,
+                category: data.plan === 'dia' ? 'daypass' : 'membership',
+                type: 'income',
+                amount: amountPaid,
+                method: data.payMethod || 'Efectivo',
+                client: data.name
+              });
+            }
+
+            setActiveMembers(prev => [{
+               id: String(Date.now()),
+               name: data.name,
+               initials: data.name.slice(0,2).toUpperCase(),
+               plan: data.plan,
+               checkedInAt: Date.now(),
+               membershipStatus: 'active',
+               color: 'var(--neon-green)',
+               checkInMethod: 'manual'
+            }, ...prev]);
+
+            setShowQuickRegister(false);
+            setLogs(prev => [{ 
+              id: Date.now(), 
+              name: data.name, 
+              action: 'NUEVO REGISTRO & INGRESO', 
+              time: new Date().toLocaleTimeString().slice(0,5), 
+              method: 'RECEPCIÓN', 
+              color: 'var(--neon-green)' 
+            }, ...prev]);
+          }}
+        />
       )}
 
       <style>{`

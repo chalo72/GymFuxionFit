@@ -4,7 +4,7 @@ import {
   Users, Brain, Zap, Apple, Activity, Heart, MessageSquare,
   Plus, ChevronRight, CheckCircle2, Clock, TrendingUp, TrendingDown,
   Dumbbell, Target, Star, AlertTriangle, Send, ChevronLeft,
-  FileText, BarChart3, Scale, Flame, Mic, X, Play, StopCircle, BrainCircuit
+  FileText, BarChart3, Scale, Flame, Mic, X, Play, StopCircle, BrainCircuit, CreditCard, AlertCircle
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -148,6 +148,8 @@ export default function TrainerDashboard() {
   const [activeTab, setActiveTab] = useState<'progress' | 'log' | 'body' | 'goals' | 'notes' | 'connect'>('progress');
   const [activeAI, setActiveAI] = useState<AiId>('nutri');
   const [showAIPanel, setShowAIPanel] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const onToggleCollapse = () => setIsCollapsed(!isCollapsed);
   const [sessionMode, setSessionMode] = useState(false);
   const [sessionTime, setSessionTime] = useState(0);
   const [aiInput, setAiInput] = useState('');
@@ -254,14 +256,16 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
 
       {/* ══════════ LEFT — LISTA DE CLIENTES ══════════ */}
       <div className="sidebar-trainer-list" style={{
-        width: 280,
+        width: isCollapsed ? 80 : 280,
         flexShrink: 0,
-        background: 'var(--space-dark)',
-        borderRight: '1px solid rgba(0,255,136,0.08)',
+        background: 'rgba(10, 10, 10, 0.4)',
+        backdropFilter: 'blur(20px)',
+        borderRight: '1px solid rgba(255,255,255,0.05)',
         display: 'flex',
         flexDirection: 'column',
         borderRadius: 'var(--radius-xl) 0 0 var(--radius-xl)',
         overflow: 'hidden',
+        transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}>
         {/* Header */}
         <div style={{ padding: '20px 16px 14px', borderBottom: '1px solid rgba(0,255,136,0.06)' }}>
@@ -272,11 +276,11 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                 {members.length} Atletas Activos
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-secondary" title="Reportes Consolidados" onClick={() => navigate('/reports')} style={{ padding: '8px 12px', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}>
-                <BarChart3 size={16} />
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => onToggleCollapse()} className="btn btn-ghost" style={{ width: 32, height: 32, padding: 0 }}>
+                 {isCollapsed ? <ChevronRight size={14}/> : <ChevronLeft size={14}/>}
               </button>
-              <button className="btn btn-primary" style={{ padding: '8px 12px', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 15px rgba(0,255,136,0.2)' }}>
+              <button className="btn btn-primary" style={{ width: 32, height: 32, padding: 0, borderRadius: 10 }}>
                 <Plus size={16} />
               </button>
             </div>
@@ -299,6 +303,18 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                 <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Pendientes</div>
             </div>
           </div>
+          
+          {/* Alerta de Evaluaciones Urgentes (Viene de Recepción) */}
+          {members.filter(m => m.biometricStatus === 'pending').length > 0 && (
+            <div style={{ marginTop: 12, padding: '10px 14px', background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', borderRadius: 12 }}>
+               <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--danger-red)', letterSpacing: 1, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                 <AlertCircle size={12}/> EVALUACIONES PENDIENTES
+               </div>
+               <div style={{ fontSize: 11, color: '#fff', marginTop: 4 }}>
+                 Hay {members.filter(m => m.biometricStatus === 'pending').length} atletas registrados por recepción que necesitan onboarding.
+               </div>
+            </div>
+          )}
         </div>
 
         {/* Client list */}
@@ -332,24 +348,15 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                   {(member?.name || 'NN').slice(0, 2).toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member?.name || 'N/A'}</span>
+                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {!isCollapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member?.name || 'N/A'}</span>}
                     {member?.alerts && member.alerts.length > 0 && <AlertTriangle size={12} style={{ color: 'var(--danger-red)', flexShrink: 0 }} />}
-                    {(!member?.weight || member?.biometricStatus !== 'completed') && (
-                      <div title="Perfil Incompleto" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--danger-red)', boxShadow: '0 0 5px var(--danger-red)' }} />
-                    )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{
-                      fontSize: '0.65rem', fontWeight: 700, padding: '1px 6px',
-                      borderRadius: 'var(--radius-full)', 
-                      background: (member?.status || 'inactive') === 'active' ? 'rgba(0,230,118,0.1)' : 'rgba(255,61,87,0.1)', 
-                      color: (member?.status || 'inactive') === 'active' ? 'var(--success-green)' : 'var(--danger-red)',
-                    }}>
-                      {(member?.status || 'inactive').toUpperCase()}
-                    </span>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>🔥{member?.streak || 0}d</span>
-                  </div>
+                  {!isCollapsed && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>🔥{member?.streak || 0}d</span>
+                    </div>
+                  )}
                 </div>
                 <ChevronRight size={14} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
               </button>
@@ -404,179 +411,139 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
                   <span>⏰ Última: {selectedClient.lastVisit}</span>
                   <span style={{ color: 'var(--neon-green)' }}>🔥 {selectedClient.streak || 0} días racha</span>
                 </div>
-                {(!selectedClient.weight || selectedClient.biometricStatus !== 'completed') && (
-                  <div style={{ marginTop: 10, padding: '10px 16px', background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.3)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <AlertTriangle size={14} color="var(--danger-red)" />
-                      <span style={{ fontSize: 10, fontWeight: 950, color: 'var(--danger-red)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Atleta con Perfil Incompleto</span>
-                    </div>
-                    <button 
-                      onClick={() => setShowMeasuresModal(true)}
-                      style={{ padding: '6px 12px', borderRadius: 8, background: 'var(--danger-red)', color: '#000', border: 'none', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
-                    >
-                      TOMAR MEDIDAS AHORA
-                    </button>
-                  </div>
-                )}
               </div>
-              {/* Acciones rápidas */}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  className="btn btn-secondary"
-                  title="Ver Dashboard del Cliente"
-                  style={{ gap: 8, background: 'rgba(0, 255, 136, 0.15)', border: '1px solid rgba(0, 255, 136, 0.3)', color: 'var(--neon-green)' }}
-                  onClick={() => navigate('/client/progress')}
-                >
-                  <TrendingUp size={14} /> View Progress
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  style={{ gap: 8, background: 'rgba(167, 139, 250, 0.15)', border: '1px solid rgba(167, 139, 250, 0.3)', color: '#A78BFA' }}
-                  onClick={() => setShowFlashBuilder(true)}
-                >
-                  <Zap size={14} /> Flash Creator
-                </button>
-                {!sessionMode ? (
+              
+              {/* Acciones rápidas — ZEN PRIORITY */}
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 8, marginRight: 8 }}>
                   <button
-                    className="btn btn-primary"
-                    onClick={() => { setSessionMode(true); setActiveTab('log'); }}
-                    style={{ gap: 8 }}
+                    className="btn btn-ghost"
+                    title="Flash Creator"
+                    style={{ width: 36, height: 36, padding: 0, borderRadius: 12, background: 'rgba(167, 139, 250, 0.1)', color: '#A78BFA', border: '1px solid rgba(167, 139, 250, 0.2)' }}
+                    onClick={() => setShowFlashBuilder(true)}
                   >
-                    <Play size={14} /> Iniciar Sesión
+                    <Zap size={16} />
                   </button>
+                  <button
+                    className="btn btn-ghost"
+                    title="Métricas"
+                    style={{ width: 36, height: 36, padding: 0, borderRadius: 12, background: 'rgba(0, 255, 136, 0.1)', color: 'var(--neon-green)', border: '1px solid rgba(0, 255, 136, 0.2)' }}
+                    onClick={() => navigate('/client/progress')}
+                  >
+                    <TrendingUp size={16} />
+                  </button>
+                </div>
+
+                {!sessionMode ? (
+                  selectedClient.biometricStatus === 'pending' ? (
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => {
+                        localStorage.setItem('pending_eval_id', selectedClient.id);
+                        navigate('/evaluacion-inicial');
+                      }}
+                      style={{ height: 48, padding: '0 24px', borderRadius: 16, background: 'var(--neon-green)', color: '#000', fontWeight: 950, display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 8px 25px rgba(0,255,136,0.3)' }}
+                    >
+                      <Zap size={18} /> INICIAR ONBOARDING
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => { setSessionMode(true); setActiveTab('log'); }}
+                      style={{ height: 48, padding: '0 24px', borderRadius: 16, background: 'var(--neon-green)', color: '#000', fontWeight: 950, display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 8px 25px rgba(0,255,136,0.3)' }}
+                    >
+                      <Play size={18} /> INICIAR SESIÓN
+                    </button>
+                  )
                 ) : (
                   <button
                     onClick={() => { setSessionMode(false); setSessionTime(0); }}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px',
-                      borderRadius: 'var(--radius-md)', background: 'rgba(255,61,87,0.15)',
+                      height: 48, padding: '0 24px', borderRadius: 16, background: 'rgba(255,61,87,0.15)',
                       border: '1px solid rgba(255,61,87,0.3)', color: 'var(--danger-red)',
-                      cursor: 'pointer', fontWeight: 700, fontSize: 'var(--text-sm)',
+                      cursor: 'pointer', fontWeight: 950, display: 'flex', alignItems: 'center', gap: 10,
                     }}
                   >
-                    <StopCircle size={14} /> Terminar · {formatTime(sessionTime)}
+                    <StopCircle size={18} /> TERMINAR · {formatTime(sessionTime)}
                   </button>
                 )}
               </div>
             </div>
 
-            {/* 🤖 ELITE COACH COPILOT — ADVISORY PANEL */}
+            {/* 🤖 ZEN ADVISORY BAR (Floating style) */}
             <div style={{
-              marginTop: 16, padding: '16px 20px', 
-              background: 'linear-gradient(90deg, rgba(0,255,136,0.05) 0%, rgba(167,139,250,0.05) 100%)',
-              border: '1px solid rgba(0,255,136,0.1)', borderRadius: 16,
-              display: 'flex', gap: 20, alignItems: 'center'
+              marginTop: 16, padding: '12px 16px', 
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14,
+              display: 'flex', gap: 16, alignItems: 'center',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
             }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: 12, background: 'rgba(0,255,136,0.1)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-green)'
-              }}>
-                <BrainCircuit size={24} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--neon-green)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>ASISTENTE DE DATOS · CONSEJO DEL DÍA</div>
-                <div style={{ fontSize: 13, color: '#fff', fontWeight: 600 }}>
-                  {selectedClient.biometricStatus !== 'completed' 
-                    ? "Este cliente es nuevo. Vamos a hacerle la 'Entrevista Inicial' para ver cómo se mueve su cuerpo y ganar su confianza."
-                    : selectedClient.femurLength && Number(selectedClient.femurLength) > 50
-                      ? `Tiene fémures largos (${selectedClient.femurLength}cm). Recomiéndale sentadilla con la barra más abajo o frontal para que esté más cómodo.`
-                      : (selectedClient.streak || 0) > 15 
-                        ? "Lleva muchos días seguidos entrenando. Hoy mejor baja un poco la intensidad para evitar que se canse de más."
-                        : "Todo se ve bien hoy. Sigue con el plan de subir cargas poco a poco."
+               <div style={{ color: 'var(--neon-green)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                 <BrainCircuit size={18} />
+                 <span style={{ fontSize: 9, fontWeight: 950, letterSpacing: 1, textTransform: 'uppercase' }}>AI_ADVISOR</span>
+               </div>
+               <div style={{ flex: 1, fontSize: 12, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>
+                  {selectedClient.biometricStatus === 'pending' 
+                    ? `Atleta nuevo. Requiere Onboarding Élite para configurar palancas.`
+                    : selectedClient.biometricStatus !== 'completed' 
+                      ? "Evaluación incompleta. Falta entrevista inicial."
+                      : selectedClient.femurLength && Number(selectedClient.femurLength) > 50
+                        ? `Fémures largos detected (${selectedClient.femurLength}cm). Ajustar técnica en sentadilla.`
+                        : (selectedClient.streak || 0) > 15 
+                          ? "Fatiga acumulada alta. Hoy toca descarga."
+                          : "Estado óptimo. Mantener sobrecarga progresiva."
                   }
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button 
-                  className="btn btn-ghost" 
-                  style={{ fontSize: 11, border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}
-                  onClick={() => setShowScript(!showScript)}
-                >
-                  {showScript ? 'Cerrar Script' : '¿Qué decirle?'}
-                </button>
-                <button 
-                  className="btn btn-primary" 
-                  style={{ fontSize: 11, padding: '8px 16px' }}
-                  onClick={() => setShowTechnicalGuide(!showTechnicalGuide)}
-                >
-                  {showTechnicalGuide ? 'Cerrar Guía' : 'Guía Técnica'}
-                </button>
-              </div>
+               </div>
+               <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={() => setShowScript(!showScript)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 10, fontWeight: 800, cursor: 'pointer', padding: '4px 8px' }}>SCRIPT</button>
+                  <button onClick={() => setShowTechnicalGuide(!showTechnicalGuide)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: 10, fontWeight: 800, cursor: 'pointer', padding: '4px 8px' }}>GUÍA</button>
+               </div>
             </div>
 
-            {/* Sub-Panel: Scripts de Comunicación */}
-            {showScript && (
-              <div style={{ marginTop: 12, padding: 16, background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)', borderRadius: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 900, color: 'var(--neon-green)', marginBottom: 8 }}>SCRIPT DE COMUNICACIÓN SUGERIDO</div>
-                <p style={{ fontSize: 13, fontStyle: 'italic', color: 'var(--text-secondary)' }}>
-                  "{selectedClient.biometricStatus !== 'completed' 
-                    ? `Hola ${selectedClient.name}, ¡qué bueno tenerte aquí! Antes de empezar a mover peso, vamos a hacer una 'Evaluación Bio-Mecánica'. Quiero entender cómo se mueven tus articulaciones para que cada ejercicio sea 100% eficiente para tu estructura. ¿Empezamos?`
-                    : (selectedClient.streak || 0) > 15 
-                      ? `Alex, he notado que llevas 15 días entrenando a tope. Tu nivel de fatiga acumulada está subiendo. Hoy vamos a regular la carga y enfocarnos en calidad técnica, así evitamos lesiones y progresamos más a largo plazo.`
-                      : `¡A darle Alex! Tu estado es óptimo hoy. El plan marca sobrecarga progresiva en sentadilla. ¿Cómo te sientes para buscar ese nuevo PR?`
-                  }"
-                </p>
-              </div>
-            )}
-
-            {/* Sub-Panel: Guía Técnica */}
-            {showTechnicalGuide && (
-              <div style={{ marginTop: 12, padding: 16, background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.1)', borderRadius: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 900, color: '#A78BFA', marginBottom: 8 }}>CÓMO AJUSTAR EL EJERCICIO</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                     <strong>Tip clave:</strong> {selectedClient.techniqueNotes || 'Ajustar ancho de pies en sentadilla.'}
-                   </div>
-                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                     <strong>Cuerpo:</strong> Fémur {selectedClient.femurLength || 'S/D'}cm • Brazos {selectedClient.armLength || 'S/D'}cm
-                   </div>
-                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                     <strong>Movilidad:</strong> Cadera {selectedClient.mobilityHip || 'Normal'} • Tobillo {selectedClient.mobilityAnkle || 'Normal'}
-                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Resumen de impacto rápido */}
-            <div style={{ display: 'flex', gap: 12, marginTop: 14 }}>
+            {/* Metrics Bar — CLEAN & HORIZONTAL */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               {[
-                { label: 'Estado Pagos', value: selectedClient.debt > 0 ? 'Deuda Pendiente' : 'Al día', color: selectedClient.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)' },
-                { label: 'Energía de Hoy', value: (selectedClient.streak || 0) > 10 ? '🔴 CANSADO' : '🟢 CON ENERGÍA', color: (selectedClient.streak || 0) > 10 ? 'var(--danger-red)' : 'var(--neon-green)' },
-                { label: 'Objetivo', value: selectedClient.objective || 'Sin asignar', color: 'var(--text-primary)' },
+                { label: 'Pagos', value: selectedClient.debt > 0 ? 'Pendiente' : 'Al día', color: selectedClient.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)', icon: <CreditCard size={12}/> },
+                { label: 'Energía', value: (selectedClient.streak || 0) > 10 ? 'Baja' : 'Óptima', color: (selectedClient.streak || 0) > 10 ? 'var(--danger-red)' : 'var(--neon-green)', icon: <Zap size={12}/> },
+                { label: 'Meta', value: selectedClient.objective || 'Sin asignar', color: '#fff', icon: <Target size={12}/> },
               ].map((s, i) => (
                 <div key={i} style={{
-                  flex: 1, padding: '10px 14px', background: 'rgba(255,255,255,0.02)',
-                  borderRadius: 'var(--radius-lg)', border: '1px solid rgba(255,255,255,0.04)',
+                  flex: 1, padding: '8px 12px', background: 'rgba(255,255,255,0.02)',
+                  borderRadius: 12, border: '1px solid rgba(255,255,255,0.03)',
+                  display: 'flex', alignItems: 'center', gap: 8
                 }}>
-                  <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>{s.label}</div>
-                  <div style={{ fontWeight: 750, fontSize: 'var(--text-sm)', color: s.color }}>{s.value}</div>
+                  <div style={{ color: 'var(--text-muted)' }}>{s.icon}</div>
+                  <div>
+                    <div style={{ fontSize: 8, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.label}</div>
+                    <div style={{ fontWeight: 800, fontSize: 11, color: s.color }}>{s.value}</div>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Tabs */}
+        {/* Tabs — ZEN STYLE */}
         {selectedClient && (
-          <div style={{ padding: '0 24px', borderBottom: '1px solid rgba(0,255,136,0.06)', flexShrink: 0, background: 'var(--glass-bg)' }}>
-            <div style={{ display: 'flex', gap: 0 }}>
+          <div style={{ padding: '0 24px', borderBottom: '1px solid rgba(255,255,255,0.03)', flexShrink: 0, background: 'rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', gap: 4 }}>
               {([
                 { id: 'progress', icon: BarChart3,  label: 'Progreso' },
-                { id: 'connect',  icon: MessageSquare, label: 'Connect Hub' },
-                { id: 'log',      icon: Dumbbell,   label: sessionMode ? `● Sesión ${formatTime(sessionTime)}` : 'Historial' },
-                { id: 'body',     icon: Scale,      label: 'Métricas Cuerpo' },
-                { id: 'goals',    icon: Target,     label: 'Objetivos' },
+                { id: 'connect',  icon: MessageSquare, label: 'Hub' },
+                { id: 'log',      icon: Dumbbell,   label: sessionMode ? `● Sesión` : 'Logbook' },
+                { id: 'body',     icon: Scale,      label: 'Cuerpo' },
+                { id: 'goals',    icon: Target,     label: 'Metas' },
                 { id: 'notes',    icon: FileText,   label: 'Notas' },
               ] as const).map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
-                    padding: '14px 16px', fontSize: 'var(--text-xs)', fontWeight: 600,
-                    borderBottom: activeTab === tab.id ? '2px solid var(--neon-green)' : '2px solid transparent',
+                    padding: '14px 16px',
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: `2px solid ${activeTab === tab.id ? 'var(--neon-green)' : 'transparent'}`,
                     color: activeTab === tab.id ? 'var(--neon-green)' : 'var(--text-muted)',
-                    background: 'none', cursor: 'pointer', transition: 'color var(--transition-fast)',
                     whiteSpace: 'nowrap',
                   }}
                 >
