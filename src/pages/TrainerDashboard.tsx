@@ -4,7 +4,8 @@ import {
   Users, Brain, Zap, Apple, Activity, Heart, MessageSquare,
   Plus, ChevronRight, CheckCircle2, Clock, TrendingUp, TrendingDown,
   Dumbbell, Target, Star, AlertTriangle, Send, ChevronLeft,
-  FileText, BarChart3, Scale, Flame, Mic, X, Play, StopCircle, BrainCircuit, CreditCard, AlertCircle
+  FileText, BarChart3, Scale, Flame, Mic, X, Play, StopCircle, 
+  BrainCircuit, CreditCard, AlertCircle
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,

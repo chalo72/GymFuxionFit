@@ -232,9 +232,13 @@ function useGymDataInternal() {
 
     // 📡 SINCRONIZACIÓN DE DISCO DURO ENTRE PESTAÑAS (Evita Amnesia de Datos)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'fuxion_members' && e.newValue) setMembers(JSON.parse(e.newValue));
-      if (e.key === 'fuxion_tx' && e.newValue) setTransactions(JSON.parse(e.newValue));
-      if (e.key === 'fuxion_products' && e.newValue) setProducts(JSON.parse(e.newValue));
+      try {
+        if (e.key === 'fuxion_members' && e.newValue) setMembers(JSON.parse(e.newValue));
+        if (e.key === 'fuxion_tx' && e.newValue) setTransactions(JSON.parse(e.newValue));
+        if (e.key === 'fuxion_products' && e.newValue) setProducts(JSON.parse(e.newValue));
+      } catch (err) {
+        console.error("Error al sincronizar desde localStorage:", err);
+      }
     };
     window.addEventListener('storage', handleStorageChange);
 
@@ -332,16 +336,13 @@ function useGymDataInternal() {
     };
   }, []);
 
-  // Guardar en LocalStorage cada vez que cambian (Snapshot preventivo)
-  useEffect(() => {
-    if (!isLoaded) return;
-    localStorage.setItem('fuxion_tx', JSON.stringify(transactions));
-    localStorage.setItem('fuxion_members', JSON.stringify(members));
-    localStorage.setItem('fuxion_products', JSON.stringify(products));
-    localStorage.setItem('fuxion_goals', JSON.stringify(goals));
-    localStorage.setItem('fuxion_obligations', JSON.stringify(obligations));
-    localStorage.setItem('fuxion_staff', JSON.stringify(staff));
-  }, [isLoaded, transactions, members, products, goals, obligations, staff]);
+  // 💾 PERSISTENCIA INDIVIDUAL: Evita que el cambio en un módulo sobreescriba todo el disco
+  useEffect(() => { if (isLoaded) localStorage.setItem('fuxion_tx', JSON.stringify(transactions)); }, [isLoaded, transactions]);
+  useEffect(() => { if (isLoaded) localStorage.setItem('fuxion_members', JSON.stringify(members)); }, [isLoaded, members]);
+  useEffect(() => { if (isLoaded) localStorage.setItem('fuxion_products', JSON.stringify(products)); }, [isLoaded, products]);
+  useEffect(() => { if (isLoaded) localStorage.setItem('fuxion_goals', JSON.stringify(goals)); }, [isLoaded, goals]);
+  useEffect(() => { if (isLoaded) localStorage.setItem('fuxion_obligations', JSON.stringify(obligations)); }, [isLoaded, obligations]);
+  useEffect(() => { if (isLoaded) localStorage.setItem('fuxion_staff', JSON.stringify(staff)); }, [isLoaded, staff]);
 
   const injectTransaction = async (tx: Omit<Transaction, 'id' | 'hash'>) => {
     const newTx: Transaction = {
