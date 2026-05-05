@@ -701,7 +701,7 @@ export default function Reception() {
           onClose={() => setShowQuickRegister(false)}
           plansConfig={plansConfig}
           onSave={async (data, amountPaid) => {
-            await addMember(data);
+            const newMem = await addMember(data);
             
             if (amountPaid > 0) {
               await injectTransaction({
@@ -717,7 +717,7 @@ export default function Reception() {
             }
 
             setActiveMembers(prev => [{
-               id: String(Date.now()),
+               id: newMem ? String(newMem.id) : String(Date.now()),
                name: data.name,
                initials: data.name.slice(0,2).toUpperCase(),
                plan: data.plan,

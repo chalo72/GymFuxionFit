@@ -230,6 +230,14 @@ function useGymDataInternal() {
       if (type === 'ASSETS_UPDATE') setAssets(data);
     };
 
+    // 📡 SINCRONIZACIÓN DE DISCO DURO ENTRE PESTAÑAS (Evita Amnesia de Datos)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'fuxion_members' && e.newValue) setMembers(JSON.parse(e.newValue));
+      if (e.key === 'fuxion_tx' && e.newValue) setTransactions(JSON.parse(e.newValue));
+      if (e.key === 'fuxion_products' && e.newValue) setProducts(JSON.parse(e.newValue));
+    };
+    window.addEventListener('storage', handleStorageChange);
+
     // 3. Suscripción Realtime Universal
     const unsubMembers = gymDatabase.subscribe<any>('members', (items) => {
       setSyncStatus('live');
@@ -320,6 +328,7 @@ function useGymDataInternal() {
       unsubStaff();
       unsubAssets();
       bc.close();
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
@@ -606,6 +615,7 @@ function useGymDataInternal() {
       } catch (error) {
         console.error("Error sync members:", error);
       }
+      return newMember;
     },
     deleteMember: async (id: string) => {
       setMembers(prev => prev.filter(m => m.id !== id));

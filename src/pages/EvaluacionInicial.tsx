@@ -84,11 +84,11 @@ export default function EvaluacionInicial() {
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + 1);
 
-    const evalPayload = {
+    const evalPayload: any = {
       name: data.name,
       phone: data.phone,
       email: data.email,
-      status: 'active' as const,
+      status: 'active',
       plan: data.plan,
       expiryDate: expiryDate.toISOString().split('T')[0],
       debt: 0,
@@ -114,7 +114,7 @@ export default function EvaluacionInicial() {
       techniqueNotes: data.techniqueNotes,
       notes: data.notes,
       joined: new Date().toISOString().split('T')[0],
-      biometricStatus: 'completed' as const
+      biometricStatus: 'completed'
     };
 
     if (selectedMemberId) {

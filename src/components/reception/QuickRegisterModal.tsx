@@ -14,7 +14,7 @@ export default function QuickRegisterModal({ onClose, onSave, plansConfig }: Qui
     phone: '',
     plan: 'mes_pro',
     payMethod: 'Efectivo',
-    amountPaid: 0,
+    amountPaid: plansConfig?.mes_pro || 75000,
     debt: 0
   });
 
@@ -113,7 +113,7 @@ export default function QuickRegisterModal({ onClose, onSave, plansConfig }: Qui
               {plans.map(p => (
                 <div 
                   key={p.id}
-                  onClick={() => setForm({ ...form, plan: p.id })}
+                  onClick={() => setForm({ ...form, plan: p.id, amountPaid: p.price })}
                   style={{
                     padding: '12px 8px', borderRadius: 16, textAlign: 'center', cursor: 'pointer',
                     background: form.plan === p.id ? 'rgba(0,255,136,0.1)' : 'rgba(255,255,255,0.02)',
@@ -147,6 +147,7 @@ export default function QuickRegisterModal({ onClose, onSave, plansConfig }: Qui
                <input 
                 type="number"
                 placeholder="Abono..."
+                value={form.amountPaid === 0 ? '' : form.amountPaid}
                 onChange={e => setForm({ ...form, amountPaid: Number(e.target.value) })}
                 style={{ width: 100, padding: 12, borderRadius: 12, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 12 }}
                />
