@@ -85,11 +85,27 @@ export default function Reception() {
   const [productSearch, setProductSearch] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showQuickRegister, setShowQuickRegister] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Timer de sala — no depende de cameraStream
   useEffect(() => {
     const t = setInterval(() => setTick(x => x + 1), 1000);
-    return () => { clearInterval(t); stopCamera(); };
-  }, [cameraStream]);
+    return () => clearInterval(t);
+  }, []);
+
+  // Limpieza de cámara e interval de escaneo al desmontar
+  useEffect(() => {
+    return () => {
+      if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+      stopCamera();
+    };
+  }, []);
 
   useEffect(() => {
     if (search.length > 1 && activeTab === 'manual') {
@@ -107,26 +123,33 @@ export default function Reception() {
     setStatus('scanning');
     setProgress(0);
     if (type === 'qr' || type === 'facial') {
+      if (members.length === 0) { setStatus('error'); return; }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
         setCameraStream(stream);
         if (videoRef.current) videoRef.current.srcObject = stream;
         let p = 0;
-        const interval = setInterval(() => {
+        if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = setInterval(() => {
           p += 5; setProgress(p);
           if (p >= 100) {
-            clearInterval(interval);
+            if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
             const randomMember = members[Math.floor(Math.random() * members.length)];
-            handleSuccess(randomMember.name, type);
+            if (randomMember) handleSuccess(randomMember.name, type);
           }
         }, 100);
       } catch (err) { setStatus('error'); }
     } else if (type === 'geo') {
-       let p = 0;
-       const interval = setInterval(() => {
-         p += 10; setProgress(p);
-         if (p >= 100) { clearInterval(interval); handleSuccess(members[0].name, 'geo'); }
-       }, 150);
+      if (members.length === 0) { setStatus('error'); return; }
+      let p = 0;
+      if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = setInterval(() => {
+        p += 10; setProgress(p);
+        if (p >= 100) {
+          if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+          if (members[0]) handleSuccess(members[0].name, 'geo');
+        }
+      }, 150);
     }
   };
 
@@ -151,6 +174,7 @@ export default function Reception() {
     }
     
     if (masterMember) {
+      setCart([]);
       setSelectedMember(masterMember);
       if (masterMember.debt > 0 || masterMember.status === 'expired' || masterMember.status === 'expiring') {
          setAlertMember(masterMember);
@@ -193,7 +217,7 @@ export default function Reception() {
         const existing = prev.find(item => item.id === product.id);
         if (existing) {
            if (product.stock && existing.qty >= product.stock) {
-              alert('STOCK_INSUFICIENTE');
+              showToast('⚠️ Stock insuficiente para ese producto');
               return prev;
            }
            return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
@@ -223,14 +247,19 @@ export default function Reception() {
             method: paymentMethod,
             client: selectedMember.name
           });
-          if (item.id === 'srv_mes' || item.id === 'srv_sem') {
-            const daysToAdd = item.id === 'srv_mes' ? 30 * item.qty : 7 * item.qty;
-            const [y, m, d] = selectedMember.expiryDate.split('-').map(Number);
+          if (item.id === 'srv_mes' || item.id === 'srv_sem' || item.id === 'srv_dia') {
+            const daysToAdd = item.id === 'srv_mes' ? 30 * item.qty : item.id === 'srv_sem' ? 7 * item.qty : 1 * item.qty;
+            const expiryStr = selectedMember.expiryDate || new Date().toISOString().split('T')[0];
+            const [y, m, d] = expiryStr.split('-').map(Number);
             const currentExpiry = new Date(y, m - 1, d);
             const now = new Date();
             const startDate = currentExpiry > now ? currentExpiry : now;
             startDate.setDate(startDate.getDate() + daysToAdd);
-            await updateMemberStatus(selectedMember.id, { status: 'active', expiryDate: startDate.toISOString().split('T')[0], debt: 0 });
+            await updateMemberStatus(selectedMember.id, {
+              status: 'active',
+              expiryDate: startDate.toISOString().split('T')[0],
+              debt: 0
+            });
           }
         }
       }
@@ -256,7 +285,7 @@ export default function Reception() {
       
     } catch (error) {
       console.error("Error al procesar venta:", error);
-      alert("Error al procesar el cobro. Por favor intente de nuevo.");
+      showToast("❌ Error al procesar el cobro. Intente de nuevo.");
     } finally {
       setIsProcessing(false);
     }
@@ -271,7 +300,14 @@ export default function Reception() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24, padding: '10px' }}>
-      
+
+      {/* ── TOAST GLOBAL ── */}
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 32, right: 32, zIndex: 99999, padding: '14px 24px', borderRadius: 20, background: 'rgba(10,10,20,0.95)', border: '1px solid rgba(0,255,136,0.3)', color: '#fff', fontSize: 13, fontWeight: 700, backdropFilter: 'blur(20px)', boxShadow: '0 10px 40px rgba(0,0,0,0.5)', pointerEvents: 'none' }}>
+          {toast}
+        </div>
+      )}
+
       {/* ── ALERTA DE DEUDA (GLASS DESIGN) ── */}
       {alertMember && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,5,0.85)', backdropFilter: 'blur(20px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -383,11 +419,26 @@ export default function Reception() {
                      <button onClick={() => setShowProfile(true)} style={{ background:'rgba(0,255,136,0.08)', border:'1px solid rgba(0,255,136,0.2)', color:'var(--neon-green)', borderRadius:16, fontSize:11, fontWeight:950, cursor:'pointer', transition: '0.3s' }}>VER PERFIL</button>
                   </div>
                   
+                  {/* ── ACCESOS RÁPIDOS DE MEMBRESÍA ── */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 14 }}>
+                    {[
+                      { id: 'srv_dia', label: 'DIARIO', price: plansConfig?.dia || 5000, color: '#FFD600', icon: <Zap size={14}/> },
+                      { id: 'srv_sem', label: 'SEMANAL', price: plansConfig?.semana || 25000, color: '#00E5FF', icon: <Calendar size={14}/> },
+                      { id: 'srv_mes', label: 'MENSUAL', price: plansConfig?.mes_pro || 75000, color: 'var(--neon-green)', icon: <TrendingUp size={14}/> },
+                    ].map(srv => (
+                      <button key={srv.id} onClick={() => addToCart({ id: srv.id, name: srv.label, sellPrice: srv.price, category: 'Servicio' })} style={{ padding: '12px 6px', borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: `1px solid ${srv.color}30`, color: '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: '0.25s' }} className="srv-btn-premium">
+                        <div style={{ color: srv.color }}>{srv.icon}</div>
+                        <div style={{ fontSize: 9, fontWeight: 950, letterSpacing: 1 }}>{srv.label}</div>
+                        <div style={{ fontSize: 13, fontWeight: 950, color: srv.color }}>${(srv.price/1000).toFixed(0)}K</div>
+                      </button>
+                    ))}
+                  </div>
+
                   <div style={{ position: 'relative', marginBottom: 12 }}>
-                     <input 
-                       placeholder="Vender producto o bebida..." 
-                       value={productSearch} 
-                       onChange={e => setProductSearch(e.target.value)} 
+                     <input
+                       placeholder="Vender producto o bebida..."
+                       value={productSearch}
+                       onChange={e => setProductSearch(e.target.value)}
                        style={{ width:'100%', padding:'16px', background:'rgba(255,255,255,0.04)', borderRadius:16, color:'#fff', border: '1px solid rgba(255,255,255,0.08)', fontSize: 14 }} 
                      />
                      {productSearch && (
@@ -469,6 +520,7 @@ export default function Reception() {
                     } as Member; 
                     setSelectedMember(master); 
                     setShowProfile(true); 
+                    setCart([]);
                  }} className="glass-card athlete-card-premium" style={{ padding: 24, border: '1px solid rgba(255,255,255,0.08)', background: `linear-gradient(135deg, ${m.color}08, rgba(255,255,255,0.01))`, borderRadius: 24, cursor: 'pointer', transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)', backdropFilter: 'blur(10px)' }}>
                     <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
                        <div style={{ width: 50, height: 50, borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: `1px solid ${m.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.color, fontWeight: 950, fontSize: 18, boxShadow: `0 0 15px ${m.color}20` }}>{m.initials}</div>
@@ -595,7 +647,7 @@ export default function Reception() {
                                  <div style={{ fontSize: 16, fontWeight: 900, color: '#fff' }}>{selectedMember.emergencyContact || 'Contacto Directo'}</div>
                                  <div style={{ fontSize: 14, color: 'var(--neon-green)', fontWeight: 950, marginTop: 6 }}>{selectedMember.emergencyPhone || selectedMember.phone || 'Pendiente'}</div>
                               </div>
-                              <button onClick={() => window.open(`https://wa.me/${selectedMember.phone}`, '_blank')} style={{ background: '#25D366', border: 'none', color: '#fff', padding: '16px', borderRadius: 18, cursor: 'pointer', boxShadow: '0 10px 20px rgba(37,211,102,0.3)' }}><Phone size={22}/></button>
+                              <button onClick={() => selectedMember.phone && window.open(`https://wa.me/${selectedMember.phone}`, '_blank')} disabled={!selectedMember.phone} style={{ background: '#25D366', border: 'none', color: '#fff', padding: '16px', borderRadius: 18, cursor: selectedMember.phone ? 'pointer' : 'not-allowed', opacity: selectedMember.phone ? 1 : 0.5, boxShadow: '0 10px 20px rgba(37,211,102,0.3)' }}><Phone size={22}/></button>
                            </div>
                         </div>
                      </div>

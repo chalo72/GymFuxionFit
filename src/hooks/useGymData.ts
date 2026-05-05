@@ -727,6 +727,6 @@ export function GymDataProvider({ children }: { children: ReactNode }) {
 
 export function useGymData() {
   const ctx = useContext(GymDataContext);
-  if (!ctx) return useGymDataInternal();
+  if (!ctx) throw new Error('useGymData debe usarse dentro de GymDataProvider');
   return ctx;
 }

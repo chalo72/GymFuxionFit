@@ -1,10 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useGymData } from '../hooks/useGymData';
 import {
   Search, Plus, Filter, Edit2, Trash2, Eye,
   UserCheck, UserX, RefreshCw, Phone, Mail,
   Calendar, CreditCard, Dumbbell, X, Check,
-  ChevronDown, AlertTriangle, Shield,
+  ChevronDown, AlertTriangle,
 } from 'lucide-react';
 
 /* ══════════════════════════════════════════
@@ -50,10 +50,14 @@ interface Client {
 const COLORS = ['#00FF88','#FF6B35','#A78BFA','#00E5FF','#FFD600','#FF4FA3','#4CAF50','#2196F3'];
 
 const PLANS: Record<string, { label: string; price: number; color: string; desc: string }> = {
-  basic: { label: 'Básico',    price: 45000,  color: '#8A948A', desc: 'Acceso gimnasio · L-V · Sin clases' },
-  pro:   { label: 'Pro',       price: 75000,  color: '#00FF88', desc: 'Acceso completo · Clases incluidas' },
-  hyrox: { label: 'HYROX Pro', price: 120000, color: '#FF6B35', desc: 'Elite · HYROX · Trainer asignado' },
-  'hyrox pro': { label: 'HYROX Pro', price: 120000, color: '#FF6B35', desc: 'Elite · HYROX · Trainer asignado' },
+  basic:     { label: 'Básico',    price: 45000,  color: '#8A948A', desc: 'Acceso gimnasio · L-V · Sin clases' },
+  pro:       { label: 'Pro',       price: 75000,  color: '#00FF88', desc: 'Acceso completo · Clases incluidas' },
+  hyrox:     { label: 'HYROX Pro', price: 120000, color: '#FF6B35', desc: 'Elite · HYROX · Trainer asignado' },
+  mes_basico:{ label: 'Básico',    price: 45000,  color: '#8A948A', desc: 'Acceso gimnasio · L-V · Sin clases' },
+  mes_pro:   { label: 'Pro',       price: 75000,  color: '#00FF88', desc: 'Acceso completo · Clases incluidas' },
+  mes_hyrox: { label: 'HYROX Pro', price: 120000, color: '#FF6B35', desc: 'Elite · HYROX · Trainer asignado' },
+  dia:       { label: 'Día',       price: 5000,   color: '#FFD600', desc: 'Acceso por un día' },
+  semana:    { label: 'Semanal',   price: 25000,  color: '#00E5FF', desc: 'Acceso por 7 días' },
 };
 
 const TRAINERS = ['Sin entrenador','Coach Alex','Coach María','Coach Andrés','Coach Sofia'];
@@ -120,13 +124,14 @@ function ClientModal({
   plansConfig?: any;
 }) {
   const [form, setForm] = useState<any>(
-    initial ? { 
-      name:initial.name??'', email:initial.email??'', phone:initial.phone??'', plan:initial.plan??'pro', 
-      status:initial.status??'active', joined:initial.joined??'', expiry:initial.expiry??'', 
-      nextPayment:initial.nextPayment??'', payMethod:initial.payMethod??'nequi', trainer:initial.trainer??'Sin entrenador', 
-      emergency:initial.emergency??'', emergencyPhone:initial.emergencyPhone??'', address:initial.address??'', 
-      notes:initial.notes??'', objective:initial.objective??'', injuries:initial.injuries??'', 
-      nutrition:initial.nutrition??'', emergencyContact:initial.emergencyContact??'' 
+    initial ? {
+      name:initial.name??'', email:initial.email??'', phone:initial.phone??'', plan:initial.plan??'pro',
+      status:initial.status??'active', joined:initial.joined??'',
+      expiryDate: (initial as any).expiryDate || initial.expiry || '',
+      nextPayment:initial.nextPayment??'', payMethod:initial.payMethod??'nequi', trainer:initial.trainer??'Sin entrenador',
+      emergency:initial.emergency??'', emergencyPhone:initial.emergencyPhone??'', address:initial.address??'',
+      notes:initial.notes??'', objective:initial.objective??'', injuries:initial.injuries??'',
+      nutrition:initial.nutrition??'', emergencyContact:initial.emergencyContact??''
     }
     : emptyForm()
   );
@@ -389,6 +394,11 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
   onEdit: () => void; onDelete: () => void;
 }) {
   const status = STATUS_CFG[client.status as Status] || STATUS_CFG.active;
+  const { transactions } = useGymData();
+  const clientTx = transactions
+    .filter(t => t.client === client.name && t.type === 'income')
+    .sort((a, b) => (b.date > a.date ? 1 : -1))
+    .slice(0, 5);
   return (
     <div style={{
       position:'fixed', inset:0, background:'rgba(0,0,0,.85)',
@@ -463,22 +473,21 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
               </div>
            </div>
 
-            {/* Bóveda de Pagos del Socio */}
+            {/* Bóveda de Pagos del Socio — DATOS REALES */}
             <div className="glass-card" style={{ padding: 20, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: 20 }}>
                <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 15, letterSpacing: 1 }}>HISTORIAL_DE_TRANSACCIONES_RECIENTES</div>
                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {[
-                    { d: '15 Abr 2026', a: 120000, m: 'Nequi', r: 'NQ-883492' },
-                    { d: '15 Mar 2026', a: 120000, m: 'Efectivo', r: 'MANUAL' }
-                  ].map((p, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 }}>
+                  {clientTx.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '14px 0', opacity: 0.4, fontSize: 12 }}>Sin transacciones registradas</div>
+                  ) : clientTx.map((tx) => (
+                    <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 }}>
                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 800 }}>${p.a.toLocaleString()}</div>
-                          <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{p.d} • {p.m}</div>
+                          <div style={{ fontSize: 12, fontWeight: 800 }}>${tx.amount.toLocaleString()}</div>
+                          <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{tx.date} • {tx.method}</div>
                        </div>
                        <div style={{ textAlign: 'right' }}>
                           <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--neon-green)' }}>VERIFICADO</div>
-                          <div style={{ fontSize: 8, color: 'var(--text-muted)' }}>{p.r}</div>
+                          <div style={{ fontSize: 8, color: 'var(--text-muted)', maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tx.description}</div>
                        </div>
                     </div>
                   ))}
@@ -488,7 +497,8 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
             {/* Direct Access Bar */}
            <div style={{ background:'rgba(0,255,136,0.05)', padding: 25, borderRadius: 24, border: '1px solid rgba(0,255,136,0.1)', position: 'relative' }}>
               <button 
-                onClick={() => window.open(`https://wa.me/57${client.phone.replace(/-/g,'')}?text=Hola ${client.name}, te saludamos de GymFuxionFit!`, '_blank')}
+                onClick={() => client.phone && window.open(`https://wa.me/57${(client.phone || '').replace(/-/g,'')}?text=Hola ${client.name}, te saludamos de GymFuxionFit!`, '_blank')}
+              disabled={!client.phone}
                 style={{ position: 'absolute', top: 20, right: 20, padding: '12px 20px', borderRadius: 14, background: '#25D366', color: '#fff', border: 'none', fontSize: 11, fontWeight: 950, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
               >
                  <Phone size={14} /> WHATSAPP
@@ -707,7 +717,7 @@ export default function Members() {
                   {/* Cliente */}
                   <td style={{ padding:'14px 16px' }}>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <div style={{ width:36, height:36, borderRadius:'50%', background:`${c.color}20`, border:`1.5px solid ${c.color}50`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:c.color, flexShrink:0 }}>
+                      <div style={{ width:36, height:36, borderRadius:'50%', background: c.color ? `${c.color}20` : 'rgba(0,255,136,0.12)', border: `1.5px solid ${c.color ? `${c.color}50` : 'rgba(0,255,136,0.4)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color: c.color || 'var(--neon-green)', flexShrink:0 }}>
                         {c.name?.charAt(0) || '?'}
                       </div>
                       <div>
