@@ -59,6 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       role: role,
       loginAt: Date.now(),
     };
+    // 🛡️ MODO CRÍTICO: Persistencia síncrona antes del cambio de estado
+    localStorage.setItem('gymfuxion_auth', JSON.stringify(mockUser));
     setUser(mockUser);
   };
 

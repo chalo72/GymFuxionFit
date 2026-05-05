@@ -90,9 +90,11 @@ class TrioSync {
       this.isProcessing = false;
       this.processQueue();
     } catch (e) {
-      console.error('❌ [TRIO-SYNC]: Error procesando cola. Reintentando en 30s...', e);
+      console.error('❌ [TRIO-SYNC]: Error procesando cola. Reintentando...', e);
       this.isProcessing = false;
-      setTimeout(() => this.processQueue(), 30000);
+      // Reintento exponencial simple: empezamos en 5s, máximo 30s
+      const delay = Math.min(5000 * (this.queue.length > 5 ? 2 : 1), 30000);
+      setTimeout(() => this.processQueue(), delay);
     }
   }
 

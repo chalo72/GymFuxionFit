@@ -24,21 +24,34 @@ export class AppwriteAdapter implements DatabaseAdapter {
 
   private normalizeName(name: string): string {
     const map: Record<string, string> = {
-      'products': 'Productos',
+      'products': 'products',
       'members': 'members',
       'transactions': 'transactions',
       'staff': 'staff',
-      'goals': 'goals'
+      'goals': 'goals',
+      'assets': 'assets',
+      'obligations': 'obligations'
     };
-    const finalId = map[name.toLowerCase()] || name;
-    console.log(`[APPWRITE-ADAPTER]: Mapping '${name}' -> '${finalId}'`);
+    
+    // Prioridad: 1. Mapa explícito, 2. Nombre en minúsculas (estándar Appwrite), 3. Nombre original
+    const finalId = map[name.toLowerCase()] || name.toLowerCase();
+    
+    console.log(`[APPWRITE-ADAPTER]: Requesting '${name}' -> Target ID: '${finalId}'`);
     return finalId;
   }
 
   async getCollection<T>(name: string): Promise<T[]> {
-    const colName = this.normalizeName(name);
-    const res = await this.sdk.listDocuments(this.databaseId, colName);
-    return res.documents.map(d => ({ ...d, id: d.$id })) as T[];
+    try {
+      const colName = this.normalizeName(name);
+      const res = await this.sdk.listDocuments(this.databaseId, colName);
+      return res.documents.map(d => ({ ...d, id: d.$id })) as T[];
+    } catch (err: any) {
+      if (err.code === 404) {
+        console.warn(`⚠️ [APPWRITE]: Colección '${name}' no encontrada. Usando datos locales.`);
+        return [];
+      }
+      throw err;
+    }
   }
 
   async getDocument<T>(name: string, id: string): Promise<T | null> {

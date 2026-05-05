@@ -174,10 +174,7 @@ export default function Settings() {
   const [emailNotif, setEmailNotif]       = useState(true);
   const [pushNotif, setPushNotif]         = useState(true);
 
-  const { updatePlansConfig } = useGymData();
-
-  // ── Planes dinámicos ──
-  const [plans, setPlans]             = useState<CustomPlan[]>(loadCustomPlans);
+  const { plans, updatePlans } = useGymData();
   const [editingPlan, setEditingPlan] = useState<CustomPlan | null>(null);
   const [showModal, setShowModal]     = useState(false);
   const [deleteId, setDeleteId]       = useState<string | null>(null);
@@ -346,7 +343,7 @@ export default function Settings() {
                     {/* Precio + acciones */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 900, fontSize: 17, color: plan.color }}>${plan.price.toLocaleString('es-CO')}</div>
+                        <div style={{ fontWeight: 900, fontSize: 17, color: plan.color }}>${(plan.price || 0).toLocaleString('es-CO')}</div>
                         <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                           {plan.duration === 'dia' ? 'Por día' : plan.duration === 'semana' ? 'Por semana' : 'Mensual'}
                         </div>

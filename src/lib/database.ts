@@ -84,6 +84,8 @@ const appwriteConfig = {
   database: import.meta.env.VITE_APPWRITE_DATABASE_ID || import.meta.env.VITE_APPWRITE_DATABASE || 'main'
 };
 
+
+
 /**
  * 🏠 LOCAL FALLBACK ADAPTER
  * Se activa solo si no hay llaves de Firebase/Appwrite.
@@ -102,6 +104,13 @@ let mainDatabase: DatabaseAdapter;
 
 const hasFirebase = !!import.meta.env.VITE_FIREBASE_API_KEY;
 const hasAppwrite = !!import.meta.env.VITE_APPWRITE_ENDPOINT;
+
+console.log("📡 [NEXUS CONFIG]:", {
+  hasFirebase,
+  hasAppwrite,
+  appwriteDb: appwriteConfig.database,
+  appwriteProject: appwriteConfig.project
+});
 
 // 🛡️ REGLA DE ORO ANTIGRAVITY: Prioridad Total a Appwrite (Capitán) y Firebase (Suplente)
 const firebaseAdapter = hasFirebase ? new FirebaseAdapter(firebaseConfig) : null;

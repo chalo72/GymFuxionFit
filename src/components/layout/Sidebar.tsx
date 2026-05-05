@@ -69,6 +69,7 @@ const trainerNav = [
 
 const receptionNav = [
   { section: 'Control Gym', items: [
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/reception', icon: UserCheck,      label: 'Recepción Live' },
     { to: '/members',   icon: Users,          label: 'Miembros' },
     { to: '/schedule',  icon: CalendarRange,  label: 'Horarios' },

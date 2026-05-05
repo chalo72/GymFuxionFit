@@ -49,16 +49,7 @@ interface Client {
 ══════════════════════════════════════════ */
 const COLORS = ['#00FF88','#FF6B35','#A78BFA','#00E5FF','#FFD600','#FF4FA3','#4CAF50','#2196F3'];
 
-const PLANS: Record<string, { label: string; price: number; color: string; desc: string }> = {
-  basic:     { label: 'Básico',    price: 45000,  color: '#8A948A', desc: 'Acceso gimnasio · L-V · Sin clases' },
-  pro:       { label: 'Pro',       price: 75000,  color: '#00FF88', desc: 'Acceso completo · Clases incluidas' },
-  hyrox:     { label: 'HYROX Pro', price: 120000, color: '#FF6B35', desc: 'Elite · HYROX · Trainer asignado' },
-  mes_basico:{ label: 'Básico',    price: 45000,  color: '#8A948A', desc: 'Acceso gimnasio · L-V · Sin clases' },
-  mes_pro:   { label: 'Pro',       price: 75000,  color: '#00FF88', desc: 'Acceso completo · Clases incluidas' },
-  mes_hyrox: { label: 'HYROX Pro', price: 120000, color: '#FF6B35', desc: 'Elite · HYROX · Trainer asignado' },
-  dia:       { label: 'Día',       price: 5000,   color: '#FFD600', desc: 'Acceso por un día' },
-  semana:    { label: 'Semanal',   price: 25000,  color: '#00E5FF', desc: 'Acceso por 7 días' },
-};
+// 🔄 Los planes ahora se gestionan dinámicamente desde useGymData
 
 const TRAINERS = ['Sin entrenador','Coach Alex','Coach María','Coach Andrés','Coach Sofia'];
 
@@ -103,8 +94,9 @@ function StatusBadge({ s }: { s: Status }) {
   );
 }
 
-function PlanBadge({ p }: { p: string }) {
-  const c = PLANS[p?.toLowerCase() || 'pro'] || PLANS.pro;
+function PlanBadge({ p, plans }: { p: string, plans: any[] }) {
+  const planData = plans.find(pl => pl.id === p || pl.label.toLowerCase() === p.toLowerCase());
+  const c = planData || { label: p, color: 'var(--text-muted)' };
   return (
     <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, color:c.color, background:`${c.color}15`, border:`1px solid ${c.color}30` }}>
       {c.label}
@@ -116,12 +108,12 @@ function PlanBadge({ p }: { p: string }) {
    MODAL AGREGAR / EDITAR CLIENTE
 ══════════════════════════════════════════ */
 function ClientModal({
-  initial, onSave, onClose, plansConfig
+  initial, onSave, onClose, plans
 }: {
   initial: Partial<Client> | null;
   onSave: (data: any) => void;
   onClose: () => void;
-  plansConfig?: any;
+  plans: any[];
 }) {
   const [form, setForm] = useState<any>(
     initial ? {
@@ -261,27 +253,21 @@ function ClientModal({
               {/* Plan selector */}
               <div>
                 <label style={labelStyle}>Plan de Membresía *</label>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10 }}>
-                  {(Object.entries(PLANS) as [string, typeof PLANS[string]][]).map(([id, p]) => {
-                    let dynamicPrice = p.price;
-                    if (plansConfig) {
-                      if (id === 'basic') dynamicPrice = plansConfig.mes_basico;
-                      if (id === 'pro') dynamicPrice = plansConfig.mes_pro;
-                      if (id === 'hyrox' || id === 'hyrox pro') dynamicPrice = plansConfig.mes_hyrox;
-                    }
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10 }}>
+                  {plans.map((p) => {
                     return (
-                    <div key={id} onClick={() => handlePlanChange(id)} style={{
+                    <div key={p.id} onClick={() => handlePlanChange(p.id)} style={{
                       padding:'14px 12px', borderRadius:'var(--radius-lg)', cursor:'pointer',
-                      background: form.plan===id ? `${p.color}15` : 'rgba(255,255,255,.03)',
-                      border: `1px solid ${form.plan===id ? p.color+'60' : 'rgba(255,255,255,.08)'}`,
+                      background: form.plan===p.id ? `${p.color}15` : 'rgba(255,255,255,.03)',
+                      border: `1px solid ${form.plan===p.id ? p.color+'60' : 'rgba(255,255,255,.08)'}`,
                       transition:'all .15s',
                     }}>
-                      <div style={{ fontSize:15, fontWeight:800, color: form.plan===id ? p.color : 'var(--text-primary)', marginBottom:4 }}>{p.label}</div>
-                      <div style={{ fontSize:16, fontWeight:900, color: form.plan===id ? p.color : 'var(--text-secondary)' }}>
-                        ${dynamicPrice.toLocaleString('es-CO')}
+                      <div style={{ fontSize:15, fontWeight:800, color: form.plan===p.id ? p.color : 'var(--text-primary)', marginBottom:4 }}>{p.label}</div>
+                      <div style={{ fontSize:16, fontWeight:900, color: form.plan===p.id ? p.color : 'var(--text-secondary)' }}>
+                        ${(p.price || 0).toLocaleString('es-CO')}
                       </div>
                       <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:4, lineHeight:1.4 }}>{p.desc}</div>
-                      {form.plan===id && <Check size={14} color={p.color} style={{ marginTop:6 }}/>}
+                      {form.plan===p.id && <Check size={14} color={p.color} style={{ marginTop:6 }}/>}
                     </div>
                   )})}
                 </div>
@@ -482,7 +468,7 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
                   ) : clientTx.map((tx) => (
                     <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 }}>
                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 800 }}>${tx.amount.toLocaleString()}</div>
+                          <div style={{ fontSize: 12, fontWeight: 800 }}>${(tx.amount || 0).toLocaleString()}</div>
                           <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{tx.date} • {tx.method}</div>
                        </div>
                        <div style={{ textAlign: 'right' }}>
@@ -532,7 +518,7 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
    PÁGINA PRINCIPAL
 ══════════════════════════════════════════ */
 export default function Members() {
-  const { members: clients, updateMemberStatus, addMember, deleteMember, plansConfig } = useGymData();
+  const { members: clients, updateMemberStatus, addMember, deleteMember, plans } = useGymData();
   const [search,  setSearch]        = useState('');
   const [filterPlan, setFilterPlan] = useState<string | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all');
@@ -564,14 +550,8 @@ export default function Members() {
     expiring: clients.filter(c => c.status === 'expiring').length,
     expired:  clients.filter(c => c.status === 'expired').length,
     revenue:  clients.filter(c => c.status !== 'suspended').reduce((a, c) => {
-      let price = PLANS[c.plan?.toLowerCase() || 'pro']?.price || 0;
-      if (plansConfig) {
-        const id = c.plan?.toLowerCase() || 'pro';
-        if (id === 'basic') price = plansConfig.mes_basico;
-        if (id === 'pro') price = plansConfig.mes_pro;
-        if (id === 'hyrox' || id === 'hyrox pro') price = plansConfig.mes_hyrox;
-      }
-      return a + price;
+      const plan = plans.find(p => p.id === c.plan || p.label === c.plan);
+      return a + (plan?.price || 0);
     }, 0),
   };
 
@@ -731,7 +711,7 @@ export default function Members() {
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding:'14px 16px' }}><PlanBadge p={c.plan}/></td>
+                  <td style={{ padding:'14px 16px' }}><PlanBadge p={c.plan} plans={plans}/></td>
                   <td style={{ padding:'14px 16px' }}><StatusBadge s={c.status}/></td>
                   <td style={{ padding:'14px 16px', fontSize:12.5, color: c.status==='expired' ? 'var(--danger-red)' : c.status==='expiring' ? '#FFD600' : 'var(--text-secondary)' }}>{c.expiryDate || c.expiry}</td>
                   <td style={{ padding:'14px 16px', fontSize:12, color:'var(--text-secondary)', textTransform:'capitalize' }}>{c.payMethod}</td>
@@ -781,7 +761,7 @@ export default function Members() {
           initial={editClient}
           onSave={handleSave}
           onClose={() => { setShowModal(false); setEditClient(null); }}
-          plansConfig={plansConfig}
+          plans={plans}
         />
       )}
       {viewClient && (

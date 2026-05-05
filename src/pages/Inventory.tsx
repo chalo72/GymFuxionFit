@@ -223,8 +223,8 @@ export default function Inventory() {
                              </div>
                           </td>
                           <td style={{ padding: '16px 24px', fontSize: 12, color:'rgba(255,255,255,0.3)', fontWeight: 800 }}>{product.minStock}</td>
-                          <td style={{ padding: '16px 24px', fontSize: 12, fontWeight: 900 }}>${product.buyPrice.toLocaleString()}</td>
-                          <td style={{ padding: '16px 24px', fontSize: 14, fontWeight: 950, color: 'var(--neon-green)' }}>${product.sellPrice.toLocaleString()}</td>
+                          <td style={{ padding: '16px 24px', fontSize: 12, fontWeight: 900 }}>${(product.buyPrice || 0).toLocaleString()}</td>
+                          <td style={{ padding: '16px 24px', fontSize: 14, fontWeight: 950, color: 'var(--neon-green)' }}>${(product.sellPrice || 0).toLocaleString()}</td>
                           <td style={{ padding: '16px 24px' }}>
                              <div style={{ fontSize: 13, fontWeight: 950, color: '#00E5FF' }}>+${(product.sellPrice - product.buyPrice).toLocaleString()}</div>
                              <div style={{ fontSize: 8, color: 'rgba(0,229,255,0.5)', fontWeight: 800 }}>MARGEN NETA</div>

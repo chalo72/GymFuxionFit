@@ -47,18 +47,17 @@ export default function Login() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     login(selectedRole);
-    // FORZADO FÍSICO
-    window.location.href = roleConfig[selectedRole].redirect;
+    navigate(roleConfig[selectedRole].redirect);
   };
 
   const handleBiometricLogin = () => {
     login(selectedRole);
-    window.location.href = roleConfig[selectedRole].redirect;
+    navigate(roleConfig[selectedRole].redirect);
   };
 
   const handleQuickLogin = (role: UserRole) => {
     login(role);
-    window.location.href = roleConfig[role].redirect;
+    navigate(roleConfig[role].redirect);
   };
 
   return (

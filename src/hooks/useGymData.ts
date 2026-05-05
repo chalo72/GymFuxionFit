@@ -145,15 +145,22 @@ function useGymDataInternal() {
     bagsPerPaca: 50,
     pacaCost: 6000
   });
+  const [plans, setPlans] = useState<any[]>(() => {
+    const saved = localStorage.getItem('fuxion_custom_plans');
+    return saved ? JSON.parse(saved) : [
+      { id: 'dia',        label: 'Día',       price: 5000,   desc: 'Acceso por un día',                  color: '#FFD600', duration: 'dia'    },
+      { id: 'semana',     label: 'Semanal',   price: 25000,  desc: 'Acceso por 7 días',                  color: '#00E5FF', duration: 'semana' },
+      { id: 'mes_basico', label: 'Básico',    price: 45000,  desc: 'Acceso gimnasio · L-V · Sin clases', color: '#8A948A', duration: 'mes'    },
+      { id: 'mes_pro',    label: 'Pro',       price: 75000,  desc: 'Acceso completo · Clases incluidas', color: '#00FF88', duration: 'mes'    },
+      { id: 'mes_hyrox',  label: 'HYROX Pro', price: 120000, desc: 'Elite · HYROX · Trainer asignado',   color: '#FF6B35', duration: 'mes'    },
+    ];
+  });
   const [plansConfig, setPlansConfig] = useState(() => {
     const saved = localStorage.getItem('fuxion_plans_config');
-    return saved ? JSON.parse(saved) : {
-      dia: 5000,
-      semana: 25000,
-      mes_basico: 45000,
-      mes_pro: 75000,
-      mes_hyrox: 120000
-    };
+    if (saved) return JSON.parse(saved);
+    const cfg: any = {};
+    plans.forEach(p => { cfg[p.id] = p.price; });
+    return cfg;
   });
 
   // ─── CARGA INICIAL Y PERSISTENCIA (HYBRID SYNC) ───
@@ -259,6 +266,12 @@ function useGymDataInternal() {
       if (type === 'OBLIGATIONS_UPDATE') setObligations(data);
       if (type === 'STAFF_UPDATE') setStaff(data);
       if (type === 'ASSETS_UPDATE') setAssets(data);
+      if (type === 'PLANS_UPDATE') {
+        setPlans(data);
+        const cfg: any = {};
+        data.forEach((p: any) => { cfg[p.id] = p.price; });
+        setPlansConfig(cfg);
+      }
     };
 
     // 📡 SINCRONIZACIÓN DE DISCO DURO ENTRE PESTAÑAS (Evita Amnesia de Datos)
@@ -267,6 +280,13 @@ function useGymDataInternal() {
         if (e.key === 'fuxion_members' && e.newValue) setMembers(JSON.parse(e.newValue));
         if (e.key === 'fuxion_tx' && e.newValue) setTransactions(JSON.parse(e.newValue));
         if (e.key === 'fuxion_products' && e.newValue) setProducts(JSON.parse(e.newValue));
+        if (e.key === 'fuxion_custom_plans' && e.newValue) {
+          const nextPlans = JSON.parse(e.newValue);
+          setPlans(nextPlans);
+          const cfg: any = {};
+          nextPlans.forEach((p: any) => { cfg[p.id] = p.price; });
+          setPlansConfig(cfg);
+        }
       } catch (err) {
         console.error("Error al sincronizar desde localStorage:", err);
       }
@@ -465,9 +485,18 @@ function useGymDataInternal() {
     });
   };
 
-  const updatePlansConfig = (newConfig: any) => {
-    setPlansConfig(newConfig);
-    localStorage.setItem('fuxion_plans_config', JSON.stringify(newConfig));
+  const updatePlans = (nextPlans: any[]) => {
+    setPlans(nextPlans);
+    localStorage.setItem('fuxion_custom_plans', JSON.stringify(nextPlans));
+    
+    const cfg: any = {};
+    nextPlans.forEach(p => { cfg[p.id] = p.price; });
+    setPlansConfig(cfg);
+    localStorage.setItem('fuxion_plans_config', JSON.stringify(cfg));
+
+    const bc = new BroadcastChannel('fuxion_sync_channel');
+    bc.postMessage({ type: 'PLANS_UPDATE', data: nextPlans });
+    bc.close();
   };
 
   // 🆘 SHADOW RECOVERY: Intenta recuperar datos desde el Suplente (Firebase)
@@ -515,9 +544,9 @@ function useGymDataInternal() {
   };
 
   return { 
-    transactions, assets, members, products, plansConfig, waterConfig,
+    transactions, assets, members, products, plans, plansConfig, waterConfig,
     syncError, syncStatus, pendingTasks,
-    setAssets, setMembers, setProducts, updatePlansConfig,
+    setAssets, setMembers, setProducts, updatePlans,
     injectTransaction, updateMemberStatus, clearMemberDebt,
     registerProductSale,
     withdrawFromGoal,

@@ -1066,6 +1066,95 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
           onSave={handleSaveMeasures} 
         />
       )}
+
+      {/* ══ MODAL: SCRIPT DE COMUNICACIÓN ══ */}
+      {showScript && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.9)', zIndex:4000, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(20px)' }}>
+          <div className="glass-card" style={{ width: 600, maxHeight: '80vh', overflowY: 'auto', padding: 40, border: '1px solid var(--neon-green)', boxShadow: '0 0 50px rgba(0,255,136,0.15)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }}>
+               <div>
+                 <h2 style={{ fontSize: 24, fontWeight: 950, color: '#fff', letterSpacing: -0.5 }}>SCRIPT DE COMUNICACIÓN ÉLITE</h2>
+                 <p style={{ fontSize: 11, color: 'var(--neon-green)', fontWeight: 800, marginTop: 4 }}>PROTOCOLO DE PERSUASIÓN Y CIERRE v2.0</p>
+               </div>
+               <button onClick={() => setShowScript(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={24}/></button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+               <section style={{ padding: 20, background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+                 <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8 }}>01. BIENVENIDA Y ENCUADRE</div>
+                 <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                   "Hola [Nombre], bienvenido a la familia FuxionFit. No solo te inscribiste a un gym, entraste a un ecosistema de alto rendimiento. Mi objetivo hoy es entender tu estructura ósea y mecánica para que cada repetición cuente."
+                 </p>
+               </section>
+
+               <section style={{ padding: 20, background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+                 <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8 }}>02. EXPLICACIÓN DE BIOMETRÍA</div>
+                 <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                   "Mira estos datos. Tu longitud de fémur es de {selectedClient?.femurLength || 'XX'}cm. Esto significa que en sentadilla, tu palanca es larga; si bajamos recto, te inclinarás de más. Necesitamos un ancho de pies mayor para que tu cadera baje entre tus fémures. Eso es entrenamiento inteligente."
+                 </p>
+               </section>
+
+               <section style={{ padding: 20, background: 'rgba(0,255,136,0.05)', borderRadius: 16, border: '1px solid rgba(0,255,136,0.2)' }}>
+                 <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 8 }}>03. CIERRE DE UPSELL (PLAN ÉLITE)</div>
+                 <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', lineHeight: 1.6, fontStyle: 'italic' }}>
+                   "Tienes una base excelente, pero para llegar a [Meta], el plan básico se queda corto. En el Plan Élite FuxionFit, yo monitoreo tu HRV y ajusto tu carga cada 24 horas basado en tu recuperación. ¿Empezamos con la programación avanzada hoy?"
+                 </p>
+               </section>
+            </div>
+
+            <button onClick={() => setShowScript(false)} style={{ width: '100%', marginTop: 30, padding: 20, borderRadius: 16, background: 'var(--neon-green)', color: '#000', fontWeight: 950, fontSize: 16, cursor: 'pointer', boxShadow: '0 10px 30px rgba(0,255,136,0.3)' }}> ENTENDIDO, APLICAR PROTOCOLO </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL: GUÍA TÉCNICA ══ */}
+      {showTechnicalGuide && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.9)', zIndex:4000, display:'flex', alignItems:'center', justifyContent:'center', backdropFilter:'blur(20px)' }}>
+          <div className="glass-card" style={{ width: 800, maxHeight: '90vh', overflowY: 'auto', padding: 40, border: '1px solid #A78BFA', boxShadow: '0 0 50px rgba(167,139,250,0.15)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }}>
+               <div>
+                 <h2 style={{ fontSize: 24, fontWeight: 950, color: '#fff', letterSpacing: -0.5 }}>GUÍA TÉCNICA BIOMECÁNICA</h2>
+                 <p style={{ fontSize: 11, color: '#A78BFA', fontWeight: 800, marginTop: 4 }}>FUNDAMENTOS DE INGENIERÍA HUMANA v1.5</p>
+               </div>
+               <button onClick={() => setShowTechnicalGuide(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', cursor: 'pointer', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={24}/></button>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div style={{ padding: 20, background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 900, color: '#A78BFA', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}><Activity size={16}/> 1. ANÁLISIS DE PALANCAS</h3>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+                      Identifica si el atleta es dominante de rodilla o cadera según su longitud de torso vs fémur. Atletas con torsos largos y fémures cortos son "nacidos para la sentadilla".
+                    </p>
+                  </div>
+                  <div style={{ padding: 20, background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 900, color: '#A78BFA', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}><TrendingUp size={16}/> 2. CURVAS DE TENSIÓN</h3>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+                      Asegura que cada rutina incluya ejercicios en posición de estiramiento (Prensa), rango medio (Sentadilla) y acortamiento (Extensiones) para hipertrofia total.
+                    </p>
+                  </div>
+               </div>
+
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div style={{ padding: 20, background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 900, color: '#A78BFA', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}><Brain size={16}/> 3. FATIGA DEL SNC</h3>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+                      Monitorea el HRV. Si el atleta reporta estrés 9/10 o sueño &lt; 6h, reduce el RPE de 9 a 7 para evitar lesiones por sobreuso y sobreentrenamiento.
+                    </p>
+                  </div>
+                  <div style={{ padding: 20, background: 'rgba(167,139,250,0.1)', borderRadius: 16, border: '1px solid rgba(167,139,250,0.3)' }}>
+                    <h3 style={{ fontSize: 14, fontWeight: 900, color: '#fff', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}><Zap size={16}/> PROTOCOLO HYROX</h3>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', lineHeight: 1.5 }}>
+                      En sesiones de alta intensidad, prioriza la economía de movimiento. El Sled Push se mueve con el core, no solo con las piernas. Bracing es mandatorio.
+                    </p>
+                  </div>
+               </div>
+            </div>
+
+            <button onClick={() => setShowTechnicalGuide(false)} style={{ width: '100%', marginTop: 30, padding: 20, borderRadius: 16, border: '2px solid #A78BFA', color: '#A78BFA', background: 'transparent', fontWeight: 950, fontSize: 16, cursor: 'pointer' }}> CERRAR GUÍA TÉCNICA </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

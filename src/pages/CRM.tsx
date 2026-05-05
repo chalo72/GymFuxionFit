@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Kanban, UserPlus, TrendingUp, Instagram, Facebook, MessageSquare, Phone, X, Save, Plus } from 'lucide-react';
+import { Kanban, UserPlus, TrendingUp, Instagram, Facebook, MessageSquare, Phone, X, Save, Plus, Zap } from 'lucide-react';
+import { useGymData } from '../hooks/useGymData';
 
 export default function CRM() {
+  const { members } = useGymData();
   const [showModal, setShowModal] = useState(false);
   const [leads, setLeads] = useState([
     { name: 'Carlos Mario', source: 'Instagram', date: 'Hoy, 10:30', status: 'leads' },
@@ -72,7 +74,10 @@ export default function CRM() {
 
       <div className="glass-card-header" style={{ marginBottom: 32 }}>
         <div>
-          <h1 className="navbar-title">CRM de Ventas <span style={{ color: 'var(--neon-green)', fontSize: '0.9rem', marginLeft: 8 }}>Pipeline Omnicanal</span></h1>
+          <h1 className="navbar-title">
+            CRM de Ventas 
+            <span style={{ color: 'var(--neon-green)', fontSize: '0.7rem', marginLeft: 12, border: '1px solid var(--neon-green)', padding: '2px 8px', borderRadius: 6, fontWeight: 950 }}>NEXUS ELITE v7.2</span>
+          </h1>
           <p className="glass-card-subtitle">Gestión de prospectos e integración con redes sociales</p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>

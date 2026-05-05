@@ -1,16 +1,12 @@
 {
-  "version": "6.5.0",
-  "build": 20260505,
-  "status": "CRITICAL_DEPLOY_ACTIVE",
+  "version": "6.6.6",
+  "build": "20260505.1646",
+  "status": "ELITE_ATHLETE_V3",
   "author": "Antigravity Nexus",
   "features": [
-    "MODO CRITICO ACTIVADO: Sincronización Forzada Vercel",
-    "Elite Coach Copilot - Advisory Panel & Scripts",
-    "Lever-Based Exercise Logic (Femur/Arms)",
-    "Elite Logbook v1.0 - Tempo & RPE/RIR",
-    "Elite Anamnesis & Initial Evaluation 360",
-    "Pre-Training Semaphore & Fatigue Alerts",
-    "Elite Planner & Recovery Synergy",
-    "TypeScript Integrity - Fixed Build Errors for Vercel"
+    "🚀 ATHLETE V3: Remodelación integral de la App del Cliente (Elite UI)",
+    "💎 PREMIUM DESIGN: Glassmorphism y tipografía de alta gama",
+    "📊 REAL DATA: Integración total con useGymData para perfiles de atletas",
+    "🛡️ STABILITY: Mantenimiento de blindajes preventivos v6.6.1"
   ]
 }

@@ -1,14 +1,14 @@
-# 📑 NEXUS SYSTEM MANIFEST — GymFuxionFit
-> **Versión del Sistema**: v6.5.0 (CRITICAL-DEPLOY)
-> **Última Actualización**: 2026-05-05 11:40
-> **Estado General**: 🔴 CRITICAL MODE — Forcing Vercel Synchronization
+# 🌌 GymFuxionFit — NEXUS SYSTEM MANIFEST
+**Versión Actual:** `v6.6.3 — ELITE ATHLETE EXPERIENCE`
+**Estado:** ✅ SISTEMA ESTABLE Y BLINDADO
 
----
+## 📋 Registro de Evolución Crítica
 
-## 🚨 MODO CRÍTICO ACTIVADO (v6.5.0)
-- **Causa**: Vercel no refleja los cambios realizados en local.
-- **Acción**: Incremento de versión forzado y creación de script de rescate de Git.
-- **Protocolo**: `RESCATE_VERCEL_YA.bat` desplegado para ejecución manual.
+- **v6.6.4 (Actual):** 🛒 MARKETPLACE ELITE. Integración de tienda virtual híbrida (Local + Dropshipping) en la app del cliente con sistema de acuerdos flexibles de pago.
+- **v6.6.3:** 🚀 ELITE ATHLETE EXPERIENCE. Transformación total de la interfaz del cliente. Diseño premium, intuitivo y conectado a datos reales de biometría y membresía.
+- **v6.6.2:** 🔄 NEXUS SYNC. Sincronización dinámica total de planes. Eliminación de mocks en `Members` y `Reception`.
+- **v6.5.0:** 🛡️ Activación de Modo Crítico para rescate de Vercel. Implementación de `RESCATE_VERCEL_YA.bat`. Forzado de versión.
+- **v6.4.0:** Integración de `EvaluacionInicial.tsx` y Dashboards de Cliente.
 
 ## 🏗️ ARQUITECTURA TÉCNICA
 - **Frontend**: React 19 + TypeScript + Vite.

@@ -39,7 +39,7 @@ const fmtTime = (s: number) => {
    HYBRID RECEPTION HUB (FUSION v5.0 - PREMIUM GLASS)
    ══════════════════════════════════════════ */
 export default function Reception() {
-  const { members, transactions, clearMemberDebt, injectTransaction, products, registerProductSale, updateMemberStatus, plansConfig, addMember } = useGymData();
+  const { members, transactions, clearMemberDebt, injectTransaction, products, registerProductSale, updateMemberStatus, plans, plansConfig, addMember } = useGymData();
   const { products: configProducts } = useGymConfig();
 
   /* ── KPIs del día calculados en tiempo real ── */
@@ -244,18 +244,24 @@ export default function Reception() {
         if (item.category !== 'Servicio') {
           await registerProductSale(item.id, item.qty, selectedMember.name, paymentMethod);
         } else {
+          const plan = plans.find(p => p.id === item.id);
           await injectTransaction({
             date: new Date().toISOString().split('T')[0],
             time: new Date().toLocaleTimeString().slice(0, 5),
             description: `Servicio: ${item.name}`,
-            category: item.id === 'srv_mes' || item.id === 'srv_sem' ? 'membership' : 'daypass',
+            category: plan?.duration === 'mes' || plan?.duration === 'semana' ? 'membership' : 'daypass',
             type: 'income',
             amount: item.price * item.qty,
             method: paymentMethod,
             client: selectedMember.name
           });
-          if (item.id === 'srv_mes' || item.id === 'srv_sem' || item.id === 'srv_dia') {
-            const daysToAdd = item.id === 'srv_mes' ? 30 * item.qty : item.id === 'srv_sem' ? 7 * item.qty : 1 * item.qty;
+          
+          if (plan) {
+            let daysToAdd = 1;
+            if (plan.duration === 'semana') daysToAdd = 7;
+            if (plan.duration === 'mes') daysToAdd = 30;
+            daysToAdd *= item.qty;
+
             const expiryStr = selectedMember.expiryDate || new Date().toISOString().split('T')[0];
             const [y, m, d] = expiryStr.split('-').map(Number);
             const currentExpiry = new Date(y, m - 1, d);
@@ -335,7 +341,7 @@ export default function Reception() {
              <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 20, padding: 24, marginBottom: 24, border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                    <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 600 }}>Deuda Pendiente:</span>
-                   <span style={{ fontSize: 20, fontWeight: 950, color: 'var(--danger-red)' }}>${alertMember.debt.toLocaleString()}</span>
+                   <span style={{ fontSize: 20, fontWeight: 950, color: 'var(--danger-red)' }}>${(alertMember.debt || 0).toLocaleString()}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                    <span style={{ fontSize: 14, color: 'var(--text-secondary)', fontWeight: 600 }}>Vencimiento:</span>
@@ -411,21 +417,17 @@ export default function Reception() {
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:20 }}>
                      <div style={{ background:'rgba(255,255,255,0.03)', padding:16, borderRadius:16, border: '1px solid rgba(255,255,255,0.05)', textAlign:'center' }}>
                         <div style={{ fontSize:9, color:'var(--text-muted)', letterSpacing: 1, fontWeight: 800 }}>ESTADO DE CUENTA</div>
-                        <div style={{ fontSize:16, fontWeight: 950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)', marginTop: 4 }}>${selectedMember.debt.toLocaleString()}</div>
+                        <div style={{ fontSize:16, fontWeight: 950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)', marginTop: 4 }}>${(selectedMember.debt || 0).toLocaleString()}</div>
                      </div>
                      <button onClick={() => setShowProfile(true)} style={{ background:'rgba(0,255,136,0.08)', border:'1px solid rgba(0,255,136,0.2)', color:'var(--neon-green)', borderRadius:16, fontSize:11, fontWeight:950, cursor:'pointer', transition: '0.3s' }}>VER PERFIL</button>
                   </div>
                   
                   {/* ── ACCESOS RÁPIDOS DE MEMBRESÍA ── */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 14 }}>
-                    {[
-                      { id: 'srv_dia', label: 'DIARIO', price: plansConfig?.dia || 5000, color: '#FFD600', icon: <Zap size={14}/> },
-                      { id: 'srv_sem', label: 'SEMANAL', price: plansConfig?.semana || 25000, color: '#00E5FF', icon: <Calendar size={14}/> },
-                      { id: 'srv_mes', label: 'MENSUAL', price: plansConfig?.mes_pro || 75000, color: 'var(--neon-green)', icon: <TrendingUp size={14}/> },
-                    ].map(srv => (
+                    {plans.slice(0, 3).map(srv => (
                       <button key={srv.id} onClick={() => addToCart({ id: srv.id, name: srv.label, sellPrice: srv.price, category: 'Servicio' })} style={{ padding: '12px 6px', borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: `1px solid ${srv.color}30`, color: '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: '0.25s' }} className="srv-btn-premium">
-                        <div style={{ color: srv.color }}>{srv.icon}</div>
-                        <div style={{ fontSize: 9, fontWeight: 950, letterSpacing: 1 }}>{srv.label}</div>
+                        <div style={{ color: srv.color }}>{srv.duration === 'dia' ? <Zap size={14}/> : srv.duration === 'semana' ? <Calendar size={14}/> : <TrendingUp size={14}/>}</div>
+                        <div style={{ fontSize: 9, fontWeight: 950, letterSpacing: 1 }}>{srv.label.toUpperCase()}</div>
                         <div style={{ fontSize: 13, fontWeight: 950, color: srv.color }}>${(srv.price/1000).toFixed(0)}K</div>
                       </button>
                     ))}
@@ -654,14 +656,10 @@ export default function Reception() {
                         <div className="glass-card" style={{ padding: 32, borderRadius: 32, border: '1px solid rgba(0,255,136,0.3)', background: 'rgba(0,255,136,0.04)', backdropFilter: 'blur(10px)' }}>
                            <h4 style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', letterSpacing: 3, marginBottom: 24 }}>SERVICIOS RÁPIDOS</h4>
                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 32 }}>
-                              {[
-                                 { id: 'srv_mes', label: 'MES PRO', price: plansConfig?.mes_pro || 75000, color: 'var(--neon-green)', icon: <TrendingUp size={16}/> },
-                                 { id: 'srv_sem', label: 'SEMANAL', price: plansConfig?.semana || 25000, color: '#00E5FF', icon: <Calendar size={16}/> },
-                                 { id: 'srv_dia', label: 'DÍA PLAN', price: plansConfig?.dia || 5000, color: '#FFD600', icon: <Zap size={16}/> }
-                              ].map(srv => (
+                              {plans.slice(0, 3).map(srv => (
                                  <button key={srv.id} onClick={() => addToCart({ ...srv, name: srv.label, sellPrice: srv.price, category: 'Servicio' })} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${srv.color}30`, borderRadius: 20, padding: '22px 10px', color: '#fff', cursor: 'pointer', transition: '0.3s', display:'flex', flexDirection:'column', alignItems:'center', gap: 10 }} className="srv-btn-premium">
-                                    <div style={{ color: srv.color }}>{srv.icon}</div>
-                                    <div style={{ fontSize: 10, fontWeight: 950, letterSpacing: 1.5 }}>{srv.label}</div>
+                                    <div style={{ color: srv.color }}>{srv.duration === 'dia' ? <Zap size={16}/> : srv.duration === 'semana' ? <Calendar size={16}/> : <TrendingUp size={16}/>}</div>
+                                    <div style={{ fontSize: 10, fontWeight: 950, letterSpacing: 1.5 }}>{srv.label.toUpperCase()}</div>
                                     <div style={{ fontSize: 16, fontWeight: 950 }}>${(srv.price/1000).toFixed(0)}K</div>
                                  </button>
                               ))}
