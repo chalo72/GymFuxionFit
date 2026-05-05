@@ -67,7 +67,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
-  const { syncError, syncStatus, forceSyncAll } = useGymData();
+  const { syncError, syncStatus, forceSyncAll, forceSyncFromShadow, pendingTasks } = useGymData();
   const [showSyncError, setShowSyncError] = useState(() => {
     // 🛡️ MODO CRÍTICO: No mostrar si ya se cerró en esta sesión
     return sessionStorage.getItem('hide_sync_alert') !== 'true';
@@ -216,23 +216,42 @@ function App() {
         {syncStatus?.toUpperCase() || 'OFFLINE'}
 
         {syncStatus !== 'syncing' && (
-          <button 
-            onClick={() => forceSyncAll()}
-            style={{
-              marginLeft: '8px',
-              background: 'rgba(255,255,255,0.1)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              color: '#fff',
-              fontSize: '8px',
-              padding: '2px 6px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: '900',
-              pointerEvents: 'auto'
-            }}
-          >
-            [ SYNC NOW ]
-          </button>
+          <div style={{ display: 'flex', gap: 6, marginLeft: 8, pointerEvents: 'auto' }}>
+            <button 
+              onClick={() => forceSyncAll()}
+              style={{
+                background: 'rgba(0,255,136,0.1)',
+                border: '1px solid rgba(0,255,136,0.2)',
+                color: 'var(--neon-green)',
+                fontSize: '8px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: '950'
+              }}
+            >
+              [ SYNC PUSH ]
+            </button>
+            <button 
+              onClick={() => {
+                if(window.confirm('¿Deseas intentar recuperar datos desde el Suplente (Firebase)? Usa esto si no ves tus miembros.')) {
+                  forceSyncFromShadow();
+                }
+              }}
+              style={{
+                background: 'rgba(255,61,87,0.1)',
+                border: '1px solid rgba(255,61,87,0.2)',
+                color: 'var(--danger-red)',
+                fontSize: '8px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: '950'
+              }}
+            >
+              [ DEEP RECOVERY ]
+            </button>
+          </div>
         )}
         <style>{`@keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }`}</style>
       </div>

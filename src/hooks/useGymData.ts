@@ -131,8 +131,15 @@ function useGymDataInternal() {
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
+  const [syncStatus, setSyncStatus] = useState<'live' | 'local' | 'syncing'>('local');
+  const [pendingTasks, setPendingTasks] = useState(0);
+
+  // 🔄 Suscripción a la cola de sincronización
+  useEffect(() => {
+    return trioSync.subscribe(count => setPendingTasks(count));
+  }, []);
+
   const [isLoaded, setIsLoaded] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<'live' | 'local' | 'syncing'>('syncing');
   const [waterConfig, setWaterConfig] = useState({
     bagPrice: 200,
     bagsPerPaca: 50,
@@ -158,54 +165,78 @@ function useGymDataInternal() {
         const savedMembers = localStorage.getItem('fuxion_members');
         const savedProducts = localStorage.getItem('fuxion_products');
 
-        if (savedTx) setTransactions(JSON.parse(savedTx));
-        if (savedMembers) setMembers(JSON.parse(savedMembers));
-        if (savedProducts) setProducts(JSON.parse(savedProducts));
+        let currentMembers: Member[] = savedMembers ? JSON.parse(savedMembers) : [];
+        let currentTx: Transaction[] = savedTx ? JSON.parse(savedTx) : [];
+        let currentProducts: Product[] = savedProducts ? JSON.parse(savedProducts) : [];
 
-        console.log("🛠️ Memoria local cargada. Iniciando sincronización cloud...");
+        // Establecer estado inicial rápido
+        if (currentTx.length > 0) setTransactions(currentTx);
+        if (currentMembers.length > 0) setMembers(currentMembers);
+        if (currentProducts.length > 0) setProducts(currentProducts);
 
-        // 2. Cargar desde el Adaptador Activo (Firebase/Supabase/Appwrite)
-        const cloudMembers = await gymDatabase.getCollection<any>('members');
-        if (cloudMembers) {
-           const mappedMembers = cloudMembers.map(m => ({
-             ...m,
-             expiryDate: m.expiry_date || m.expiry || m.expiryDate,
-             biometricStatus: m.biometric_status || m.biometricStatus
-           }));
-           setMembers(mappedMembers);
-           localStorage.setItem('fuxion_members', JSON.stringify(mappedMembers));
+        console.log(`🛠️ [BOOT]: Memoria local cargada (${currentMembers.length} miembros). Iniciando sincronización cloud...`);
+
+        // 2. Sincronización de Miembros
+        try {
+          const cloudMembers = await gymDatabase.getCollection<any>('members');
+          if (cloudMembers && cloudMembers.length > 0) {
+            const mappedMembers = cloudMembers.map(m => ({
+              ...m,
+              expiryDate: m.expiry_date || m.expiry || m.expiryDate,
+              biometricStatus: m.biometric_status || m.biometricStatus
+            }));
+            
+            // Mezcla Híbrida usando la variable local como base
+            const cloudIds = new Set(mappedMembers.map(m => String(m.id)));
+            const localOnly = currentMembers.filter(m => !cloudIds.has(String(m.id)));
+            currentMembers = [...mappedMembers, ...localOnly];
+            
+            setMembers(currentMembers);
+            localStorage.setItem('fuxion_members', JSON.stringify(currentMembers));
+          }
+        } catch (e) {
+          console.warn("⚠️ Fallo sync cloud miembros:", e);
         }
 
-        const cloudTx = await gymDatabase.getCollection<any>('transactions');
-        if (cloudTx) {
-          setTransactions(cloudTx);
-          localStorage.setItem('fuxion_tx', JSON.stringify(cloudTx));
+        // 3. Sincronización de Transacciones
+        try {
+          const cloudTx = await gymDatabase.getCollection<any>('transactions');
+          if (cloudTx && cloudTx.length > 0) {
+            const cloudIds = new Set(cloudTx.map(t => String(t.id)));
+            const localOnly = currentTx.filter(t => !cloudIds.has(String(t.id)));
+            currentTx = [...cloudTx, ...localOnly];
+            
+            setTransactions(currentTx);
+            localStorage.setItem('fuxion_tx', JSON.stringify(currentTx));
+          }
+        } catch (e) {
+          console.warn("⚠️ Fallo sync cloud transacciones:", e);
         }
 
-        const cloudProducts = await gymDatabase.getCollection<any>('products');
-        if (cloudProducts) {
-          const mappedCloud = cloudProducts.map((p: any) => ({
-            ...p,
-            id: String(p.id || p.$id || p.ID), 
-            buyPrice: p.buy_price || p.buyPrice || 0,
-            sellPrice: p.sell_price || p.sellPrice || 0,
-            minStock: p.min_stock || p.minStock || 0
-          }));
+        // 4. Sincronización de Productos
+        try {
+          const cloudProducts = await gymDatabase.getCollection<any>('products');
+          if (cloudProducts && cloudProducts.length > 0) {
+            const mappedCloud = cloudProducts.map((p: any) => ({
+              ...p,
+              id: String(p.id || p.$id || p.ID), 
+              buyPrice: p.buy_price || p.buyPrice || 0,
+              sellPrice: p.sell_price || p.sellPrice || 0,
+              minStock: p.min_stock || p.minStock || 0
+            }));
 
-          setProducts(prev => {
-            const newProductList: Product[] = [...mappedCloud];
-            prev.forEach(localItem => {
-              const alreadyInCloud = mappedCloud.some(c => 
-                String(c.id) === String(localItem.id) || 
-                c.name.toLowerCase() === localItem.name.toLowerCase()
-              );
-              if (!alreadyInCloud) newProductList.push(localItem);
-            });
-            return newProductList;
-          });
-          setIsLoaded(true);
+            const cloudIds = new Set(mappedCloud.map(p => String(p.id)));
+            const localOnly = currentProducts.filter(p => !cloudIds.has(String(p.id)));
+            currentProducts = [...mappedCloud, ...localOnly];
+
+            setProducts(currentProducts);
+            localStorage.setItem('fuxion_products', JSON.stringify(currentProducts));
+          }
+        } catch (e) {
+          console.warn("⚠️ Fallo sync cloud productos:", e);
         }
 
+        // Finalizar carga
         setIsLoaded(true);
       } catch (err: any) {
         console.error("❌ ERROR CRÍTICO DE SINCRONIZACIÓN:", err);
@@ -253,11 +284,16 @@ function useGymDataInternal() {
       
       // Deduplicación inteligente: Solo actualizamos si hay cambios reales
       setMembers(prev => {
-        const cloudStr = JSON.stringify(mapped);
+        const cloudIds = new Set(mapped.map(m => String(m.id)));
+        const localOnly = prev.filter(m => !cloudIds.has(String(m.id)));
+        const merged = [...mapped, ...localOnly];
+        
+        const mergedStr = JSON.stringify(merged);
         const prevStr = JSON.stringify(prev);
-        if (cloudStr === prevStr) return prev;
-        bc.postMessage({ type: 'MEMBERS_UPDATE', data: mapped });
-        return mapped;
+        if (mergedStr === prevStr) return prev;
+        
+        bc.postMessage({ type: 'MEMBERS_UPDATE', data: merged });
+        return merged;
       });
     });
 
@@ -272,22 +308,32 @@ function useGymDataInternal() {
       }));
       
       setProducts(prev => {
-        const cloudStr = JSON.stringify(mapped);
+        const cloudIds = new Set(mapped.map(p => String(p.id)));
+        const localOnly = prev.filter(p => !cloudIds.has(String(p.id)));
+        const merged = [...mapped, ...localOnly];
+        
+        const mergedStr = JSON.stringify(merged);
         const prevStr = JSON.stringify(prev);
-        if (cloudStr === prevStr) return prev;
-        bc.postMessage({ type: 'PRODUCTS_UPDATE', data: mapped });
-        return mapped;
+        if (mergedStr === prevStr) return prev;
+        
+        bc.postMessage({ type: 'PRODUCTS_UPDATE', data: merged });
+        return merged;
       });
     });
 
     const unsubTx = gymDatabase.subscribe<Transaction>('transactions', (items) => {
       setSyncStatus('live');
       setTransactions(prev => {
-        const cloudStr = JSON.stringify(items);
+        const cloudIds = new Set(items.map(t => String(t.id)));
+        const localOnly = prev.filter(t => !cloudIds.has(String(t.id)));
+        const merged = [...items, ...localOnly];
+        
+        const mergedStr = JSON.stringify(merged);
         const prevStr = JSON.stringify(prev);
-        if (cloudStr === prevStr) return prev;
-        bc.postMessage({ type: 'TX_UPDATE', data: items });
-        return items;
+        if (mergedStr === prevStr) return prev;
+        
+        bc.postMessage({ type: 'TX_UPDATE', data: merged });
+        return merged;
       });
     });
 
@@ -424,12 +470,59 @@ function useGymDataInternal() {
     localStorage.setItem('fuxion_plans_config', JSON.stringify(newConfig));
   };
 
+  // 🆘 SHADOW RECOVERY: Intenta recuperar datos desde el Suplente (Firebase)
+  const forceSyncFromShadow = async () => {
+    try {
+      setSyncStatus('syncing');
+      console.log("🆘 [RECOVERY]: Iniciando Búsqueda Profunda en el Suplente...");
+      
+      const cloudMembers = await gymDatabase.getCollection<any>('members');
+      const cloudTx = await gymDatabase.getCollection<any>('transactions');
+      
+      if (cloudMembers.length > 0) {
+        setMembers(cloudMembers);
+        localStorage.setItem('fuxion_members', JSON.stringify(cloudMembers));
+      }
+      
+      if (cloudTx.length > 0) {
+        setTransactions(cloudTx);
+        localStorage.setItem('fuxion_tx', JSON.stringify(cloudTx));
+      }
+      
+      setSyncStatus('live');
+      alert(`✅ RECUPERACIÓN EXITOSA: Se han restaurado ${cloudMembers.length} miembros y ${cloudTx.length} transacciones.`);
+    } catch (e: any) {
+      console.error("❌ Fallo en recuperación:", e);
+      alert("❌ Error en recuperación profunda: " + e.message);
+    }
+  };
+
+  // 🚀 NEXUS PUSH: Fuerza la subida de TODO lo local a la nube
+  const forceSyncAll = async () => {
+    setSyncStatus('syncing');
+    try {
+      console.log("🚀 [NEXUS]: Iniciando empuje masivo a la nube...");
+      for (const m of members) await trioSync.create('members', m);
+      for (const p of products) await trioSync.create('products', p);
+      for (const tx of transactions.slice(0, 50)) await trioSync.create('transactions', tx);
+      setSyncStatus('live');
+      return true;
+    } catch (error) {
+      console.error("❌ [NEXUS]: Error en empuje masivo:", error);
+      setSyncStatus('local');
+      return false;
+    }
+  };
+
   return { 
     transactions, assets, members, products, plansConfig, waterConfig,
+    syncError, syncStatus, pendingTasks,
     setAssets, setMembers, setProducts, updatePlansConfig,
     injectTransaction, updateMemberStatus, clearMemberDebt,
     registerProductSale,
     withdrawFromGoal,
+    forceSyncAll,
+    forceSyncFromShadow,
     updateTransaction: async (id: string | number, t: Partial<Transaction>) => {
       setTransactions(prev => prev.map(item => item.id === id ? { ...item, ...t } : item));
       try {
@@ -621,41 +714,7 @@ function useGymDataInternal() {
     deleteMember: async (id: string) => {
       setMembers(prev => prev.filter(m => m.id !== id));
       await trioSync.delete('members', id);
-    },
-    
-    // 🚀 NEXUS PUSH: Fuerza la subida de TODO lo local a la nube
-    forceSyncAll: async () => {
-      setSyncStatus('syncing');
-      try {
-        console.log("🚀 [NEXUS]: Iniciando empuje masivo a la nube...");
-        
-        // Sincronizar Miembros
-        for (const m of members) {
-          await trioSync.create('members', m);
-        }
-        
-        // Sincronizar Productos
-        for (const p of products) {
-          await trioSync.create('products', p);
-        }
-        
-        // Sincronizar Transacciones (últimas 50 para evitar saturación)
-        for (const tx of transactions.slice(0, 50)) {
-          await trioSync.create('transactions', tx);
-        }
-
-        setSyncStatus('live');
-        console.log("✅ [NEXUS]: Sincronización masiva completada con éxito.");
-        return true;
-      } catch (error) {
-        console.error("❌ [NEXUS]: Error en empuje masivo:", error);
-        setSyncStatus('local');
-        return false;
-      }
-    },
-
-    syncStatus,
-    syncError
+    }
   };
 }
 

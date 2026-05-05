@@ -1,147 +1,109 @@
 import { gymDatabase } from './database';
 
-/**
- * 🏎️ TRIO-SYNC ENGINE v2.0 (The Offline-First Auto-Healer)
- * Garantiza integridad de datos, previene duplicados y sincroniza 
- * automáticamente entre LocalStorage, Appwrite y Firebase.
- */
+const QUEUE_STORAGE_KEY = 'nexus_sync_queue';
 
 interface SyncTask {
-  id: string;
   action: 'CREATE' | 'UPDATE' | 'DELETE';
   table: string;
-  data?: any;
+  data: any;
   timestamp: number;
 }
 
-const SYNC_QUEUE_KEY = 'nexus_sync_queue';
-
-class TrioSyncEngine {
+class TrioSync {
   private queue: SyncTask[] = [];
   private isProcessing = false;
-  private isOnline = navigator.onLine;
+  private listeners: ((count: number) => void)[] = [];
 
   constructor() {
-    this.loadQueue();
+    const saved = localStorage.getItem(QUEUE_STORAGE_KEY);
+    if (saved) {
+      try {
+        this.queue = JSON.parse(saved);
+      } catch (e) {
+        this.queue = [];
+      }
+    }
     
-    // Escuchar cambios de red para auto-curación
-    window.addEventListener('online', () => {
-      console.log("🌐 [TRIO-SYNC]: Conexión restaurada. Procesando cola pendiente...");
-      this.isOnline = true;
-      this.processQueue();
-    });
-    
-    window.addEventListener('offline', () => {
-      console.warn("⚠️ [TRIO-SYNC]: Conexión perdida. Activando modo Offline Seguro.");
-      this.isOnline = false;
-    });
-
-    // Procesar la cola inicialmente si hay internet
-    if (this.isOnline) {
+    // Iniciar procesamiento si hay tareas
+    if (this.queue.length > 0) {
       setTimeout(() => this.processQueue(), 2000);
     }
   }
 
-  private loadQueue() {
-    try {
-      const saved = localStorage.getItem(SYNC_QUEUE_KEY);
-      if (saved) {
-        this.queue = JSON.parse(saved);
-        console.log(`📦 [TRIO-SYNC]: ${this.queue.length} tareas cargadas en cola.`);
-      }
-    } catch (e) {
-      console.error("Error cargando cola de sincronización", e);
-    }
+  subscribe(callback: (count: number) => void) {
+    this.listeners.push(callback);
+    callback(this.queue.length);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== callback);
+    };
+  }
+
+  private notify() {
+    this.listeners.forEach(l => l(this.queue.length));
   }
 
   private saveQueue() {
-    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(this.queue));
+    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(this.queue));
+    this.notify();
   }
 
-  private addTask(task: Omit<SyncTask, 'id' | 'timestamp'>) {
-    const fullTask: SyncTask = {
-      ...task,
-      id: crypto.randomUUID(),
-      timestamp: Date.now()
+  async create(table: string, data: any) {
+    const enriched = { 
+      ...data, 
+      syncStatus: 'pending',
+      lastUpdate: new Date().toISOString() 
     };
-    
-    // Anti-duplicación y compresión de la cola:
-    // Si hay una actualización de un documento que ya estaba en la cola para actualizarse,
-    // podemos fusionarlos para no saturar la red cuando vuelva.
-    if (task.action === 'UPDATE') {
-      const existingIdx = this.queue.findIndex(t => t.table === task.table && t.data?.id === task.data?.id && t.action === 'UPDATE');
-      if (existingIdx >= 0) {
-        this.queue[existingIdx].data = { ...this.queue[existingIdx].data, ...task.data };
-        this.queue[existingIdx].timestamp = Date.now();
-        this.saveQueue();
-        this.processQueue();
-        return;
-      }
-    }
+    this.addTask({ action: 'CREATE', table, data: enriched, timestamp: Date.now() });
+    return enriched;
+  }
 
-    this.queue.push(fullTask);
+  async update(table: string, id: string, data: any) {
+    this.addTask({ action: 'UPDATE', table, data: { ...data, id }, timestamp: Date.now() });
+  }
+
+  async delete(table: string, id: string) {
+    this.addTask({ action: 'DELETE', table, data: { id }, timestamp: Date.now() });
+  }
+
+  private addTask(task: SyncTask) {
+    this.queue.push(task);
     this.saveQueue();
     this.processQueue();
   }
 
   private async processQueue() {
-    if (this.isProcessing || !this.isOnline || this.queue.length === 0) return;
-
+    if (this.isProcessing || this.queue.length === 0) return;
     this.isProcessing = true;
-
-    while (this.queue.length > 0 && this.isOnline) {
-      const task = this.queue[0];
-      try {
-        if (task.action === 'CREATE' || task.action === 'UPDATE') {
-          await gymDatabase.setDocument(task.table, task.data.id, task.data);
-        } else if (task.action === 'DELETE') {
-          await gymDatabase.deleteDocument(task.table, task.data.id);
-        }
-        
-        // Tarea exitosa, remover de la cola
-        this.queue.shift();
-        this.saveQueue();
-      } catch (error) {
-        console.error(`❌ [TRIO-SYNC]: Fallo procesando tarea ${task.action} en ${task.table}. Reintentando luego.`, error);
-        break; // Detener el procesamiento si hay un error persistente (ej. fallo de red)
+    
+    const task = this.queue[0];
+    try {
+      console.log(`📡 [TRIO-SYNC]: Procesando ${task.action} en ${task.table}...`);
+      
+      if (task.action === 'CREATE' || task.action === 'UPDATE') {
+        await gymDatabase.setDocument(task.table, task.data.id, task.data);
+      } else if (task.action === 'DELETE') {
+        await gymDatabase.deleteDocument(task.table, task.data.id);
       }
+      
+      this.queue.shift();
+      this.saveQueue();
+      this.isProcessing = false;
+      this.processQueue();
+    } catch (e) {
+      console.error('❌ [TRIO-SYNC]: Error procesando cola. Reintentando en 30s...', e);
+      this.isProcessing = false;
+      setTimeout(() => this.processQueue(), 30000);
     }
-
-    this.isProcessing = false;
   }
 
-  // --- API PUBLICA ---
-
-  async create(table: string, data: any) {
-    const id = data.id || crypto.randomUUID();
-    const enriched = {
-      ...data,
-      id,
-      created_at: data.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      sync_layer: 'trio-engine'
-    };
-
-    // 1. Guardado en background via Cola (Garantiza que nunca se pierda)
-    this.addTask({ action: 'CREATE', table, data: enriched });
-    return enriched;
+  getPendingCount() {
+    return this.queue.length;
   }
 
-  async update(table: string, id: string, changes: any) {
-    const enriched = {
-      ...changes,
-      id,
-      updated_at: new Date().toISOString()
-    };
-
-    // 1. Añadir a la cola para sincronización cloud
-    this.addTask({ action: 'UPDATE', table, data: enriched });
-    return enriched;
-  }
-
-  async delete(table: string, id: string) {
-    this.addTask({ action: 'DELETE', table, data: { id } });
+  clearQueue() {
+    this.queue = [];
+    this.saveQueue();
   }
 }
 
-export const trioSync = new TrioSyncEngine();
+export const trioSync = new TrioSync();

@@ -14,17 +14,42 @@ class MultiAdapter implements DatabaseAdapter {
     if (this.shadow) await this.shadow.init();
   }
 
+  // 🛡️ NEXUS TIMEOUT GUARD: Evita bloqueos infinitos de la nube
+  private async withTimeout<T>(promise: Promise<T>, timeoutMs: number = 3000): Promise<T | any> {
+    let timeoutHandle: any;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutHandle = setTimeout(() => reject(new Error('NEXUS_TIMEOUT')), timeoutMs);
+    });
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutHandle));
+  }
+
   async getCollection<T>(name: string) {
-    // Siempre leemos del primario para máxima velocidad
-    return this.primary.getCollection<T>(name);
+    try {
+      // 🔍 DEEP FETCH: Si el primario está vacío, probamos con el suplente
+      const data = await this.withTimeout(this.primary.getCollection<T>(name));
+      if ((!data || data.length === 0) && this.shadow) {
+        console.log(`⚠️ [NEXUS]: ${name} vacío en Capitán. Intentando recuperar desde Suplente...`);
+        return this.withTimeout(this.shadow.getCollection<T>(name));
+      }
+      return data || [];
+    } catch (e) {
+      console.warn(`⏳ [NEXUS]: Timeout/Error en ${name}. Usando memoria local.`);
+      return [];
+    }
   }
 
   async getDocument<T>(collection: string, id: string) {
-    return this.primary.getDocument<T>(collection, id);
+    try {
+      const doc = await this.withTimeout(this.primary.getDocument<T>(collection, id));
+      if (!doc && this.shadow) return this.withTimeout(this.shadow.getDocument<T>(collection, id));
+      return doc;
+    } catch (e) {
+      return null;
+    }
   }
 
   async setDocument<T>(collection: string, id: string, data: T) {
-    // ✍️ ESCRITURA DUAL: Guardamos en ambos motores
+    // ✍️ ESCRITURA DUAL: Guardamos en ambos motores para redundancia total
     const p1 = this.primary.setDocument(collection, id, data);
     const p2 = this.shadow ? this.shadow.setDocument(collection, id, data) : Promise.resolve();
     await Promise.all([p1, p2]);
@@ -37,7 +62,7 @@ class MultiAdapter implements DatabaseAdapter {
   }
 
   subscribe<T>(collection: string, callback: (data: T[]) => void) {
-    // Nos suscribimos solo al primario para evitar colisiones en la UI
+    // Nos suscribimos al primario
     return this.primary.subscribe(collection, callback);
   }
 }
@@ -55,8 +80,8 @@ const firebaseConfig = {
 
 const appwriteConfig = {
   endpoint: import.meta.env.VITE_APPWRITE_ENDPOINT,
-  project: import.meta.env.VITE_APPWRITE_PROJECT_ID,
-  database: import.meta.env.VITE_APPWRITE_DATABASE_ID || 'main'
+  project: import.meta.env.VITE_APPWRITE_PROJECT_ID || import.meta.env.VITE_APPWRITE_PROJECT,
+  database: import.meta.env.VITE_APPWRITE_DATABASE_ID || import.meta.env.VITE_APPWRITE_DATABASE || 'main'
 };
 
 /**

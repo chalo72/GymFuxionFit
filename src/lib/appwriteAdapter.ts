@@ -26,9 +26,13 @@ export class AppwriteAdapter implements DatabaseAdapter {
     const map: Record<string, string> = {
       'products': 'Productos',
       'members': 'members',
-      'transactions': 'transactions'
+      'transactions': 'transactions',
+      'staff': 'staff',
+      'goals': 'goals'
     };
-    return map[name.toLowerCase()] || name;
+    const finalId = map[name.toLowerCase()] || name;
+    console.log(`[APPWRITE-ADAPTER]: Mapping '${name}' -> '${finalId}'`);
+    return finalId;
   }
 
   async getCollection<T>(name: string): Promise<T[]> {
@@ -47,16 +51,27 @@ export class AppwriteAdapter implements DatabaseAdapter {
     }
   }
 
+  private scrubData(data: any): any {
+    const scrubbed = { ...data };
+    const keysToRemove = [
+      '$id', '$collectionId', '$databaseId', '$createdAt', '$updatedAt', 
+      '$permissions', 'id', 'ID', '$collection', '$database'
+    ];
+    keysToRemove.forEach(key => delete scrubbed[key]);
+    return scrubbed;
+  }
+
   async setDocument<T>(name: string, id: string, data: T): Promise<void> {
     const colName = this.normalizeName(name);
+    const cleanData = this.scrubData(data);
+    
     try {
-      // Intentamos actualizar primero
-      await this.sdk.updateDocument(this.databaseId, colName, id, data as any);
+      await this.sdk.updateDocument(this.databaseId, colName, id, cleanData);
     } catch (err: any) {
-      // Si no existe, lo creamos
       if (err.code === 404) {
-        await this.sdk.createDocument(this.databaseId, colName, id, data as any);
+        await this.sdk.createDocument(this.databaseId, colName, id, cleanData);
       } else {
+        console.error(`❌ [APPWRITE] Error en setDocument (${name}/${id}):`, err);
         throw err;
       }
     }
