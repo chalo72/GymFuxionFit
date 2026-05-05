@@ -60,12 +60,7 @@ export default function Reception() {
     return { total, count, topMethod, topProd };
   }, [transactions, todayStr]);
 
-  const [activeMembers, setActiveMembers] = useState<ActiveMember[]>([
-    { 
-      id: 'mock_5', name: 'Rodrigo Silva', initials: 'RS', plan: 'Pro', 
-      checkedInAt: Date.now() - 3600000, membershipStatus: 'active', color: 'var(--neon-green)', checkInMethod: 'qr' 
-    }
-  ]);
+  const [activeMembers, setActiveMembers] = useState<ActiveMember[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [tick, setTick] = useState(0);
   const [search, setSearch] = useState('');
@@ -87,11 +82,23 @@ export default function Reception() {
   const [showQuickRegister, setShowQuickRegister] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   };
+
+  // Calcular posición fixed del dropdown de sugerencias
+  useEffect(() => {
+    if (suggestions.length > 0 && searchContainerRef.current) {
+      const rect = searchContainerRef.current.getBoundingClientRect();
+      setDropdownRect({ top: rect.bottom + 6, left: rect.left, width: rect.width });
+    } else {
+      setDropdownRect(null);
+    }
+  }, [suggestions]);
 
   // Timer de sala — no depende de cameraStream
   useEffect(() => {
@@ -375,28 +382,18 @@ export default function Reception() {
                   <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(0,255,136,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, border: '1px solid rgba(0,255,136,0.1)' }}>
                     <Activity size={36} className="pulse-animation" style={{ color: 'var(--neon-green)' }} />
                   </div>
-                  <div style={{ position: 'relative', width: '100%' }}>
-                    <Search size={20} style={{ position: 'absolute', left: 20, top: 18, color: 'rgba(0,255,136,0.5)' }} />
-                    <input 
-                      placeholder="Identificar atleta..." 
-                      value={search} 
-                      onChange={e => setSearch(e.target.value)} 
-                      onKeyDown={e => e.key === 'Enter' && handleSuccess(search, 'manual')} 
-                      style={{ width: '100%', padding: '18px 20px 18px 55px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, color: '#fff', fontSize: 15, outline: 'none', transition: '0.3s' }} 
+                  <div ref={searchContainerRef} style={{ position: 'relative', width: '100%' }}>
+                    <Search size={20} style={{ position: 'absolute', left: 20, top: 18, color: 'rgba(0,255,136,0.5)', zIndex: 1 }} />
+                    <input
+                      placeholder="Identificar atleta..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleSuccess(search, 'manual')}
+                      onBlur={() => setTimeout(() => setSuggestions([]), 200)}
+                      style={{ width: '100%', padding: '18px 20px 18px 55px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, color: '#fff', fontSize: 15, outline: 'none', transition: '0.3s' }}
                       className="search-input-premium"
                     />
                   </div>
-
-                  {suggestions.length > 0 && (
-                     <div style={{ width: '100%', marginTop: 12, background: 'rgba(10,10,15,0.95)', borderRadius: 20, border: '1px solid rgba(0,255,136,0.3)', overflow: 'hidden', zIndex: 10, backdropFilter: 'blur(20px)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
-                        {suggestions.map(m => (
-                           <div key={m.id} onClick={() => handleSuccess(m, 'manual')} style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }} className="suggestion-item">
-                               <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{m.name}</span>
-                               <span style={{ fontSize: 10, color: 'var(--neon-green)', fontWeight: 900, background: 'rgba(0,255,136,0.1)', padding: '4px 10px', borderRadius: 8 }}>{m.plan}</span>
-                           </div>
-                        ))}
-                     </div>
-                  )}
                </div>
             ) : (
                <div className="glass-card premium-shadow" style={{ flex: 1, padding: 24, border: `1px solid ${selectedMember.debt > 0 ? 'rgba(255,61,87,0.3)' : 'rgba(0,255,136,0.2)'}`, borderRadius: 28, display:'flex', flexDirection:'column', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)' }}>
@@ -748,6 +745,35 @@ export default function Reception() {
       )}
 
       {/* Quick Register Modal */}
+      {/* ── DROPDOWN DE SUGERENCIAS (position:fixed — nunca recortado por overflow) ── */}
+      {dropdownRect && suggestions.length > 0 && (
+        <div style={{
+          position: 'fixed',
+          top: dropdownRect.top,
+          left: dropdownRect.left,
+          width: dropdownRect.width,
+          background: 'rgba(8,12,10,0.98)',
+          borderRadius: 20,
+          border: '1px solid rgba(0,255,136,0.45)',
+          overflow: 'hidden',
+          zIndex: 99999,
+          backdropFilter: 'blur(24px)',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,255,136,0.1)',
+        }}>
+          {suggestions.map(m => (
+            <div
+              key={m.id}
+              onMouseDown={e => { e.preventDefault(); handleSuccess(m, 'manual'); }}
+              style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.15s' }}
+              className="suggestion-item"
+            >
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{m.name}</span>
+              <span style={{ fontSize: 10, color: 'var(--neon-green)', fontWeight: 900, background: 'rgba(0,255,136,0.1)', padding: '4px 10px', borderRadius: 8 }}>{m.plan}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {showQuickRegister && (
         <QuickRegisterModal 
           onClose={() => setShowQuickRegister(false)}
