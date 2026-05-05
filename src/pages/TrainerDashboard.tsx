@@ -978,9 +978,9 @@ function MeasuresModal({ client, onClose, onSave }: { client: Member, onClose: (
             <div style={{ fontWeight: 600, fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Insights para {(selectedClient?.name || 'Usuario').split(' ')[0]}:
             </div>
-            {selectedClient?.injuries && selectedClient.injuries !== 'Ninguna' && (
+            {selectedClient?.injuries && (Array.isArray(selectedClient.injuries) ? selectedClient.injuries.length > 0 : selectedClient.injuries !== 'Ninguna') && (
               <div style={{ padding: '10px 12px', borderRadius: 'var(--radius-md)', background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.3)', fontSize: 'var(--text-xs)', color: 'var(--danger-red)' }}>
-                🚨 Alerta de Lesión: {selectedClient.injuries}. El bot de recuperación recomienda protocolos suaves.
+                🚨 Alerta de Lesión: {Array.isArray(selectedClient.injuries) ? selectedClient.injuries.join(', ') : selectedClient.injuries}. El bot de recuperación recomienda protocolos suaves.
               </div>
             )}
             {currentAI.suggestions.slice(0, 2).map((s, i) => (

@@ -180,12 +180,7 @@ export default function Settings() {
   const [deleteId, setDeleteId]       = useState<string | null>(null);
 
   const persistPlans = (next: CustomPlan[]) => {
-    setPlans(next);
-    localStorage.setItem('fuxion_custom_plans', JSON.stringify(next));
-    // Compatibilidad con Members y Reception (leen plansConfig por clave)
-    const cfg: Record<string, number> = {};
-    next.forEach(p => { cfg[p.id] = p.price; });
-    updatePlansConfig(cfg);
+    updatePlans(next);
   };
 
   const handleSavePlan = (plan: CustomPlan) => {

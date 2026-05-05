@@ -131,9 +131,9 @@ export default function Finances() {
     window.open(`https://wa.me/57${cleanPhone}?text=${msg}`, '_blank');
   };
 
-  const handleProcessPayment = () => {
+  const handleProcessPayment = async () => {
     if (amount <= 0 || !selectedMember) return;
-    const newTx = injectTransaction({
+    const newTx = await injectTransaction({
       date: new Date().toISOString().split('T')[0],
       time: new Date().toLocaleTimeString().slice(0, 5),
       description: `Pago ${category.toUpperCase()}: ${selectedMember.name}`,
@@ -481,7 +481,7 @@ export default function Finances() {
         </div>
       ) : activeTab === 'agua' ? (
         <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
-           <div style={{ display:'justify-content', justifyContent:'space-between', alignItems:'center' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                  <h3 style={{ fontSize:18, fontWeight:950 }}>OMNI_AQUA: CONTROL_DE_AHORRO</h3>
                  <p style={{ fontSize:10, color:'var(--text-muted)', fontWeight:800 }}>REPOSICIÓN DE PACAS (50 UND) Y UTILIDAD NETA</p>
