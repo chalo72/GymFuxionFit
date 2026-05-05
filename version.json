@@ -1,9 +1,10 @@
 {
-  "version": "6.4.4",
-  "build": 20260504,
-  "status": "ELITE_STABILITY_FIXED",
+  "version": "6.5.0",
+  "build": 20260505,
+  "status": "CRITICAL_DEPLOY_ACTIVE",
   "author": "Antigravity Nexus",
   "features": [
+    "MODO CRITICO ACTIVADO: Sincronización Forzada Vercel",
     "Elite Coach Copilot - Advisory Panel & Scripts",
     "Lever-Based Exercise Logic (Femur/Arms)",
     "Elite Logbook v1.0 - Tempo & RPE/RIR",

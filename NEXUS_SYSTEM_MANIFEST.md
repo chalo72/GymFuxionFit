@@ -1,9 +1,14 @@
 # 📑 NEXUS SYSTEM MANIFEST — GymFuxionFit
-> **Versión del Sistema**: v6.4.4 (ELITE-STABILITY)
-> **Última Actualización**: 2026-05-04 13:30
-> **Estado General**: 🟢 STABLE — TypeScript Build Errors Fixed for Vercel Deployment
+> **Versión del Sistema**: v6.5.0 (CRITICAL-DEPLOY)
+> **Última Actualización**: 2026-05-05 11:40
+> **Estado General**: 🔴 CRITICAL MODE — Forcing Vercel Synchronization
 
 ---
+
+## 🚨 MODO CRÍTICO ACTIVADO (v6.5.0)
+- **Causa**: Vercel no refleja los cambios realizados en local.
+- **Acción**: Incremento de versión forzado y creación de script de rescate de Git.
+- **Protocolo**: `RESCATE_VERCEL_YA.bat` desplegado para ejecución manual.
 
 ## 🏗️ ARQUITECTURA TÉCNICA
 - **Frontend**: React 19 + TypeScript + Vite.
