@@ -49,16 +49,29 @@ class MultiAdapter implements DatabaseAdapter {
   }
 
   async setDocument<T>(collection: string, id: string, data: T) {
-    // ✍️ ESCRITURA DUAL: Guardamos en ambos motores para redundancia total
-    const p1 = this.primary.setDocument(collection, id, data);
-    const p2 = this.shadow ? this.shadow.setDocument(collection, id, data) : Promise.resolve();
-    await Promise.all([p1, p2]);
+    // ✍️ El Capitán (Appwrite) manda. Si falla, lanzamos error para reintentar.
+    await this.primary.setDocument(collection, id, data);
+    
+    // El Suplente (Firebase) es opcional. Si falla, solo avisamos.
+    if (this.shadow) {
+      try {
+        await this.shadow.setDocument(collection, id, data);
+      } catch (e) {
+        console.warn(`⚠️ [NEXUS]: Fallo silencioso en Suplente (Firebase).`);
+      }
+    }
   }
 
   async deleteDocument(collection: string, id: string) {
-    const p1 = this.primary.deleteDocument(collection, id);
-    const p2 = this.shadow ? this.shadow.deleteDocument(collection, id) : Promise.resolve();
-    await Promise.all([p1, p2]);
+    await this.primary.deleteDocument(collection, id);
+
+    if (this.shadow) {
+      try {
+        await this.shadow.deleteDocument(collection, id);
+      } catch (e) {
+        console.warn(`⚠️ [NEXUS]: Fallo silencioso en Suplente al borrar.`);
+      }
+    }
   }
 
   subscribe<T>(collection: string, callback: (data: T[]) => void) {
