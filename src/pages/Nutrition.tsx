@@ -318,7 +318,7 @@ export default function Nutrition() {
                       <div style={{ fontWeight: 600 }}>{m.name}</div>
                     </div>
                   </td>
-                  <td><span className={`plan-badge ${m.plan.toLowerCase()}`}>{m.plan}</span></td>
+                  <td><span className={`plan-badge ${(m.plan || '').toLowerCase()}`}>{m.plan}</span></td>
                   <td style={{ color: 'var(--text-secondary)' }}>{m.calories.toLocaleString()} kcal</td>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

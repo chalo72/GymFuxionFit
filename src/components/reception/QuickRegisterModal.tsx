@@ -26,7 +26,7 @@ export default function QuickRegisterModal({ onClose, onSave, plansConfig }: Qui
     { id: 'mes_hyrox', label: 'HYROX', price: plansConfig?.mes_hyrox || 120000, color: '#FF6B35' },
   ];
 
-  const currentPlanPrice = plans.find(p => p.id === form.plan || p.label.toLowerCase() === form.plan.toLowerCase())?.price || 0;
+  const currentPlanPrice = plans.find(p => p.id === form.plan || (p.label && form.plan && p.label.toLowerCase() === form.plan.toLowerCase()))?.price || 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

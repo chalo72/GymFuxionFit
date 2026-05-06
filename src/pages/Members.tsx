@@ -95,7 +95,15 @@ function StatusBadge({ s }: { s: Status }) {
 }
 
 function PlanBadge({ p, plans }: { p: string, plans: any[] }) {
-  const planData = plans.find(pl => pl.id === p || pl.label.toLowerCase() === p.toLowerCase());
+  if (!p) return <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, color:'var(--text-muted)', background:'rgba(255,255,255,0.05)' }}>Sin Plan</span>;
+
+  const planData = (plans || []).find(pl => 
+    pl && (
+      pl.id === p || 
+      (pl.label && p && String(pl.label).toLowerCase() === String(p).toLowerCase())
+    )
+  );
+  
   const c = planData || { label: p, color: 'var(--text-muted)' };
   return (
     <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, color:c.color, background:`${c.color}15`, border:`1px solid ${c.color}30` }}>

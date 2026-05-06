@@ -91,7 +91,7 @@ export default function SmartCheckInPanel({ onClose, onSuccess, members }: Smart
     setDetectedMember(null);
   };
 
-  const filteredMembers = members.filter(m => m.toLowerCase().includes(manualSearch.toLowerCase()));
+  const filteredMembers = members.filter(m => (m || '').toLowerCase().includes((manualSearch || '').toLowerCase()));
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 2, 0.95)', backdropFilter: 'blur(24px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

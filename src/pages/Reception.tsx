@@ -170,7 +170,7 @@ export default function Reception() {
   const handleSuccess = (nameOrMember: string | Member, method: CheckInMethod) => {
     let masterMember: Member | undefined;
     if (typeof nameOrMember === 'string') {
-      masterMember = members.find(m => m.name.toLowerCase() === nameOrMember.toLowerCase());
+      masterMember = members.find(m => m.name && nameOrMember && m.name.toLowerCase() === nameOrMember.toLowerCase());
       if (!masterMember && method === 'manual') {
         setStatus('error');
         setTimeout(() => setStatus('idle'), 2000);
@@ -443,7 +443,7 @@ export default function Reception() {
                      {productSearch && (
                         <div style={{ position: 'absolute', top: '105%', left: 0, right: 0, background: 'rgba(10,10,15,0.98)', borderRadius: 20, border: '1px solid rgba(0,255,136,0.4)', maxHeight: 300, overflowY: 'auto', zIndex: 100, boxShadow: '0 20px 60px rgba(0,0,0,0.8)', backdropFilter: 'blur(20px)' }}>
                            {products
-                             .filter(p => p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(productSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
+                             .filter(p => (p.name || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes((productSearch || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
                              .map(p => (
                               <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="product-item">
                                  <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -679,7 +679,7 @@ export default function Reception() {
                                {productSearch && (
                                   <div style={{ position: 'absolute', top: '110%', left: 0, right: 0, background: 'rgba(10,10,15,0.98)', border: '1px solid rgba(0,255,136,0.5)', borderRadius: 24, marginTop: 10, maxHeight: 300, overflowY: 'auto', zIndex: 100, boxShadow: '0 20px 80px rgba(0,0,0,0.9)', backdropFilter: 'blur(30px)' }}>
                                      {products
-                                       .filter(p => p.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(productSearch.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
+                                       .filter(p => (p.name || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes((productSearch || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")))
                                        .map(p => (
                                         <div key={p.id} onClick={() => { addToCart(p); setProductSearch(''); }} style={{ padding: '18px 24px', borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="product-item">
                                            <div style={{ display: 'flex', flexDirection: 'column' }}>

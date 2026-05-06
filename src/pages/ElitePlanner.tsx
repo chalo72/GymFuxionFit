@@ -54,8 +54,8 @@ export default function ElitePlanner() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredExercises = catalogs.exercises.filter((ex: any) => 
-    ex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ex.muscleGroup.toLowerCase().includes(searchTerm.toLowerCase())
+    (ex.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+    (ex.muscleGroup || '').toLowerCase().includes((searchTerm || '').toLowerCase())
   );
 
   const addExercise = (ex: any) => {

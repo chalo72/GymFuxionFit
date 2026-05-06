@@ -1,12 +1,12 @@
 {
-  "version": "6.6.9",
-  "build": "20260505.1731",
-  "status": "ELITE_ATHLETE_V3",
+  "version": "7.0.1",
+  "build": "20260506.0156",
+  "status": "ULTRA_STABLE_V7",
   "author": "Antigravity Nexus",
   "features": [
-    "🚀 ATHLETE V3: Remodelación integral de la App del Cliente (Elite UI)",
-    "💎 PREMIUM DESIGN: Glassmorphism y tipografía de alta gama",
-    "📊 REAL DATA: Integración total con useGymData para perfiles de atletas",
-    "🛡️ STABILITY: Mantenimiento de blindajes preventivos v6.6.1"
+    "🚀 OMNI_STABILITY: Blindaje masivo contra errores de nulidad (toLowerCase)",
+    "🛡️ CORE_INTEGRITY: Parche crítico en Member List y Reception POS",
+    "💎 PREMIUM_RECOVERY: Estabilización de flujos tras fallo de build local",
+    "🔄 CACHE_PURGE: Incremento de versión para forzar actualización en clientes"
   ]
 }

@@ -114,7 +114,7 @@ export default function Finances() {
 
   const filteredMembers = useMemo(() => {
     if (!searchTerm) return [];
-    return members.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5);
+    return members.filter(m => (m.name || '').toLowerCase().includes((searchTerm || '').toLowerCase())).slice(0, 5);
   }, [members, searchTerm]);
 
   const stats = useMemo(() => {
@@ -157,7 +157,7 @@ export default function Finances() {
   };
 
   const handleWaterWithdraw = () => {
-    const waterGoal = goals.find(g => g.name.toLowerCase().includes('agua'));
+    const waterGoal = goals.find(g => (g.name || '').toLowerCase().includes('agua'));
     if (!waterGoal || withdrawAmount <= 0) return alert('No hay meta de agua o monto inválido');
     
     withdrawFromGoal(waterGoal.id, withdrawAmount, withdrawReason);
@@ -167,10 +167,10 @@ export default function Finances() {
   };
 
   const handleCloseWaterWeek = () => {
-    const waterGoal = goals.find(g => g.name.toLowerCase().includes('agua'));
+    const waterGoal = goals.find(g => (g.name || '').toLowerCase().includes('agua'));
     if (!waterGoal) return alert('Debes crear una meta llamada "Ahorro Agua" primero');
     
-    const waterTxs = txList.filter(t => t.description.toLowerCase().includes('agua') && !t.goalId);
+    const waterTxs = txList.filter(t => (t.description || '').toLowerCase().includes('agua') && !t.goalId);
     const totalCollected = waterTxs.reduce((a, t) => a + t.amount, 0);
     const bagsSold = totalCollected / waterConfig.bagPrice;
     const pacasToRestock = Math.floor(bagsSold / waterConfig.bagsPerPaca);
@@ -557,7 +557,7 @@ export default function Finances() {
            <div className="glass-card" style={{ padding:32 }}>
               <h3 style={{ fontSize:12, fontWeight:950, marginBottom:20 }}>HISTORIAL_FACTURAS_Y_MOVIMIENTOS</h3>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:15 }}>
-                 {txList.filter(t => t.goalId && goals.find(g => g.id === t.goalId)?.name.toLowerCase().includes('agua')).map(t => (
+                 {txList.filter(t => t.goalId && (goals.find(g => g.id === t.goalId)?.name || '').toLowerCase().includes('agua')).map(t => (
                     <div key={t.id} style={{ borderRadius:12, border:'1px solid rgba(255,255,255,0.05)', overflow:'hidden', background:'rgba(0,0,0,0.2)', position:'relative' }}>
                        <button 
                          onClick={() => { alert('Para eliminar, usa el historial general de transacciones'); }}
@@ -576,7 +576,7 @@ export default function Finances() {
                        </div>
                     </div>
                  ))}
-                 {txList.filter(t => t.goalId && goals.find(g => g.id === t.goalId)?.name.toLowerCase().includes('agua')).length === 0 && (
+                 {txList.filter(t => t.goalId && (goals.find(g => g.id === t.goalId)?.name || '').toLowerCase().includes('agua')).length === 0 && (
                     <div style={{ gridColumn:'1/-1', textAlign:'center', padding:40, color:'var(--text-muted)', fontSize:12 }}>
                        No hay movimientos registrados en el ahorro de agua.
                     </div>

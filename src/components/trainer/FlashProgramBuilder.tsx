@@ -47,7 +47,7 @@ export default function FlashProgramBuilder({ onClose, athleteName }: FlashProgr
 
   const filteredLibrary = EXERCISE_LIBRARY.filter(ex => 
     (filter === 'all' || ex.category === filter) && 
-    ex.name.toLowerCase().includes(search.toLowerCase())
+    (ex.name || '').toLowerCase().includes((search || '').toLowerCase())
   );
 
   return (

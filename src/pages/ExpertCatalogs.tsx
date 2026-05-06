@@ -74,7 +74,7 @@ export default function ExpertCatalogs() {
   };
 
   const renderExercises = () => {
-    const filtered = catalogs.exercises.filter((e: any) => e.name.toLowerCase().includes(search.toLowerCase()) || e.muscleGroup.toLowerCase().includes(search.toLowerCase()));
+    const filtered = catalogs.exercises.filter((e: any) => (e.name || '').toLowerCase().includes(search.toLowerCase()) || (e.muscleGroup || '').toLowerCase().includes(search.toLowerCase()));
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
         {filtered.map((ex: any) => (
@@ -93,7 +93,7 @@ export default function ExpertCatalogs() {
   };
 
   const renderFunctional = () => {
-    const filtered = (catalogs.functional || []).filter((f: any) => f.name.toLowerCase().includes(search.toLowerCase()) || f.type.toLowerCase().includes(search.toLowerCase()));
+    const filtered = (catalogs.functional || []).filter((f: any) => (f.name || '').toLowerCase().includes(search.toLowerCase()) || (f.type || '').toLowerCase().includes(search.toLowerCase()));
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
         {filtered.map((f: any) => (
@@ -113,7 +113,7 @@ export default function ExpertCatalogs() {
   };
 
   const renderSupplements = () => {
-    const filtered = catalogs.supplements.filter((s: any) => s.name.toLowerCase().includes(search.toLowerCase()) || s.type.toLowerCase().includes(search.toLowerCase()));
+    const filtered = catalogs.supplements.filter((s: any) => (s.name || '').toLowerCase().includes(search.toLowerCase()) || (s.type || '').toLowerCase().includes(search.toLowerCase()));
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 16 }}>
         {filtered.map((sup: any) => (
@@ -132,7 +132,7 @@ export default function ExpertCatalogs() {
   };
 
   const renderNutrition = () => {
-    const filtered = catalogs.nutrition.filter((n: any) => n.name.toLowerCase().includes(search.toLowerCase()) || n.category.toLowerCase().includes(search.toLowerCase()));
+    const filtered = catalogs.nutrition.filter((n: any) => (n.name || '').toLowerCase().includes(search.toLowerCase()) || (n.category || '').toLowerCase().includes(search.toLowerCase()));
     return (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 16 }}>
         {filtered.map((nut: any) => (
