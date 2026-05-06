@@ -7,6 +7,7 @@ interface SyncTask {
   table: string;
   data: any;
   timestamp: number;
+  retries?: number;
 }
 
 class TrioSync {
@@ -77,7 +78,6 @@ class TrioSync {
     
     const task = this.queue[0];
     try {
-      // @ts-ignore
       if (!task.retries) task.retries = 0;
       
       console.log(`📡 [TRIO-SYNC]: Procesando ${task.action} en ${task.table} (Intento ${task.retries + 1})...`);
@@ -93,9 +93,7 @@ class TrioSync {
       this.isProcessing = false;
       this.processQueue();
     } catch (e) {
-      // @ts-ignore
-      task.retries++;
-      // @ts-ignore
+      task.retries = (task.retries || 0) + 1;
       if (task.retries >= 3) {
         console.error('⚠️ [TRIO-SYNC]: Tarea fallida tras 3 intentos. Saltando para desbloquear cola.', task);
         this.queue.shift(); // Saltamos la tarea problemática
