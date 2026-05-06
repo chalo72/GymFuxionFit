@@ -79,10 +79,10 @@ export class AppwriteAdapter implements DatabaseAdapter {
     const cleanData = this.scrubData(data);
     
     try {
-      await this.sdk.updateDocument(this.databaseId, colName, id, cleanData);
+      await this.sdk.updateDocument(this.databaseId, colName, String(id), cleanData);
     } catch (err: any) {
       if (err.code === 404) {
-        await this.sdk.createDocument(this.databaseId, colName, id, cleanData);
+        await this.sdk.createDocument(this.databaseId, colName, String(id), cleanData);
       } else {
         console.error(`❌ [APPWRITE] Error en setDocument (${name}/${id}):`, err);
         throw err;

@@ -77,7 +77,10 @@ class TrioSync {
     
     const task = this.queue[0];
     try {
-      console.log(`📡 [TRIO-SYNC]: Procesando ${task.action} en ${task.table}...`);
+      // @ts-ignore
+      if (!task.retries) task.retries = 0;
+      
+      console.log(`📡 [TRIO-SYNC]: Procesando ${task.action} en ${task.table} (Intento ${task.retries + 1})...`);
       
       if (task.action === 'CREATE' || task.action === 'UPDATE') {
         await gymDatabase.setDocument(task.table, task.data.id, task.data);
@@ -90,9 +93,18 @@ class TrioSync {
       this.isProcessing = false;
       this.processQueue();
     } catch (e) {
-      console.error('❌ [TRIO-SYNC]: Error procesando cola. Reintentando...', e);
+      // @ts-ignore
+      task.retries++;
+      // @ts-ignore
+      if (task.retries >= 3) {
+        console.error('⚠️ [TRIO-SYNC]: Tarea fallida tras 3 intentos. Saltando para desbloquear cola.', task);
+        this.queue.shift(); // Saltamos la tarea problemática
+        this.saveQueue();
+      } else {
+        console.error('❌ [TRIO-SYNC]: Error en intento. Reintentando en breve...', e);
+      }
+      
       this.isProcessing = false;
-      // Reintento exponencial simple: empezamos en 5s, máximo 30s
       const delay = Math.min(5000 * (this.queue.length > 5 ? 2 : 1), 30000);
       setTimeout(() => this.processQueue(), delay);
     }
