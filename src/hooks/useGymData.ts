@@ -531,8 +531,26 @@ function useGymDataInternal() {
     setSyncStatus('syncing');
     try {
       console.log("🚀 [NEXUS]: Iniciando empuje masivo a la nube...");
-      for (const m of members) await trioSync.create('members', m);
-      for (const p of products) await trioSync.create('products', p);
+      
+      // Empujar Miembros con mapeo correcto
+      for (const m of members) {
+        await trioSync.create('members', { 
+          ...m, 
+          expiry_date: m.expiryDate, 
+          biometric_status: m.biometricStatus 
+        });
+      }
+      
+      // Empujar Productos con mapeo correcto
+      for (const p of products) {
+        await trioSync.create('products', {
+          ...p,
+          buy_price: p.buyPrice,
+          sell_price: p.sellPrice,
+          min_stock: p.minStock
+        });
+      }
+      
       for (const tx of transactions.slice(0, 50)) await trioSync.create('transactions', tx);
       setSyncStatus('live');
       return true;
@@ -581,7 +599,13 @@ function useGymDataInternal() {
       setProducts(prev => [newProduct, ...prev]);
       
       try {
-        await trioSync.create('products', { ...p, id: tempId });
+        const cloudData = { 
+          ...p, id: tempId,
+          buy_price: p.buyPrice,
+          sell_price: p.sellPrice,
+          min_stock: p.minStock
+        };
+        await trioSync.create('products', cloudData);
         setSyncError(null);
       } catch (error: any) {
         // 🛡️ Silencio de sincronización: El producto se guardó localmente, BD en background
@@ -592,7 +616,11 @@ function useGymDataInternal() {
     updateProduct: async (id: string, p: Partial<Product>) => {
       setProducts(prev => prev.map(item => item.id === id ? { ...item, ...p } : item));
       try {
-        await trioSync.update('products', id, p);
+        const cloudData = { ...p };
+        if (p.buyPrice) (cloudData as any).buy_price = p.buyPrice;
+        if (p.sellPrice) (cloudData as any).sell_price = p.sellPrice;
+        if (p.minStock) (cloudData as any).min_stock = p.minStock;
+        await trioSync.update('products', id, cloudData);
       } catch (error: any) {
         console.warn("⚠️ Producto actualizado localmente. Sync BD pendiente:", error.message);
       }
@@ -734,7 +762,13 @@ function useGymDataInternal() {
       setMembers(prev => [newMember as Member, ...prev]);
       
       try {
-        await trioSync.create('members', newMember);
+        // 🔄 MAPEO DE ESQUEMA: Appwrite usa snake_case en los atributos
+        const cloudData = { 
+          ...newMember,
+          expiry_date: newMember.expiryDate,
+          biometric_status: newMember.biometricStatus
+        };
+        await trioSync.create('members', cloudData);
       } catch (error) {
         console.error("Error sync members:", error);
       }

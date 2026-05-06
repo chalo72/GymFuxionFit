@@ -526,7 +526,7 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
    PÁGINA PRINCIPAL
 ══════════════════════════════════════════ */
 export default function Members() {
-  const { members: clients, updateMemberStatus, addMember, deleteMember, plans } = useGymData();
+  const { members: clients, updateMemberStatus, addMember, deleteMember, plans, forceSyncAll } = useGymData();
   const [search,  setSearch]        = useState('');
   const [filterPlan, setFilterPlan] = useState<string | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all');
@@ -611,13 +611,32 @@ export default function Members() {
             {stats.total} clientes registrados · {stats.active} activos
           </p>
         </div>
-        <button
-          onClick={() => { setEditClient(null); setShowModal(true); }}
-          className="btn btn-primary"
-          style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 22px', fontSize:13, fontWeight:700 }}
-        >
-          <Plus size={16}/> Agregar Cliente
-        </button>
+        <div style={{ display:'flex', gap:10 }}>
+          <button
+            onClick={async () => {
+              if(confirm('🚀 ¿Deseas forzar la subida de TODOS los datos locales a la nube?\n\nEsto sincronizará los 4 miembros que tienes en local con Vercel.')) {
+                // @ts-ignore
+                const success = await forceSyncAll();
+                alert(success ? '✅ Sincronización Exitosa: Revisa Vercel en unos segundos.' : '❌ Error: Revisa tu conexión o las llaves de la base de datos.');
+              }
+            }}
+            className="btn"
+            style={{ 
+              display:'flex', alignItems:'center', gap:8, padding:'10px 18px', 
+              fontSize:12, fontWeight:700, background:'rgba(0,229,255,0.1)', 
+              border:'1px solid rgba(0,229,255,0.3)', color:'#00E5FF', cursor:'pointer' 
+            }}
+          >
+            <RefreshCw size={16}/> SINCRONIZAR TODO
+          </button>
+          <button
+            onClick={() => { setEditClient(null); setShowModal(true); }}
+            className="btn btn-primary"
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 22px', fontSize:13, fontWeight:700 }}
+          >
+            <Plus size={16}/> Agregar Cliente
+          </button>
+        </div>
       </div>
 
       {/* KPIs */}
