@@ -64,6 +64,19 @@ export interface Staff {
   tempPassword?: string;
   lastPayment?: string;
   status: 'active' | 'inactive';
+  payPeriod?: 'complete' | 'q1' | 'q2';
+  advances?: number; // Anticipos pendientes a descontar en próximo pago
+}
+
+export interface StaffLoan {
+  id: string;
+  staffId: string;
+  staffName: string;
+  total: number;       // Monto total del préstamo
+  remaining: number;   // Saldo pendiente
+  installment: number; // Cuota por período
+  date: string;
+  description: string;
 }
 
 export interface Member {
@@ -131,6 +144,10 @@ function useGymDataInternal() {
   const [goals, setGoals] = useState<FinancialGoal[]>([]);
   const [obligations, setObligations] = useState<Obligation[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
+  const [staffLoans, setStaffLoans] = useState<StaffLoan[]>(() => {
+    const saved = localStorage.getItem('fuxion_staff_loans');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [syncStatus, setSyncStatus] = useState<'live' | 'local' | 'syncing'>('local');
   const [pendingTasks, setPendingTasks] = useState(0);
 
@@ -436,6 +453,7 @@ function useGymDataInternal() {
   useEffect(() => { if (isLoaded) localStorage.setItem('fuxion_goals', JSON.stringify(goals)); }, [isLoaded, goals]);
   useEffect(() => { if (isLoaded) localStorage.setItem('fuxion_obligations', JSON.stringify(obligations)); }, [isLoaded, obligations]);
   useEffect(() => { if (isLoaded) localStorage.setItem('fuxion_staff', JSON.stringify(staff)); }, [isLoaded, staff]);
+  useEffect(() => { localStorage.setItem('fuxion_staff_loans', JSON.stringify(staffLoans)); }, [staffLoans]);
 
   const injectTransaction = async (tx: Omit<Transaction, 'id' | 'hash'>) => {
     const newTx: Transaction = {
@@ -762,63 +780,116 @@ function useGymDataInternal() {
         console.warn("⚠️ Eliminación de personal local.");
       }
     },
-    // 🛡️ DESBLOQUEO TEMPORAL: Corrección de sync de nómina autorizado por el usuario (2026-05-07)
-    generateMonthlyPayroll: async (period: 'complete' | 'q1' | 'q2' = 'complete') => {
-      const currentMonth = new Date().toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+    generateMonthlyPayroll: async (overridePeriod?: 'complete' | 'q1' | 'q2') => {
+      const today = new Date();
+      const day = today.getDate();
+      // Auto-detectar quincena por fecha si no se pasa override
+      const autoPeriod: 'complete' | 'q1' | 'q2' = day <= 15 ? 'q1' : 'q2';
+      const currentMonth = today.toLocaleString('es-ES', { month: 'long' }).toUpperCase();
+      const todayStr = today.toISOString().split('T')[0];
+
       const newObligations: Obligation[] = [];
-      
+      const staffAdvanceResets: string[] = [];   // IDs de staff a los que se les resetea el anticipo
+      const loanDeductions: { id: string; newRemaining: number }[] = [];
+
       for (const s of staff) {
-        if (s.status === 'active') {
-          let obligationName = `PAGO NÓMINA: ${s.name} (${currentMonth})`;
-          let amount = s.salary;
-          
-          if (period === 'q1') {
-            obligationName = `PAGO NÓMINA: ${s.name} (1ra Q ${currentMonth})`;
-            amount = s.salary / 2;
-          } else if (period === 'q2') {
-            obligationName = `PAGO NÓMINA: ${s.name} (2da Q ${currentMonth})`;
-            amount = s.salary / 2;
-          }
-          
-          // Verificar duplicados
-          const exists = obligations.some(o => o.name === obligationName);
-          if (exists) {
-            console.log(`⚠️ Nómina ya generada para ${s.name} en ${obligationName}`);
-            continue;
-          }
-          
-          const newOb: Obligation = {
-            id: crypto.randomUUID(),
-            name: obligationName,
-            amount: amount,
-            dueDate: new Date().toISOString().split('T')[0],
-            status: 'pending',
-            category: 'payroll'
-          };
-          
-          newObligations.push(newOb);
-          
-          // Guardar en la nube
-          try {
-            await trioSync.create('obligations', newOb);
-          } catch (e) {
-            console.warn(`⚠️ Error al sincronizar nómina de ${s.name}:`, e);
-          }
+        if (s.status !== 'active') continue;
+
+        // Período: override > propio del empleado > auto por fecha
+        const period = overridePeriod || s.payPeriod || autoPeriod;
+
+        let periodLabel = '';
+        let baseSalary = s.salary;
+        if (period === 'q1') {
+          periodLabel = `1ra Q ${currentMonth}`;
+          baseSalary = s.salary / 2;
+        } else if (period === 'q2') {
+          periodLabel = `2da Q ${currentMonth}`;
+          baseSalary = s.salary / 2;
+        } else {
+          periodLabel = currentMonth;
         }
+
+        const obKey = `NÓMINA: ${s.name} (${periodLabel})`;
+        if (obligations.some(o => o.name.startsWith(obKey))) continue;
+
+        // ── Calcular deducciones ──
+        const advance = s.advances || 0;
+        const activeLoans = staffLoans.filter(l => l.staffId === s.id && l.remaining > 0);
+        const loanDeduction = activeLoans.reduce((sum, l) => sum + Math.min(l.installment, l.remaining), 0);
+        const netPay = Math.max(0, baseSalary - advance - loanDeduction);
+
+        // ── Construir descripción con desglose ──
+        let name = obKey;
+        const parts: string[] = [`Base: $${baseSalary.toLocaleString()}`];
+        if (advance > 0) parts.push(`Anticipo: -$${advance.toLocaleString()}`);
+        if (loanDeduction > 0) parts.push(`Préstamo: -$${loanDeduction.toLocaleString()}`);
+        if (advance > 0 || loanDeduction > 0) parts.push(`NETO: $${netPay.toLocaleString()}`);
+        name = `${obKey} [${parts.join(' | ')}]`;
+
+        const newOb: Obligation = {
+          id: crypto.randomUUID(),
+          name,
+          amount: netPay,
+          dueDate: todayStr,
+          status: 'pending',
+          category: 'payroll'
+        };
+        newObligations.push(newOb);
+
+        // Marcar anticipos a resetear
+        if (advance > 0) staffAdvanceResets.push(s.id);
+
+        // Marcar cuotas de préstamos a descontar
+        activeLoans.forEach(l => {
+          loanDeductions.push({ id: l.id, newRemaining: Math.max(0, l.remaining - l.installment) });
+        });
+
+        try { await trioSync.create('obligations', newOb); }
+        catch (e) { console.warn(`⚠️ Sync nómina ${s.name}:`, e); }
       }
-      
-      if (newObligations.length > 0) {
-        setObligations(prev => [...newObligations, ...prev]);
-        
-        // Broadcast inter-pestañas
-        const bc = new BroadcastChannel('fuxion_sync_channel');
-        bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: [...newObligations, ...obligations] });
-        bc.close();
-        
-        alert(`✅ Se generaron ${newObligations.length} nóminas (${period}) exitosamente.`);
-      } else {
-        alert(`ℹ️ No se generaron nuevas nóminas (pueden estar ya duplicadas o no haber staff activo).`);
+
+      if (newObligations.length === 0) {
+        alert('ℹ️ No se generaron nóminas (ya existen o no hay staff activo).');
+        return;
       }
+
+      setObligations(prev => [...newObligations, ...prev]);
+
+      // Resetear anticipos usados
+      if (staffAdvanceResets.length > 0) {
+        setStaff(prev => prev.map(s =>
+          staffAdvanceResets.includes(s.id) ? { ...s, advances: 0 } : s
+        ));
+      }
+
+      // Descontar cuotas de préstamos
+      if (loanDeductions.length > 0) {
+        setStaffLoans(prev => prev.map(l => {
+          const upd = loanDeductions.find(d => d.id === l.id);
+          return upd ? { ...l, remaining: upd.newRemaining } : l;
+        }));
+      }
+
+      const bc = new BroadcastChannel('fuxion_sync_channel');
+      bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: [...newObligations, ...obligations] });
+      bc.close();
+      alert(`✅ ${newObligations.length} nómina(s) generada(s). Anticipos y préstamos descontados automáticamente.`);
+    },
+
+    // ── ANTICIPOS Y PRÉSTAMOS ──
+    staffLoans,
+    addStaffAdvance: (staffId: string, amount: number) => {
+      setStaff(prev => prev.map(s =>
+        s.id === staffId ? { ...s, advances: (s.advances || 0) + amount } : s
+      ));
+    },
+    addStaffLoan: (loan: Omit<StaffLoan, 'id'>) => {
+      const newLoan: StaffLoan = { ...loan, id: crypto.randomUUID() };
+      setStaffLoans(prev => [newLoan, ...prev]);
+    },
+    deleteStaffLoan: (loanId: string) => {
+      setStaffLoans(prev => prev.filter(l => l.id !== loanId));
     },
 
     addMember: async (m: Omit<Member, 'id'>) => {

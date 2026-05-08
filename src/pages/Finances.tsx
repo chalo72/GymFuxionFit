@@ -76,11 +76,12 @@ function PaymentVoucher({ tx, onClose }: { tx: any; onClose: () => void }) {
 }
 
 export default function Finances() {
-  const { 
-    transactions: txList, members, injectTransaction, 
+  const {
+    transactions: txList, members, injectTransaction,
     goals, addGoal, updateGoal, deleteGoal,
     obligations, addObligation, updateObligation, deleteObligation, payObligation,
     staff, addStaff, updateStaff, deleteStaff, generateMonthlyPayroll,
+    staffLoans, addStaffAdvance, addStaffLoan, deleteStaffLoan,
     waterConfig, updateWaterConfig, withdrawFromGoal
   } = useGymData();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expense' | 'payroll' | 'goals' | 'agua'>('dashboard');
@@ -95,7 +96,16 @@ export default function Finances() {
   const [goalForm, setGoalForm] = useState({ name: '', target: 0, category: 'savings' as any });
   const [obForm, setObForm] = useState({ name:'', amount:0, dueDate:'', category:'utilities' as any });
   const [obPeriod, setObPeriod] = useState<'complete' | 'q1' | 'q2'>('complete');
-  const [payrollPeriod, setPayrollPeriod] = useState<'complete' | 'q1' | 'q2'>('complete');
+  const [payrollPeriod, setPayrollPeriod] = useState<'complete' | 'q1' | 'q2'>(() => {
+    const day = new Date().getDate();
+    return day <= 15 ? 'q1' : 'q2';
+  });
+  const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+  const [showLoanModal, setShowLoanModal] = useState(false);
+  const [advanceTarget, setAdvanceTarget] = useState<any>(null);
+  const [advanceAmount, setAdvanceAmount] = useState(0);
+  const [loanTarget, setLoanTarget] = useState<any>(null);
+  const [loanForm, setLoanForm] = useState({ total: 0, installment: 0, description: '' });
   const [staffForm, setStaffForm] = useState({ name:'', role:'', salary:0, phone:'', email:'', tempPassword:'', status:'active' as any, payPeriod: 'complete' as 'complete' | 'q1' | 'q2' });
 
   const [receivedAmount, setReceivedAmount] = useState<number>(0);
@@ -456,38 +466,93 @@ export default function Finances() {
               </div>
            </div>
 
-           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(300px, 1fr))', gap:20 }}>
-              {staff.map(s => (
-                 <div key={s.id} className="glass-card" style={{ padding:24, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                    <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-                       <div style={{ width:48, height:48, borderRadius:14, background:'rgba(255,255,255,0.03)', display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid rgba(255,255,255,0.1)' }}>
-                          <Users size={24} style={{ opacity:0.5 }} />
-                       </div>
-                       <div>
-                          <div style={{ fontSize:14, fontWeight:950 }}>{s.name}</div>
-                          <div style={{ fontSize:10, color:'var(--neon-green)', fontWeight:800 }}>{s.role}</div>
-                          <div style={{ fontSize:15, fontWeight:950, marginTop:4 }}>${s.salary.toLocaleString()}</div>
-                          <div style={{ fontSize:9, fontWeight:800, marginTop:3, color: (s as any).payPeriod === 'q1' ? 'var(--neon-green)' : (s as any).payPeriod === 'q2' ? '#FFD600' : '#00E5FF' }}>
-                            {(s as any).payPeriod === 'q1' ? '1ra QUINCENA' : (s as any).payPeriod === 'q2' ? '2da QUINCENA' : 'MES COMPLETO'}
+           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))', gap:20 }}>
+              {staff.map(s => {
+                const advance = s.advances || 0;
+                const activeLoans = staffLoans.filter(l => l.staffId === s.id && l.remaining > 0);
+                const loanDeduction = activeLoans.reduce((sum, l) => sum + Math.min(l.installment, l.remaining), 0);
+                const period = s.payPeriod || 'complete';
+                const basePay = period === 'complete' ? s.salary : s.salary / 2;
+                const netPay = Math.max(0, basePay - advance - loanDeduction);
+                const periodColor = period === 'q1' ? 'var(--neon-green)' : period === 'q2' ? '#FFD600' : '#00E5FF';
+                const periodLabel = period === 'q1' ? '1ra QUINCENA' : period === 'q2' ? '2da QUINCENA' : 'MES COMPLETO';
+                return (
+                 <div key={s.id} className="glass-card" style={{ padding:20 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16 }}>
+                       <div style={{ display:'flex', gap:14, alignItems:'center' }}>
+                          <div style={{ width:44, height:44, borderRadius:12, background:'rgba(255,255,255,0.03)', display:'flex', alignItems:'center', justifyContent:'center', border:'1px solid rgba(255,255,255,0.1)' }}>
+                             <Users size={22} style={{ opacity:0.5 }} />
+                          </div>
+                          <div>
+                             <div style={{ fontSize:15, fontWeight:950 }}>{s.name}</div>
+                             <div style={{ fontSize:11, color:'var(--neon-green)', fontWeight:800 }}>{s.role}</div>
+                             <div style={{ fontSize:10, fontWeight:800, color: periodColor, marginTop:2 }}>{periodLabel}</div>
                           </div>
                        </div>
+                       <div style={{ display:'flex', gap:6 }}>
+                          <button onClick={() => { const msg = `Hola ${s.name}! Bienvenido al equipo de GymFuxionFit. 🚀%0A%0AAquí tienes tus credenciales de acceso:%0A👤 Usuario: ${s.email}%0A🔑 Clave: ${s.tempPassword || 'fuxion123'}%0A🔗 Acceso: ${window.location.origin}%0A%0A¡Nos vemos en el entrenamiento! 💪`; window.open(`https://wa.me/57${s.phone}?text=${msg}`, '_blank'); }} style={{ background:'rgba(0,255,136,0.1)', border:'none', padding:7, borderRadius:8, color:'var(--neon-green)', cursor:'pointer' }} title="Enviar Credenciales"><Send size={13}/></button>
+                          <button onClick={() => { setEditingStaff(s); setStaffForm({ ...s, tempPassword: s.tempPassword || '', payPeriod: s.payPeriod || 'complete' }); setShowStaffModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', padding:7, borderRadius:8, color:'#fff', cursor:'pointer' }}><PenTool size={13}/></button>
+                          <button onClick={() => deleteStaff(s.id)} style={{ background:'rgba(255,77,77,0.1)', border:'none', padding:7, borderRadius:8, color:'#ff4d4d', cursor:'pointer' }}><X size={13}/></button>
+                       </div>
                     </div>
-                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                       <button 
-                          onClick={() => {
-                            const msg = `Hola ${s.name}! Bienvenido al equipo de GymFuxionFit. 🚀%0A%0AAquí tienes tus credenciales de acceso:%0A👤 Usuario: ${s.email}%0A🔑 Clave: ${s.tempPassword || 'fuxion123'}%0A🔗 Acceso: ${window.location.origin}%0A%0A¡Nos vemos en el entrenamiento! 💪`;
-                            window.open(`https://wa.me/57${s.phone}?text=${msg}`, '_blank');
-                          }}
-                          style={{ background:'rgba(0,255,136,0.1)', border:'none', padding:8, borderRadius:8, color:'var(--neon-green)', cursor:'pointer' }}
-                          title="Enviar Credenciales"
-                        >
-                          <Send size={14}/>
-                        </button>
-                        <button onClick={() => { setEditingStaff(s); setStaffForm({ ...s, tempPassword: s.tempPassword || '', payPeriod: (s as any).payPeriod || 'complete' }); setShowStaffModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', padding:8, borderRadius:8, color:'#fff', cursor:'pointer' }}><PenTool size={14}/></button>
-                       <button onClick={() => deleteStaff(s.id)} style={{ background:'rgba(255,77,77,0.1)', border:'none', padding:8, borderRadius:8, color:'#ff4d4d', cursor:'pointer' }}><X size={14}/></button>
+
+                    {/* Desglose de pago */}
+                    <div style={{ background:'rgba(255,255,255,0.02)', borderRadius:10, padding:12, marginBottom:12, display:'flex', flexDirection:'column', gap:6 }}>
+                       <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
+                          <span style={{ color:'var(--text-muted)' }}>Salario base</span>
+                          <span style={{ fontWeight:800 }}>${basePay.toLocaleString()}</span>
+                       </div>
+                       {advance > 0 && (
+                         <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
+                            <span style={{ color:'#FFD600' }}>Anticipo pendiente</span>
+                            <span style={{ color:'#FFD600', fontWeight:800 }}>-${advance.toLocaleString()}</span>
+                         </div>
+                       )}
+                       {loanDeduction > 0 && (
+                         <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
+                            <span style={{ color:'#ff4d4d' }}>Cuota préstamo ({activeLoans.length})</span>
+                            <span style={{ color:'#ff4d4d', fontWeight:800 }}>-${loanDeduction.toLocaleString()}</span>
+                         </div>
+                       )}
+                       <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:6, display:'flex', justifyContent:'space-between', fontSize:13 }}>
+                          <span style={{ fontWeight:950 }}>NETO A PAGAR</span>
+                          <span style={{ fontWeight:950, color:'var(--neon-green)' }}>${netPay.toLocaleString()}</span>
+                       </div>
                     </div>
+
+                    {/* Botones de anticipo y préstamo */}
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                       <button
+                          onClick={() => { setAdvanceTarget(s); setAdvanceAmount(0); setShowAdvanceModal(true); }}
+                          style={{ padding:'8px 0', borderRadius:8, background:'rgba(255,214,0,0.08)', border:'1px solid rgba(255,214,0,0.2)', color:'#FFD600', fontSize:11, fontWeight:800, cursor:'pointer' }}
+                       >
+                          + Anticipo
+                       </button>
+                       <button
+                          onClick={() => { setLoanTarget(s); setLoanForm({ total:0, installment:0, description:'' }); setShowLoanModal(true); }}
+                          style={{ padding:'8px 0', borderRadius:8, background:'rgba(255,77,77,0.08)', border:'1px solid rgba(255,77,77,0.2)', color:'#ff4d4d', fontSize:11, fontWeight:800, cursor:'pointer' }}
+                       >
+                          + Préstamo
+                       </button>
+                    </div>
+
+                    {/* Préstamos activos */}
+                    {activeLoans.length > 0 && (
+                      <div style={{ marginTop:10 }}>
+                        {activeLoans.map(l => (
+                          <div key={l.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 10px', background:'rgba(255,77,77,0.04)', borderRadius:8, marginTop:4, fontSize:10 }}>
+                            <div>
+                              <div style={{ fontWeight:800, color:'#ff4d4d' }}>{l.description}</div>
+                              <div style={{ color:'var(--text-muted)' }}>Saldo: ${l.remaining.toLocaleString()} | Cuota: ${l.installment.toLocaleString()}</div>
+                            </div>
+                            <button onClick={() => deleteStaffLoan(l.id)} style={{ background:'none', border:'none', color:'#ff4d4d', opacity:0.5, cursor:'pointer' }}><X size={12}/></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                  </div>
-              ))}
+                );
+              })}
            </div>
 
            <div className="glass-card" style={{ padding:20, background:'rgba(0,229,255,0.05)', border:'1px solid #00E5FF30' }}>
@@ -721,6 +786,87 @@ export default function Finances() {
       )}
       
       {showVoucher && <PaymentVoucher tx={showVoucher} onClose={() => setShowVoucher(null)} />}
+
+      {/* ══ MODAL ANTICIPO ══ */}
+      {showAdvanceModal && advanceTarget && (
+        <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center', padding:16 }}>
+          <div className="glass-card" style={{ width:'100%', maxWidth:400, padding:32, border:'1px solid rgba(255,214,0,0.3)' }}>
+            <h3 style={{ fontSize:20, fontWeight:950, color:'#FFD600', marginBottom:6 }}>ANTICIPO</h3>
+            <p style={{ fontSize:13, color:'var(--text-muted)', marginBottom:24 }}>Se descontará del próximo pago de <strong style={{ color:'#fff' }}>{advanceTarget.name}</strong></p>
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div>
+                <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Monto del Anticipo ($)</label>
+                <input
+                  type="number" placeholder="0" value={advanceAmount || ''}
+                  onChange={e => setAdvanceAmount(Number(e.target.value))}
+                  style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,214,0,0.3)', color:'#FFD600', fontWeight:950, fontSize:18 }}
+                  autoFocus
+                />
+              </div>
+              <div style={{ padding:12, background:'rgba(255,214,0,0.05)', borderRadius:10, fontSize:12, color:'#FFD600' }}>
+                Anticipo actual: <strong>${(advanceTarget.advances || 0).toLocaleString()}</strong>
+                {advanceAmount > 0 && <> → Nuevo total: <strong>${((advanceTarget.advances || 0) + advanceAmount).toLocaleString()}</strong></>}
+              </div>
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={() => setShowAdvanceModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer' }}>CANCELAR</button>
+                <button onClick={() => { if (advanceAmount > 0) { addStaffAdvance(advanceTarget.id, advanceAmount); setShowAdvanceModal(false); } }} style={{ flex:1, padding:14, borderRadius:12, background:'#FFD600', border:'none', color:'#000', fontWeight:950, fontSize:14, cursor:'pointer' }}>REGISTRAR</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL PRÉSTAMO ══ */}
+      {showLoanModal && loanTarget && (
+        <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center', padding:16 }}>
+          <div className="glass-card" style={{ width:'100%', maxWidth:420, padding:32, border:'1px solid rgba(255,77,77,0.3)' }}>
+            <h3 style={{ fontSize:20, fontWeight:950, color:'#ff4d4d', marginBottom:6 }}>PRÉSTAMO A EMPLEADO</h3>
+            <p style={{ fontSize:13, color:'var(--text-muted)', marginBottom:24 }}>Registrar préstamo para <strong style={{ color:'#fff' }}>{loanTarget.name}</strong></p>
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div>
+                <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Concepto / Motivo</label>
+                <input
+                  placeholder="Ej: Préstamo personal, Urgencia médica..."
+                  value={loanForm.description} onChange={e => setLoanForm({...loanForm, description: e.target.value})}
+                  style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:14 }}
+                />
+              </div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Monto Total ($)</label>
+                  <input
+                    type="number" placeholder="0" value={loanForm.total || ''}
+                    onChange={e => setLoanForm({...loanForm, total: Number(e.target.value)})}
+                    style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,77,77,0.3)', color:'#ff4d4d', fontWeight:950, fontSize:16 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Cuota por Período ($)</label>
+                  <input
+                    type="number" placeholder="0" value={loanForm.installment || ''}
+                    onChange={e => setLoanForm({...loanForm, installment: Number(e.target.value)})}
+                    style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,77,77,0.2)', color:'#FFD600', fontWeight:950, fontSize:16 }}
+                  />
+                </div>
+              </div>
+              {loanForm.total > 0 && loanForm.installment > 0 && (
+                <div style={{ padding:12, background:'rgba(255,77,77,0.05)', borderRadius:10, fontSize:12, color:'#ff4d4d' }}>
+                  Cuotas estimadas: <strong>{Math.ceil(loanForm.total / loanForm.installment)}</strong> períodos
+                </div>
+              )}
+              <div style={{ display:'flex', gap:10 }}>
+                <button onClick={() => setShowLoanModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer' }}>CANCELAR</button>
+                <button onClick={() => {
+                  if (loanForm.total > 0 && loanForm.installment > 0 && loanForm.description) {
+                    addStaffLoan({ staffId: loanTarget.id, staffName: loanTarget.name, total: loanForm.total, remaining: loanForm.total, installment: loanForm.installment, date: new Date().toISOString().split('T')[0], description: loanForm.description });
+                    setShowLoanModal(false);
+                  }
+                }} style={{ flex:1, padding:14, borderRadius:12, background:'#ff4d4d', border:'none', color:'#fff', fontWeight:950, fontSize:14, cursor:'pointer' }}>REGISTRAR PRÉSTAMO</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══ MODAL STAFF ══ */}
       {showStaffModal && (
