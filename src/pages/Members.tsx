@@ -37,6 +37,8 @@ interface Client {
   injuries?: string | string[];
   nutrition?: string;
   emergencyContact?: string;
+  suspendedReason?: string;
+  suspendedDate?: string;
   // Métricas Biométricas
   weight?: number;
   height?: number;
@@ -131,7 +133,8 @@ function ClientModal({
       nextPayment:initial.nextPayment??'', payMethod:initial.payMethod??'nequi', trainer:initial.trainer??'Sin entrenador',
       emergency:initial.emergency??'', emergencyPhone:initial.emergencyPhone??'', address:initial.address??'',
       notes:initial.notes??'', objective:initial.objective??'', injuries:initial.injuries??'',
-      nutrition:initial.nutrition??'', emergencyContact:initial.emergencyContact??''
+      nutrition:initial.nutrition??'', emergencyContact:initial.emergencyContact??'',
+      suspendedReason:(initial as any).suspendedReason??'', suspendedDate:(initial as any).suspendedDate??new Date().toISOString().slice(0,10)
     }
     : emptyForm()
   );
@@ -315,6 +318,29 @@ function ClientModal({
                   </select>
                 </div>
               </div>
+
+              {(form.status === 'suspended' || form.status === 'expired') && (
+                <div style={{ padding:14, borderRadius:'var(--radius-lg)', background:'rgba(255,61,87,.05)', border:'1px solid rgba(255,61,87,.25)' }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'var(--danger-red)', marginBottom:12, textTransform:'uppercase', letterSpacing:1 }}>
+                    ⚠️ Motivo de Suspensión / Inactividad
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                    <div>
+                      <label style={labelStyle}>¿Por qué está suspendido o inactivo?</label>
+                      <textarea
+                        style={{ ...inputStyle, minHeight:60, resize:'vertical' }}
+                        placeholder="Ej: Deuda pendiente, problemas de salud, viaje largo, trabajo..."
+                        value={form.suspendedReason}
+                        onChange={e => set('suspendedReason', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Fecha de Suspensión</label>
+                      <input style={inputStyle} type="date" value={form.suspendedDate} onChange={e => set('suspendedDate', e.target.value)}/>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -439,6 +465,19 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
               </div>
            </div>
 
+           {/* Box Suspensión / Inactividad */}
+           {(client.status === 'suspended' || client.status === 'expired') && client.suspendedReason && (
+             <div style={{ padding:'14px 18px', borderRadius:16, background:'rgba(255,61,87,.08)', border:'1px solid rgba(255,61,87,.3)', marginBottom:20 }}>
+               <div style={{ fontSize:10, fontWeight:950, color:'var(--danger-red)', marginBottom:8, letterSpacing:1.5, display:'flex', alignItems:'center', gap:6 }}>
+                 <AlertTriangle size={12}/> MOTIVO DE SUSPENSIÓN
+               </div>
+               <div style={{ fontSize:13, color:'#fff', lineHeight:1.5 }}>{client.suspendedReason}</div>
+               {client.suspendedDate && (
+                 <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:6 }}>📅 Desde: {client.suspendedDate}</div>
+               )}
+             </div>
+           )}
+
            {/* Metrics Grid */}
            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 15, marginBottom: 30 }}>
               <div style={{ background:'rgba(255,255,255,0.02)', padding: 15, borderRadius: 20, textAlign:'center', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -534,6 +573,9 @@ export default function Members() {
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [viewClient, setViewClient] = useState<Client | null>(null);
   const [toast, setToast]           = useState<string | null>(null);
+  const [suspendTarget, setSuspendTarget] = useState<{ id: any; name: string } | null>(null);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [suspendDate, setSuspendDate]     = useState(new Date().toISOString().slice(0,10));
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -580,6 +622,19 @@ export default function Members() {
   const toggleStatus = async (id: any, newStatus: Status) => {
     await updateMemberStatus(id, { status: newStatus });
     showToast(`✅ Estado actualizado`);
+  };
+
+  /* Suspensión con motivo */
+  const handleSuspend = async () => {
+    if (!suspendTarget) return;
+    await updateMemberStatus(suspendTarget.id, {
+      status: 'suspended',
+      suspendedReason: suspendReason,
+      suspendedDate: suspendDate,
+    });
+    showToast(`⏸️ ${suspendTarget.name} suspendido`);
+    setSuspendTarget(null);
+    setSuspendReason('');
   };
 
   const deleteClient = async (id: any) => {
@@ -739,7 +794,14 @@ export default function Members() {
                     </div>
                   </td>
                   <td style={{ padding:'14px 16px' }}><PlanBadge p={c.plan} plans={plans}/></td>
-                  <td style={{ padding:'14px 16px' }}><StatusBadge s={c.status}/></td>
+                  <td style={{ padding:'14px 16px' }}>
+                    <StatusBadge s={c.status}/>
+                    {c.suspendedReason && (
+                      <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:3, maxWidth:130, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }} title={c.suspendedReason}>
+                        {c.suspendedReason}
+                      </div>
+                    )}
+                  </td>
                   <td style={{ padding:'14px 16px', fontSize:12.5, color: c.status==='expired' ? 'var(--danger-red)' : c.status==='expiring' ? '#FFD600' : 'var(--text-secondary)' }}>{c.expiryDate || c.expiry}</td>
                   <td style={{ padding:'14px 16px', fontSize:12, color:'var(--text-secondary)', textTransform:'capitalize' }}>{c.payMethod}</td>
                   <td style={{ padding:'14px 16px', fontSize:12, color:'var(--text-secondary)' }}>{c.trainer||'—'}</td>
@@ -758,7 +820,7 @@ export default function Members() {
                           <UserCheck size={13}/>
                         </button>
                       ) : (
-                        <button onClick={() => toggleStatus(c.id,'suspended')} title="Suspender" style={{ width:30, height:30, borderRadius:8, background:'rgba(255,61,87,.06)', border:'1px solid rgba(255,61,87,.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--danger-red)' }}>
+                        <button onClick={() => { setSuspendTarget({ id: c.id, name: c.name }); setSuspendReason(''); setSuspendDate(new Date().toISOString().slice(0,10)); }} title="Suspender" style={{ width:30, height:30, borderRadius:8, background:'rgba(255,61,87,.06)', border:'1px solid rgba(255,61,87,.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--danger-red)' }}>
                           <UserX size={13}/>
                         </button>
                       )}
@@ -798,6 +860,65 @@ export default function Members() {
           onEdit={() => { setEditClient(viewClient); setViewClient(null); setShowModal(true); }}
           onDelete={() => deleteClient(viewClient.id)}
         />
+      )}
+
+      {/* Mini-modal: Suspensión con motivo */}
+      {suspendTarget && (
+        <div style={{
+          position:'fixed', inset:0, background:'rgba(0,0,0,.75)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          zIndex:1500, backdropFilter:'blur(8px)',
+        }} onClick={e => e.target === e.currentTarget && setSuspendTarget(null)}>
+          <div style={{
+            width:420, borderRadius:'var(--radius-2xl)',
+            background:'var(--space-dark)', border:'1px solid rgba(255,61,87,.25)',
+            boxShadow:'var(--shadow-elevated)', padding:24,
+          }}>
+            <div style={{ fontSize:18, fontWeight:800, color:'var(--text-primary)', marginBottom:4 }}>
+              ⏸️ Suspender Socio
+            </div>
+            <div style={{ fontSize:13, color:'var(--text-muted)', marginBottom:20 }}>
+              <strong>{suspendTarget.name}</strong> — Registra el motivo para llevar el control
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+              <div>
+                <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:6 }}>
+                  Motivo de la Suspensión *
+                </label>
+                <textarea
+                  style={{ width:'100%', padding:'10px 14px', borderRadius:'var(--radius-md)', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,61,87,.3)', color:'var(--text-primary)', fontSize:14, outline:'none', fontFamily:'var(--font)', minHeight:70, resize:'vertical', boxSizing:'border-box' }}
+                  placeholder="Ej: Deuda pendiente, problemas de salud, viaje, trabajo..."
+                  value={suspendReason}
+                  onChange={e => setSuspendReason(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', textTransform:'uppercase', letterSpacing:1, display:'block', marginBottom:6 }}>
+                  Fecha de Suspensión
+                </label>
+                <input
+                  type="date"
+                  style={{ width:'100%', padding:'10px 14px', borderRadius:'var(--radius-md)', background:'rgba(255,255,255,.05)', border:'1px solid rgba(255,255,255,.12)', color:'var(--text-primary)', fontSize:14, outline:'none', fontFamily:'var(--font)', boxSizing:'border-box' }}
+                  value={suspendDate}
+                  onChange={e => setSuspendDate(e.target.value)}
+                />
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:10, marginTop:20, justifyContent:'flex-end' }}>
+              <button onClick={() => setSuspendTarget(null)} style={{ padding:'10px 20px', borderRadius:'var(--radius-lg)', background:'rgba(255,255,255,.06)', border:'1px solid rgba(255,255,255,.12)', color:'var(--text-secondary)', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                Cancelar
+              </button>
+              <button
+                onClick={handleSuspend}
+                disabled={!suspendReason.trim()}
+                style={{ padding:'10px 24px', borderRadius:'var(--radius-lg)', background: suspendReason.trim() ? 'rgba(255,61,87,.85)' : 'rgba(255,255,255,.08)', border:'none', color: suspendReason.trim() ? '#fff' : 'var(--text-muted)', fontSize:13, fontWeight:800, cursor: suspendReason.trim() ? 'pointer' : 'not-allowed' }}
+              >
+                ⏸️ Confirmar Suspensión
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

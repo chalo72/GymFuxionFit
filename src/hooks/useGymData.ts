@@ -110,6 +110,8 @@ export interface Member {
   streak?: number;
   alerts?: string[];
   goal?: string;
+  suspendedReason?: string;
+  suspendedDate?: string;
   progress?: number;
   biometricStatus?: 'pending' | 'completed';
   lastScan?: string;
