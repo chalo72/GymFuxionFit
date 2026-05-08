@@ -82,7 +82,8 @@ export default function Finances() {
     obligations, addObligation, updateObligation, deleteObligation, payObligation,
     staff, addStaff, updateStaff, deleteStaff, generateMonthlyPayroll,
     staffLoans, addStaffAdvance, addStaffLoan, deleteStaffLoan,
-    waterConfig, updateWaterConfig, withdrawFromGoal
+    waterConfig, updateWaterConfig, withdrawFromGoal,
+    plans, plansConfig
   } = useGymData();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expense' | 'payroll' | 'goals' | 'agua'>('dashboard');
   
@@ -280,73 +281,129 @@ export default function Finances() {
         </div>
       ) : activeTab === 'income' ? (
         <div style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:24, flex:1 }}>
-           <div className="glass-card" style={{ padding:32, border: '1px solid var(--neon-green)20' }}>
-              <h3 style={{ fontSize:18, fontWeight:950, marginBottom:8 }}>RECIBO_DE_COBRO</h3>
-              <p style={{ fontSize:11, color:'var(--text-muted)', fontWeight:800, marginBottom:24 }}>PROCESAR NUEVA TRANSACCIÓN DE ENTRADA</p>
-              <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+           <div className="glass-card" style={{ padding:28, border: '1px solid var(--neon-green)20' }}>
+              <h3 style={{ fontSize:20, fontWeight:950, marginBottom:4 }}>Registrar Cobro</h3>
+              <p style={{ fontSize:13, color:'var(--text-muted)', marginBottom:20 }}>Cobrar a un cliente del gimnasio</p>
+
+              {/* ── COBRO RÁPIDO ── */}
+              <div style={{ marginBottom:20 }}>
+                 <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:10, display:'block' }}>Cobro Rápido</label>
+                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(110px, 1fr))', gap:8 }}>
+                    {plans.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => {
+                          setCategory(p.duration === 'dia' ? 'daypass' : 'membership');
+                          setAmount(plansConfig[p.id] ?? p.price);
+                        }}
+                        style={{
+                          padding:'10px 6px', borderRadius:10, cursor:'pointer', textAlign:'center',
+                          background: amount === (plansConfig[p.id] ?? p.price) ? `${p.color}25` : 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${amount === (plansConfig[p.id] ?? p.price) ? p.color : 'rgba(255,255,255,0.08)'}`,
+                          color: amount === (plansConfig[p.id] ?? p.price) ? p.color : '#fff',
+                          transition:'0.2s'
+                        }}
+                      >
+                        <div style={{ fontSize:12, fontWeight:950 }}>{p.label}</div>
+                        <div style={{ fontSize:13, fontWeight:950, marginTop:2 }}>${(plansConfig[p.id] ?? p.price).toLocaleString()}</div>
+                      </button>
+                    ))}
+                 </div>
+              </div>
+
+              <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+                 {/* Buscar cliente */}
                  <div style={{ position:'relative' }}>
-                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:8, display:'block' }}>BUSCAR SOCIO</label>
-                    <Search size={16} style={{ position:'absolute', left:14, top:42, opacity:0.5 }} />
-                    <input 
-                       type="text" placeholder="Nombre..." 
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>¿A quién le cobras?</label>
+                    <Search size={16} style={{ position:'absolute', left:14, top:46, opacity:0.5 }} />
+                    <input
+                       type="text" placeholder="Buscar por nombre..."
                        value={selectedMember ? selectedMember.name : searchTerm}
                        onChange={(e) => { setSearchTerm(e.target.value); setSelectedMember(null); }}
-                       style={{ width:'100%', padding:'14px 14px 14px 44px', borderRadius:16, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', outline:'none', fontSize:14 }} 
+                       style={{ width:'100%', padding:'13px 13px 13px 42px', borderRadius:14, background:'rgba(255,255,255,0.03)', border: selectedMember ? '1px solid var(--neon-green)' : '1px solid rgba(255,255,255,0.1)', color:'#fff', outline:'none', fontSize:15 }}
                     />
+                    {selectedMember && (
+                      <button onClick={() => { setSelectedMember(null); setSearchTerm(''); }} style={{ position:'absolute', right:12, top:44, background:'none', border:'none', color:'var(--text-muted)', cursor:'pointer' }}><X size={16}/></button>
+                    )}
                     {searchTerm && !selectedMember && (
-                       <div style={{ position:'absolute', top:'110%', left:0, right:0, background:'#0a0f0d', borderRadius:16, border:'1px solid rgba(255,255,255,0.1)', overflow:'hidden', zIndex:100 }}>
-                          {filteredMembers.map(m => (
-                             <div key={m.id} onClick={() => setSelectedMember(m)} style={{ padding:14, cursor:'pointer', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', justifyContent:'space-between' }}>
-                                <div style={{ fontSize:13, fontWeight:800 }}>{m.name}</div>
-                                <div style={{ fontSize:10 }}>{m.status?.toUpperCase()}</div>
+                       <div style={{ position:'absolute', top:'110%', left:0, right:0, background:'#0a0f0d', borderRadius:14, border:'1px solid rgba(255,255,255,0.1)', overflow:'hidden', zIndex:100 }}>
+                          {filteredMembers.length === 0
+                            ? <div style={{ padding:14, fontSize:13, color:'var(--text-muted)' }}>No se encontró nadie</div>
+                            : filteredMembers.map(m => (
+                             <div key={m.id} onClick={() => setSelectedMember(m)} style={{ padding:14, cursor:'pointer', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                                <div style={{ fontSize:14, fontWeight:800 }}>{m.name}</div>
+                                <div style={{ fontSize:11, color: m.status === 'active' ? 'var(--neon-green)' : '#ff4d4d', fontWeight:700 }}>{m.status === 'active' ? 'Activo' : m.status === 'expired' ? 'Vencido' : m.status}</div>
                              </div>
                           ))}
                        </div>
                     )}
                  </div>
-                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
+
+                 {/* Valor + método de pago */}
+                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
                     <div>
-                        <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:8, display:'block' }}>CONCEPTO</label>
-                        <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: 12, borderRadius: 12 }}>
-                           <option value="membership">Mensualidad</option>
-                           <option value="product">Producto</option>
-                           <option value="daypass">Día</option>
-                        </select>
+                      <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Valor a cobrar ($)</label>
+                      <input type="number" value={amount || ''} onChange={(e) => setAmount(Number(e.target.value))}
+                        style={{ width:'100%', background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--neon-green)', padding:'13px 12px', borderRadius:12, fontWeight:950, fontSize:18 }} />
                     </div>
                     <div>
-                        <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:8, display:'block' }}>MONTO A COBRAR ($)</label>
-                        <input type="number" value={amount} onChange={(e) => setAmount(Number(e.target.value))} style={{ width:'100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--neon-green)', padding: 12, borderRadius: 12, fontWeight: 950 }} />
+                      <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Forma de pago</label>
+                      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:6 }}>
+                        {['Efectivo','Nequi','Transferencia'].map(m => (
+                          <button key={m} onClick={() => setMethod(m)}
+                            style={{ padding:'10px 4px', borderRadius:10, cursor:'pointer', fontSize:11, fontWeight:800,
+                              background: method === m ? (m === 'Nequi' ? 'rgba(255,0,255,0.15)' : 'rgba(0,255,136,0.12)') : 'rgba(255,255,255,0.03)',
+                              border: `1px solid ${method === m ? (m === 'Nequi' ? '#FF00FF' : 'var(--neon-green)') : 'rgba(255,255,255,0.08)'}`,
+                              color: method === m ? (m === 'Nequi' ? '#FF00FF' : 'var(--neon-green)') : 'var(--text-muted)',
+                              transition:'0.2s'
+                            }}>{m}</button>
+                        ))}
+                      </div>
                     </div>
                  </div>
+
+                 {/* Calculadora de vuelto */}
                  <div>
-                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:8, display:'block' }}>PAGA CON (CALCULADORA DE VUELTAS)</label>
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>El cliente paga con:</label>
                     <div style={{ display:'flex', gap:12 }}>
-                       <input 
-                         type="number" placeholder="Ingresa billete..." 
-                         value={receivedAmount || ''} 
+                       <input
+                         type="number" placeholder="Billetes que entrega..."
+                         value={receivedAmount || ''}
                          onChange={(e) => setReceivedAmount(Number(e.target.value))}
                          style={{ flex:1, padding:14, borderRadius:12, background:'rgba(0,255,136,0.05)', border:'1px solid var(--neon-green)30', color:'var(--neon-green)', fontWeight:950, fontSize:18, outline:'none' }}
                        />
-                       <div style={{ flex:1, background:'rgba(255,255,255,0.03)', borderRadius:12, border:'1px solid rgba(255,255,255,0.1)', display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 15px' }}>
-                          <div style={{ fontSize:8, fontWeight:950, color:'var(--text-muted)' }}>DEVOLVER:</div>
-                          <div style={{ fontSize:18, fontWeight:950, color: changeAmount > 0 ? '#00E5FF' : '#fff' }}>${changeAmount.toLocaleString()}</div>
+                       <div style={{ flex:1, background:'rgba(255,255,255,0.03)', borderRadius:12, border:'1px solid rgba(255,255,255,0.1)', display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 16px' }}>
+                          <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)' }}>Le devuelves:</div>
+                          <div style={{ fontSize:22, fontWeight:950, color: changeAmount > 0 ? '#00E5FF' : '#fff' }}>${changeAmount.toLocaleString()}</div>
                        </div>
                     </div>
                  </div>
-                 <div style={{ display: 'flex', gap: 12 }}>
-                    <button 
-                      onClick={() => setIsExpectingNequi(true)}
-                      disabled={!selectedMember || method !== 'Nequi'}
-                      style={{ flex: 1, padding:16, borderRadius:16, background:'rgba(255, 0, 255, 0.1)', color:'#FF00FF', border:'1px solid #FF00FF30', fontSize:12, fontWeight:950, cursor: (!selectedMember || method !== 'Nequi') ? 'not-allowed' : 'pointer', opacity: (!selectedMember || method !== 'Nequi') ? 0.3 : 1 }}
+
+                 {/* Botones de acción */}
+                 <div style={{ display:'flex', gap:10 }}>
+                    {method === 'Nequi' && (
+                      <button
+                        onClick={() => setIsExpectingNequi(true)}
+                        disabled={!selectedMember}
+                        style={{ flex:1, padding:16, borderRadius:14, background:'rgba(255,0,255,0.1)', color:'#FF00FF', border:'1px solid #FF00FF40', fontSize:13, fontWeight:950, cursor: selectedMember ? 'pointer' : 'not-allowed', opacity: selectedMember ? 1 : 0.4 }}
+                      >
+                        Esperar Nequi
+                      </button>
+                    )}
+                    <button
+                      onClick={handleProcessPayment}
+                      disabled={!selectedMember || amount <= 0}
+                      style={{ flex:2, padding:18, borderRadius:14, background: (!selectedMember || amount <= 0) ? 'rgba(0,255,136,0.3)' : 'var(--neon-green)', color:'#000', border:'none', fontSize:16, fontWeight:950, cursor: (!selectedMember || amount <= 0) ? 'not-allowed' : 'pointer', transition:'0.2s' }}
                     >
-                       ESPERAR NEQUI
+                      {!selectedMember ? 'Busca un cliente primero' : amount <= 0 ? 'Ingresa el valor' : `✓ Cobrar $${amount.toLocaleString()}`}
                     </button>
-                    <button onClick={handleProcessPayment} style={{ flex: 2, padding:20, borderRadius:16, background:'var(--neon-green)', color:'#000', border:'none', fontSize:14, fontWeight:950, cursor:'pointer' }}>EJECUTAR COBRO [SYNC]</button>
                  </div>
               </div>
            </div>
-           <div className="glass-card" style={{ padding:32, display: 'flex', flexDirection: 'column', gap: 24 }}>
-               <NequiRadar 
+
+           {/* Columna derecha */}
+           <div className="glass-card" style={{ padding:28, display:'flex', flexDirection:'column', gap:20 }}>
+               <NequiRadar
                   isExpecting={isExpectingNequi && !!selectedMember && method === 'Nequi'}
                   expectedMemberName={selectedMember?.name}
                   onCancelExpectation={() => setIsExpectingNequi(false)}
@@ -355,16 +412,18 @@ export default function Finances() {
                     setMethod('Nequi');
                     setCategory('membership');
                     setIsExpectingNequi(false);
-                    alert(`Pago Nequi Detectado: $${amt.toLocaleString()} [REF: ${ref}]. Procede a seleccionar al socio para finalizar.`);
-                  }} 
+                    alert(`Pago Nequi detectado: $${amt.toLocaleString()} [REF: ${ref}]. Selecciona el cliente para finalizar.`);
+                  }}
                />
-               
                <div>
-                  <h3 style={{ fontSize:12, fontWeight:950, marginBottom:20 }}>INGRESOS_RECIENTES</h3>
+                  <h3 style={{ fontSize:14, fontWeight:950, marginBottom:14 }}>Últimos cobros</h3>
                   {txList.filter(t => t.type === 'income').slice(0, 6).map(t => (
-                      <div key={t.id} style={{ display:'flex', justifyContent:'space-between', padding:12, background:'rgba(0,255,136,0.03)', borderRadius:12, marginBottom:10 }}>
-                         <div style={{ fontSize:11, fontWeight:800 }}>{t.client}</div>
-                         <div style={{ color:'var(--neon-green)', fontWeight:950 }}>+${t.amount?.toLocaleString()}</div>
+                      <div key={t.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:'rgba(0,255,136,0.03)', borderRadius:12, marginBottom:8 }}>
+                         <div>
+                           <div style={{ fontSize:13, fontWeight:800 }}>{t.client}</div>
+                           <div style={{ fontSize:11, color:'var(--text-muted)' }}>{t.date} · {t.method}</div>
+                         </div>
+                         <div style={{ color:'var(--neon-green)', fontWeight:950, fontSize:14 }}>+${t.amount?.toLocaleString()}</div>
                       </div>
                   ))}
                </div>
