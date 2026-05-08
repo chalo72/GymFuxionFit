@@ -29,8 +29,25 @@
         // 3. Forzar refresco si hay cambio de versión detectado por el Manifiesto
         console.log("🛡️ Escudo Anti-Caché Activado");
 
+        // 4. Capturar fallos de importación dinámica (Vite Build Drift)
+        window.addEventListener('error', function(e) {
+          if (e.message && (e.message.includes('Failed to fetch dynamically imported module') || e.message.includes('Importing a module script failed'))) {
+            console.warn("⚠️ Fallo en carga de módulo dinámico detectado. Forzando recarga limpia...");
+            location.reload(true);
+          }
+        }, true);
+
+        // 5. Interceptar errores de promesas (importaciones dinámicas fallidas)
+        window.addEventListener('unhandledrejection', function(e) {
+          if (e.reason && e.reason.message && e.reason.message.includes('Failed to fetch dynamically imported module')) {
+            console.warn("⚠️ Promesa de módulo rechazada. Forzando recarga limpia...");
+            location.reload(true);
+          }
+        });
+
         // 🚨 REPORTERO DE ERRORES CRÍTICOS (Para pantalla en blanco)
         window.onerror = function(msg, url, line, col, error) {
+          if (msg.includes('Failed to fetch dynamically imported module')) return; // Ya manejado arriba
           var div = document.createElement('div');
           div.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:white;color:black;z-index:100000;padding:20px;font-family:monospace;border-bottom:5px solid red;font-size:12px;';
           div.innerHTML = '<h3 style="color:red;margin:0">🚨 ERROR DE CARGA DETECTADO</h3>' +
@@ -40,6 +57,7 @@
                           '<button onclick="location.reload()" style="padding:10px;background:black;color:white;border:none;cursor:pointer">REINTENTAR</button>';
           document.body.appendChild(div);
         };
+
       })();
     </script>
   </head>

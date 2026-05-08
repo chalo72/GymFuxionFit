@@ -10,6 +10,8 @@ Este archivo registra los módulos y archivos que han alcanzado un estado de est
 - [x] `src/components/layout/Sidebar.tsx` - Navegación principal.
 - [x] `src/pages/ExpertCatalogs.tsx` - Módulo maestro de conocimientos protegido contra bugs de mayúsculas (quantum evasion).
 - [x] `1_NUBE_VERCEL.bat` - Escudo de Despliegue. Prohibido eliminar o alterar su función de verificación (Build).
+- [x] `src/lib/` - Conexiones core de base de datos (Supabase, Firebase, Appwrite). PROTECCIÓN MÁXIMA de datos de clientes.
+
 
 ## 📜 Reglas de Evolución Incremental
 1. **No Overwrite**: Prohibido usar `write_to_file` para editar archivos en esta lista. Usar solo `replace_file_content` o `multi_replace_file_content` con bloques mínimos.

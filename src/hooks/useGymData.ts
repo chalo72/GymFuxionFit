@@ -171,15 +171,24 @@ function useGymDataInternal() {
         const savedTx = localStorage.getItem('fuxion_tx');
         const savedMembers = localStorage.getItem('fuxion_members');
         const savedProducts = localStorage.getItem('fuxion_products');
+        const savedObligations = localStorage.getItem('fuxion_obligations');
+        const savedStaff = localStorage.getItem('fuxion_staff');
+        const savedGoals = localStorage.getItem('fuxion_goals');
 
         let currentMembers: Member[] = savedMembers ? JSON.parse(savedMembers) : [];
         let currentTx: Transaction[] = savedTx ? JSON.parse(savedTx) : [];
         let currentProducts: Product[] = savedProducts ? JSON.parse(savedProducts) : [];
+        let currentObligations: Obligation[] = savedObligations ? JSON.parse(savedObligations) : [];
+        let currentStaff: Staff[] = savedStaff ? JSON.parse(savedStaff) : [];
+        let currentGoals: FinancialGoal[] = savedGoals ? JSON.parse(savedGoals) : [];
 
-        // Establecer estado inicial rápido
+        // Establecer estado inicial rápido (Offline First)
         if (currentTx.length > 0) setTransactions(currentTx);
         if (currentMembers.length > 0) setMembers(currentMembers);
         if (currentProducts.length > 0) setProducts(currentProducts);
+        if (currentObligations.length > 0) setObligations(currentObligations);
+        if (currentStaff.length > 0) setStaff(currentStaff);
+        if (currentGoals.length > 0) setGoals(currentGoals);
 
         console.log(`🛠️ [BOOT]: Memoria local cargada (${currentMembers.length} miembros). Iniciando sincronización cloud...`);
 
@@ -361,24 +370,42 @@ function useGymDataInternal() {
     // 🧠 Escucha cambios en los objetivos de ahorro y expansión.
     const unsubGoals = gymDatabase.subscribe<FinancialGoal>('goals', (items) => {
       setSyncStatus('live');
-      setGoals(items);
-      bc.postMessage({ type: 'GOALS_UPDATE', data: items });
+      setGoals(prev => {
+        const cloudIds = new Set(items.map(g => String(g.id)));
+        const localOnly = prev.filter(g => !cloudIds.has(String(g.id)));
+        const merged = [...items, ...localOnly];
+        if (JSON.stringify(merged) === JSON.stringify(prev)) return prev;
+        bc.postMessage({ type: 'GOALS_UPDATE', data: merged });
+        return merged;
+      });
     });
 
     // 💸 SUBS: Obligaciones (Realtime)
     // 🧠 Sincroniza facturas pendientes, nóminas y servicios.
     const unsubObligations = gymDatabase.subscribe<Obligation>('obligations', (items) => {
       setSyncStatus('live');
-      setObligations(items);
-      bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: items });
+      setObligations(prev => {
+        const cloudIds = new Set(items.map(o => String(o.id)));
+        const localOnly = prev.filter(o => !cloudIds.has(String(o.id)));
+        const merged = [...items, ...localOnly];
+        if (JSON.stringify(merged) === JSON.stringify(prev)) return prev;
+        bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: merged });
+        return merged;
+      });
     });
 
     // 👥 SUBS: Personal/Staff (Realtime)
     // 🧠 Refleja cambios en el equipo de trabajo instantáneamente.
     const unsubStaff = gymDatabase.subscribe<Staff>('staff', (items) => {
       setSyncStatus('live');
-      setStaff(items);
-      bc.postMessage({ type: 'STAFF_UPDATE', data: items });
+      setStaff(prev => {
+        const cloudIds = new Set(items.map(s => String(s.id)));
+        const localOnly = prev.filter(s => !cloudIds.has(String(s.id)));
+        const merged = [...items, ...localOnly];
+        if (JSON.stringify(merged) === JSON.stringify(prev)) return prev;
+        bc.postMessage({ type: 'STAFF_UPDATE', data: merged });
+        return merged;
+      });
     });
 
     // 🔧 SUBS: Activos/Gimnasio (Realtime)
@@ -565,6 +592,10 @@ function useGymDataInternal() {
     transactions, assets, members, products, plans, plansConfig, waterConfig,
     syncError, syncStatus, pendingTasks,
     setAssets, setMembers, setProducts, updatePlans,
+    updatePlansConfig: (cfg: Record<string, number>) => {
+      setPlansConfig(cfg);
+      localStorage.setItem('fuxion_plans_config', JSON.stringify(cfg));
+    },
     injectTransaction, updateMemberStatus, clearMemberDebt,
     registerProductSale,
     withdrawFromGoal,
@@ -731,20 +762,54 @@ function useGymDataInternal() {
         console.warn("⚠️ Eliminación de personal local.");
       }
     },
-    generateMonthlyPayroll: () => {
+    // 🛡️ DESBLOQUEO TEMPORAL: Corrección de sync de nómina autorizado por el usuario (2026-05-07)
+    generateMonthlyPayroll: async () => {
       const currentMonth = new Date().toLocaleString('es-ES', { month: 'long' }).toUpperCase();
-      staff.forEach(s => {
+      const newObligations: Obligation[] = [];
+      
+      for (const s of staff) {
         if (s.status === 'active') {
-          setObligations(prev => [{
+          const obligationName = `PAGO NÓMINA: ${s.name} (${currentMonth})`;
+          
+          // Verificar duplicados
+          const exists = obligations.some(o => o.name === obligationName);
+          if (exists) {
+            console.log(`⚠️ Nómina ya generada para ${s.name} en ${currentMonth}`);
+            continue;
+          }
+          
+          const newOb: Obligation = {
             id: crypto.randomUUID(),
-            name: `PAGO NÓMINA: ${s.name} (${currentMonth})`,
+            name: obligationName,
             amount: s.salary,
             dueDate: new Date().toISOString().split('T')[0],
             status: 'pending',
             category: 'payroll'
-          }, ...prev]);
+          };
+          
+          newObligations.push(newOb);
+          
+          // Guardar en la nube
+          try {
+            await trioSync.create('obligations', newOb);
+          } catch (e) {
+            console.warn(`⚠️ Error al sincronizar nómina de ${s.name}:`, e);
+          }
         }
-      });
+      }
+      
+      if (newObligations.length > 0) {
+        setObligations(prev => [...newObligations, ...prev]);
+        
+        // Broadcast inter-pestañas
+        const bc = new BroadcastChannel('fuxion_sync_channel');
+        bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: [...newObligations, ...obligations] });
+        bc.close();
+        
+        alert(`✅ Se generaron ${newObligations.length} nóminas exitosamente.`);
+      } else {
+        alert(`ℹ️ No se generaron nuevas nóminas (pueden estar ya duplicadas o no haber staff activo).`);
+      }
     },
 
     addMember: async (m: Omit<Member, 'id'>) => {

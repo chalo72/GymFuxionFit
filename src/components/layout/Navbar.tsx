@@ -1,0 +1,79 @@
+import { Bell, Search, Moon, Menu, X } from 'lucide-react';
+import versionData from '../../../version.json';
+
+interface NavbarProps {
+  title: string;
+  mobileMenuOpen: boolean;
+  setMobileMenuOpen: (open: boolean) => void;
+  isCollapsed: boolean;
+  handleToggleCollapse: () => void;
+}
+
+export default function Navbar({
+  title,
+  mobileMenuOpen,
+  setMobileMenuOpen,
+  isCollapsed,
+  handleToggleCollapse
+}: NavbarProps) {
+  return (
+    <header className="navbar">
+      <div className="navbar-left">
+        <button 
+          className="mobile-menu-btn"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+        <h1 className="navbar-title">{title}</h1>
+        <div className="navbar-breadcrumb">
+          <span style={{ color: 'var(--neon-green)', fontSize: 8, fontWeight: 950, background: 'var(--green-10)', padding: '2px 6px', borderRadius: 4, marginRight: 8, border: '1px solid var(--green-20)' }}>SISTEMA_OK</span>
+          <span style={{ color: '#fff', fontSize: 8, fontWeight: 950, background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, marginRight: 8, border: '1px solid rgba(255,255,255,0.1)' }}>v{versionData.version}</span>
+          <button 
+            onClick={handleToggleCollapse}
+            style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 950, cursor: 'pointer', marginRight: 10, transition: '0.2s' }}
+          >
+            {isCollapsed ? 'VISTA AMPLIADA »' : '« VISTA COMPACTA'}
+          </button>
+          <button 
+            onClick={() => {
+               if ('caches' in window) caches.keys().then(names => { for (let n of names) caches.delete(n); });
+               window.location.reload();
+            }}
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 950, cursor: 'pointer', marginRight: 10 }}
+            title="Forzar actualización de versión"
+          >
+            🔄 SINCRONIZAR
+          </button>
+          <span>Gym Admin</span>
+          <span>/</span>
+          <span style={{ color: 'var(--neon-green)' }}>{title}</span>
+        </div>
+      </div>
+
+      <div className="navbar-right">
+        <div className="search-input">
+          <Search size={18} />
+          <input
+            className="input-field"
+            placeholder="Buscar..."
+            style={{ width: 220, paddingLeft: 42, height: 40, fontSize: '0.8125rem' }}
+          />
+        </div>
+        <button className="navbar-icon-btn">
+          <Moon size={20} />
+        </button>
+        <button className="navbar-icon-btn">
+          <Bell size={20} />
+          <span className="badge-dot" />
+        </button>
+        <div
+          className="sidebar-avatar"
+          style={{ width: 36, height: 36, fontSize: '0.75rem', cursor: 'pointer' }}
+        >
+          AD
+        </div>
+      </div>
+    </header>
+  );
+}
