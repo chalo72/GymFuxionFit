@@ -427,12 +427,26 @@ export default function Finances() {
                  <p style={{ fontSize:10, color:'var(--text-muted)', fontWeight:800 }}>GESTIÓN DE SUELDOS Y COLABORADORES</p>
               </div>
               <div style={{ display:'flex', gap:12 }}>
-                 <button 
-                   onClick={() => generateMonthlyPayroll()}
-                   style={{ background:'rgba(0,229,255,0.1)', border:'1px solid #00E5FF', color:'#00E5FF', padding:'10px 20px', borderRadius:12, fontSize:11, fontWeight:950, cursor:'pointer' }}
-                 >
-                   ⚡ GENERAR NÓMINA DEL MES
-                 </button>
+                 <div style={{ display:'flex', gap:8 }}>
+                    <button 
+                      onClick={() => generateMonthlyPayroll('complete')}
+                      style={{ background:'rgba(0,229,255,0.1)', border:'1px solid #00E5FF', color:'#00E5FF', padding:'10px 15px', borderRadius:12, fontSize:10, fontWeight:950, cursor:'pointer' }}
+                    >
+                      MES COMPLETO
+                    </button>
+                    <button 
+                      onClick={() => generateMonthlyPayroll('q1')}
+                      style={{ background:'rgba(0,255,136,0.1)', border:'1px solid var(--neon-green)', color:'var(--neon-green)', padding:'10px 15px', borderRadius:12, fontSize:10, fontWeight:950, cursor:'pointer' }}
+                    >
+                      1ra QUINCENA
+                    </button>
+                    <button 
+                      onClick={() => generateMonthlyPayroll('q2')}
+                      style={{ background:'rgba(255,214,0,0.1)', border:'1px solid #FFD600', color:'#FFD600', padding:'10px 15px', borderRadius:12, fontSize:10, fontWeight:950, cursor:'pointer' }}
+                    >
+                      2da QUINCENA
+                    </button>
+                 </div>
                  <button 
                     onClick={() => { setEditingStaff(null); setStaffForm({name:'', role:'', salary:0, phone:'', email:'', tempPassword: 'Gym' + Math.floor(Math.random()*1000), status:'active'}); setShowStaffModal(true); }}
                     style={{ background:'var(--neon-green)', border:'none', color:'#000', padding:'10px 20px', borderRadius:12, fontSize:11, fontWeight:950, cursor:'pointer' }}

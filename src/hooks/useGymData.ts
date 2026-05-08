@@ -763,25 +763,34 @@ function useGymDataInternal() {
       }
     },
     // 🛡️ DESBLOQUEO TEMPORAL: Corrección de sync de nómina autorizado por el usuario (2026-05-07)
-    generateMonthlyPayroll: async () => {
+    generateMonthlyPayroll: async (period: 'complete' | 'q1' | 'q2' = 'complete') => {
       const currentMonth = new Date().toLocaleString('es-ES', { month: 'long' }).toUpperCase();
       const newObligations: Obligation[] = [];
       
       for (const s of staff) {
         if (s.status === 'active') {
-          const obligationName = `PAGO NÓMINA: ${s.name} (${currentMonth})`;
+          let obligationName = `PAGO NÓMINA: ${s.name} (${currentMonth})`;
+          let amount = s.salary;
+          
+          if (period === 'q1') {
+            obligationName = `PAGO NÓMINA: ${s.name} (1ra Q ${currentMonth})`;
+            amount = s.salary / 2;
+          } else if (period === 'q2') {
+            obligationName = `PAGO NÓMINA: ${s.name} (2da Q ${currentMonth})`;
+            amount = s.salary / 2;
+          }
           
           // Verificar duplicados
           const exists = obligations.some(o => o.name === obligationName);
           if (exists) {
-            console.log(`⚠️ Nómina ya generada para ${s.name} en ${currentMonth}`);
+            console.log(`⚠️ Nómina ya generada para ${s.name} en ${obligationName}`);
             continue;
           }
           
           const newOb: Obligation = {
             id: crypto.randomUUID(),
             name: obligationName,
-            amount: s.salary,
+            amount: amount,
             dueDate: new Date().toISOString().split('T')[0],
             status: 'pending',
             category: 'payroll'
@@ -806,7 +815,7 @@ function useGymDataInternal() {
         bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: [...newObligations, ...obligations] });
         bc.close();
         
-        alert(`✅ Se generaron ${newObligations.length} nóminas exitosamente.`);
+        alert(`✅ Se generaron ${newObligations.length} nóminas (${period}) exitosamente.`);
       } else {
         alert(`ℹ️ No se generaron nuevas nóminas (pueden estar ya duplicadas o no haber staff activo).`);
       }
