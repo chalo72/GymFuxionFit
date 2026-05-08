@@ -117,6 +117,8 @@ export default function Finances() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [showVoucher, setShowVoucher] = useState<any | null>(null);
+  const [cobroOk, setCobroOk] = useState<{ name: string; amount: number; method: string } | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isExpectingNequi, setIsExpectingNequi] = useState(false);
   const [aCredito, setACredito] = useState(false);
   const [abonoAmount, setAbonoAmount] = useState(0);
@@ -148,8 +150,11 @@ export default function Finances() {
   };
 
   const handleProcessPayment = async () => {
-    if (amount <= 0 || !selectedMember) return;
-    const memberSnap = selectedMember; // snapshot antes de limpiar estado
+    if (amount <= 0 || !selectedMember || isProcessing) return;
+    const memberSnap = selectedMember;
+    const amountSnap = amount;
+    const methodSnap = method;
+    setIsProcessing(true);
     try {
       const newTx = await injectTransaction({
         date: new Date().toISOString().split('T')[0],
@@ -157,19 +162,24 @@ export default function Finances() {
         description: `Pago ${category.toUpperCase()}: ${memberSnap.name}`,
         category: category,
         type: 'income',
-        amount: amount,
-        method: method,
+        amount: amountSnap,
+        method: methodSnap,
         client: memberSnap.name
       });
+      // Confirmación visible inline + modal opcional
+      setCobroOk({ name: memberSnap.name, amount: amountSnap, method: methodSnap });
       setShowVoucher(newTx);
       setSelectedMember(null);
       setSearchTerm('');
       setAmount(0);
       setReceivedAmount(0);
       setACredito(false);
+      setTimeout(() => setCobroOk(null), 5000);
     } catch (e) {
       console.error("Error al procesar pago:", e);
-      alert("⚠️ El cobro se guardó localmente pero hubo un error de sincronización. Revisa tu conexión.");
+      alert(`⚠️ Error al procesar el cobro: ${e}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -483,6 +493,19 @@ export default function Finances() {
                     </div>
                  </div>
 
+                 {/* Banner de éxito inline */}
+                 {cobroOk && (
+                   <div style={{ padding:'14px 18px', borderRadius:14, background:'rgba(0,255,136,0.12)', border:'2px solid var(--neon-green)', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                     <div>
+                       <div style={{ fontSize:15, fontWeight:950, color:'var(--neon-green)' }}>✅ ¡Cobro registrado!</div>
+                       <div style={{ fontSize:13, color:'#fff', marginTop:2 }}>{cobroOk.name} · ${cobroOk.amount.toLocaleString()} · {cobroOk.method}</div>
+                     </div>
+                     <button onClick={() => setShowVoucher(showVoucher)} style={{ padding:'8px 14px', borderRadius:10, background:'rgba(0,255,136,0.2)', border:'none', color:'var(--neon-green)', fontSize:12, fontWeight:800, cursor:'pointer' }}>
+                       Ver voucher
+                     </button>
+                   </div>
+                 )}
+
                  {/* Botones de acción */}
                  <div style={{ display:'flex', gap:10 }}>
                     {method === 'Nequi' && (
@@ -496,21 +519,23 @@ export default function Finances() {
                     )}
                     <button
                       onClick={aCredito ? handleDarCredito : handleProcessPayment}
-                      disabled={!selectedMember || amount <= 0}
+                      disabled={!selectedMember || amount <= 0 || isProcessing}
                       style={{
                         flex:2, padding:18, borderRadius:14, border:'none', fontSize:16, fontWeight:950,
-                        cursor: (!selectedMember || amount <= 0) ? 'not-allowed' : 'pointer', transition:'0.2s',
-                        background: (!selectedMember || amount <= 0) ? 'rgba(255,255,255,0.1)' : aCredito ? '#ff4d4d' : 'var(--neon-green)',
-                        color: aCredito ? '#fff' : '#000'
+                        cursor: (!selectedMember || amount <= 0 || isProcessing) ? 'not-allowed' : 'pointer', transition:'0.2s',
+                        background: isProcessing ? 'rgba(0,255,136,0.4)' : (!selectedMember || amount <= 0) ? 'rgba(255,255,255,0.1)' : aCredito ? '#ff4d4d' : 'var(--neon-green)',
+                        color: (!selectedMember || amount <= 0) ? 'var(--text-muted)' : aCredito ? '#fff' : '#000'
                       }}
                     >
-                      {!selectedMember
-                        ? 'Busca un cliente primero'
-                        : amount <= 0
-                          ? 'Ingresa el valor'
-                          : aCredito
-                            ? `💳 Dar a crédito $${amount.toLocaleString()}`
-                            : `✓ Cobrar $${amount.toLocaleString()}`}
+                      {isProcessing
+                        ? '⏳ Procesando...'
+                        : !selectedMember
+                          ? '① Selecciona un cliente ↑'
+                          : amount <= 0
+                            ? '② Elige un plan o ingresa el valor ↑'
+                            : aCredito
+                              ? `💳 Dar a crédito $${amount.toLocaleString()}`
+                              : `✅ Cobrar $${amount.toLocaleString()} a ${selectedMember.name}`}
                     </button>
                  </div>
               </div>
