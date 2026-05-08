@@ -94,7 +94,9 @@ export default function Finances() {
   
   const [goalForm, setGoalForm] = useState({ name: '', target: 0, category: 'savings' as any });
   const [obForm, setObForm] = useState({ name:'', amount:0, dueDate:'', category:'utilities' as any });
-  const [staffForm, setStaffForm] = useState({ name:'', role:'', salary:0, phone:'', email:'', tempPassword:'', status:'active' as any });
+  const [obPeriod, setObPeriod] = useState<'complete' | 'q1' | 'q2'>('complete');
+  const [payrollPeriod, setPayrollPeriod] = useState<'complete' | 'q1' | 'q2'>('complete');
+  const [staffForm, setStaffForm] = useState({ name:'', role:'', salary:0, phone:'', email:'', tempPassword:'', status:'active' as any, payPeriod: 'complete' as 'complete' | 'q1' | 'q2' });
 
   const [receivedAmount, setReceivedAmount] = useState<number>(0);
   const [amount, setAmount] = useState(0);
@@ -426,29 +428,27 @@ export default function Finances() {
                  <h3 style={{ fontSize:18, fontWeight:950 }}>ESTRUCTURA_DE_PERSONAL</h3>
                  <p style={{ fontSize:10, color:'var(--text-muted)', fontWeight:800 }}>GESTIÓN DE SUELDOS Y COLABORADORES</p>
               </div>
-              <div style={{ display:'flex', gap:12 }}>
-                 <div style={{ display:'flex', gap:8 }}>
-                    <button 
-                      onClick={() => generateMonthlyPayroll('complete')}
-                      style={{ background:'rgba(0,229,255,0.1)', border:'1px solid #00E5FF', color:'#00E5FF', padding:'10px 15px', borderRadius:12, fontSize:10, fontWeight:950, cursor:'pointer' }}
+              <div style={{ display:'flex', gap:12, alignItems:'center' }}>
+                 <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'4px 6px 4px 12px' }}>
+                    <span style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', whiteSpace:'nowrap' }}>PERÍODO</span>
+                    <select
+                      value={payrollPeriod}
+                      onChange={e => setPayrollPeriod(e.target.value as any)}
+                      style={{ background:'transparent', border:'none', color:'#fff', fontSize:10, fontWeight:900, outline:'none', cursor:'pointer', padding:'6px 4px' }}
                     >
-                      MES COMPLETO
-                    </button>
-                    <button 
-                      onClick={() => generateMonthlyPayroll('q1')}
-                      style={{ background:'rgba(0,255,136,0.1)', border:'1px solid var(--neon-green)', color:'var(--neon-green)', padding:'10px 15px', borderRadius:12, fontSize:10, fontWeight:950, cursor:'pointer' }}
+                      <option value="complete" style={{ background:'#0a0f0d' }}>Mes Completo</option>
+                      <option value="q1" style={{ background:'#0a0f0d' }}>1ra Quincena</option>
+                      <option value="q2" style={{ background:'#0a0f0d' }}>2da Quincena</option>
+                    </select>
+                    <button
+                      onClick={() => generateMonthlyPayroll(payrollPeriod)}
+                      style={{ background:'rgba(0,229,255,0.15)', border:'1px solid #00E5FF50', color:'#00E5FF', padding:'8px 14px', borderRadius:10, fontSize:10, fontWeight:950, cursor:'pointer' }}
                     >
-                      1ra QUINCENA
-                    </button>
-                    <button 
-                      onClick={() => generateMonthlyPayroll('q2')}
-                      style={{ background:'rgba(255,214,0,0.1)', border:'1px solid #FFD600', color:'#FFD600', padding:'10px 15px', borderRadius:12, fontSize:10, fontWeight:950, cursor:'pointer' }}
-                    >
-                      2da QUINCENA
+                      GENERAR NÓMINA
                     </button>
                  </div>
-                 <button 
-                    onClick={() => { setEditingStaff(null); setStaffForm({name:'', role:'', salary:0, phone:'', email:'', tempPassword: 'Gym' + Math.floor(Math.random()*1000), status:'active'}); setShowStaffModal(true); }}
+                 <button
+                    onClick={() => { setEditingStaff(null); setStaffForm({name:'', role:'', salary:0, phone:'', email:'', tempPassword: 'Gym' + Math.floor(Math.random()*1000), status:'active', payPeriod:'complete'}); setShowStaffModal(true); }}
                     style={{ background:'var(--neon-green)', border:'none', color:'#000', padding:'10px 20px', borderRadius:12, fontSize:11, fontWeight:950, cursor:'pointer' }}
                  >
                     + AÑADIR STAFF
@@ -467,6 +467,9 @@ export default function Finances() {
                           <div style={{ fontSize:14, fontWeight:950 }}>{s.name}</div>
                           <div style={{ fontSize:10, color:'var(--neon-green)', fontWeight:800 }}>{s.role}</div>
                           <div style={{ fontSize:15, fontWeight:950, marginTop:4 }}>${s.salary.toLocaleString()}</div>
+                          <div style={{ fontSize:9, fontWeight:800, marginTop:3, color: (s as any).payPeriod === 'q1' ? 'var(--neon-green)' : (s as any).payPeriod === 'q2' ? '#FFD600' : '#00E5FF' }}>
+                            {(s as any).payPeriod === 'q1' ? '1ra QUINCENA' : (s as any).payPeriod === 'q2' ? '2da QUINCENA' : 'MES COMPLETO'}
+                          </div>
                        </div>
                     </div>
                     <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -480,7 +483,7 @@ export default function Finances() {
                         >
                           <Send size={14}/>
                         </button>
-                        <button onClick={() => { setEditingStaff(s); setStaffForm({ ...s, tempPassword: s.tempPassword || '' }); setShowStaffModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', padding:8, borderRadius:8, color:'#fff', cursor:'pointer' }}><PenTool size={14}/></button>
+                        <button onClick={() => { setEditingStaff(s); setStaffForm({ ...s, tempPassword: s.tempPassword || '', payPeriod: (s as any).payPeriod || 'complete' }); setShowStaffModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', padding:8, borderRadius:8, color:'#fff', cursor:'pointer' }}><PenTool size={14}/></button>
                        <button onClick={() => deleteStaff(s.id)} style={{ background:'rgba(255,77,77,0.1)', border:'none', padding:8, borderRadius:8, color:'#ff4d4d', cursor:'pointer' }}><X size={14}/></button>
                     </div>
                  </div>
@@ -664,10 +667,41 @@ export default function Finances() {
                     </select>
                     <input type="number" placeholder="Monto..." value={obForm.amount} onChange={e => setObForm({...obForm, amount: Number(e.target.value)})} style={{ padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#ff4d4d', fontWeight:950 }} />
                  </div>
-                 <input type="date" value={obForm.dueDate} onChange={e => setObForm({...obForm, dueDate: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
+                 <div>
+                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:8, display:'block' }}>PERÍODO</label>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8, marginBottom:10 }}>
+                       {[
+                         { val: 'complete', label: 'Mes Completo', color: '#00E5FF' },
+                         { val: 'q1',       label: '1ra Quincena', color: 'var(--neon-green)' },
+                         { val: 'q2',       label: '2da Quincena', color: '#FFD600' },
+                       ].map(opt => (
+                         <button
+                           key={opt.val}
+                           type="button"
+                           onClick={() => setObPeriod(opt.val as any)}
+                           style={{
+                             padding:'10px 4px', borderRadius:10, cursor:'pointer', fontSize:9, fontWeight:950,
+                             background: obPeriod === opt.val ? `${opt.color}20` : 'rgba(255,255,255,0.03)',
+                             border: `1px solid ${obPeriod === opt.val ? opt.color : 'rgba(255,255,255,0.08)'}`,
+                             color: obPeriod === opt.val ? opt.color : 'var(--text-muted)',
+                             transition: '0.2s'
+                           }}
+                         >
+                           {opt.label}
+                         </button>
+                       ))}
+                    </div>
+                    <input type="date" value={obForm.dueDate} onChange={e => setObForm({...obForm, dueDate: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
+                 </div>
                  <div style={{ display:'flex', gap:10 }}>
                     <button onClick={() => setShowObModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:950 }}>CANCELAR</button>
-                    <button onClick={() => { addObligation({...obForm, status:'pending'}); setShowObModal(false); }} style={{ flex:1, padding:14, borderRadius:12, background:'#ff4d4d', border:'none', color:'#fff', fontWeight:950 }}>REGISTRAR</button>
+                    <button onClick={() => { 
+                        let finalName = obForm.name;
+                        if (obPeriod === 'q1') finalName = `(1ra Q) ${obForm.name}`;
+                        else if (obPeriod === 'q2') finalName = `(2da Q) ${obForm.name}`;
+                        addObligation({...obForm, name: finalName, status:'pending'}); 
+                        setShowObModal(false); 
+                    }} style={{ flex:1, padding:14, borderRadius:12, background:'#ff4d4d', border:'none', color:'#fff', fontWeight:950 }}>REGISTRAR</button>
                  </div>
               </div>
            </div>
@@ -707,6 +741,31 @@ export default function Finances() {
                  <div>
                     <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>EMAIL DE ACCESO</label>
                     <input className="input-field" value={staffForm.email} onChange={e => setStaffForm({...staffForm, email: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
+                 </div>
+                 <div>
+                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:8, display:'block' }}>PERÍODO DE PAGO</label>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8 }}>
+                       {[
+                         { val: 'complete', label: 'Mes Completo', color: '#00E5FF' },
+                         { val: 'q1',       label: '1ra Quincena', color: 'var(--neon-green)' },
+                         { val: 'q2',       label: '2da Quincena', color: '#FFD600' },
+                       ].map(opt => (
+                         <button
+                           key={opt.val}
+                           type="button"
+                           onClick={() => setStaffForm({...staffForm, payPeriod: opt.val as any})}
+                           style={{
+                             padding:'10px 6px', borderRadius:10, cursor:'pointer', fontSize:9, fontWeight:950,
+                             background: staffForm.payPeriod === opt.val ? `${opt.color}20` : 'rgba(255,255,255,0.03)',
+                             border: `1px solid ${staffForm.payPeriod === opt.val ? opt.color : 'rgba(255,255,255,0.08)'}`,
+                             color: staffForm.payPeriod === opt.val ? opt.color : 'var(--text-muted)',
+                             transition: '0.2s'
+                           }}
+                         >
+                           {opt.label}
+                         </button>
+                       ))}
+                    </div>
                  </div>
                  <div style={{ display:'flex', gap:10, marginTop:10 }}>
                     <button onClick={() => setShowStaffModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:950, cursor:'pointer' }}>CANCELAR</button>
