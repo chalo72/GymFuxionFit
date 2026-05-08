@@ -654,22 +654,31 @@ export default function Finances() {
       )}
 
       {showObModal && (
-        <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center' }}>
-           <div className="glass-card" style={{ width:400, padding:32, border:'1px solid #ff4d4d50' }}>
-              <h3 style={{ fontSize:18, fontWeight:950, color:'#ff4d4d', marginBottom:24 }}>NUEVA OBLIGACIÓN</h3>
+        <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center', padding:16 }}>
+           <div className="glass-card" style={{ width:'100%', maxWidth:460, padding:32, border:'1px solid #ff4d4d50' }}>
+              <h3 style={{ fontSize:22, fontWeight:950, color:'#ff4d4d', marginBottom:24 }}>NUEVA OBLIGACIÓN</h3>
               <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
-                 <input placeholder="Concepto..." value={obForm.name} onChange={e => setObForm({...obForm, name: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
-                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
-                    <select value={obForm.category} onChange={e => setObForm({...obForm, category: e.target.value as any})} style={{ padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }}>
-                       <option value="utilities">Servicios</option>
-                       <option value="rent">Arriendo</option>
-                       <option value="payroll">Nómina</option>
-                    </select>
-                    <input type="number" placeholder="Monto..." value={obForm.amount} onChange={e => setObForm({...obForm, amount: Number(e.target.value)})} style={{ padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#ff4d4d', fontWeight:950 }} />
+                 <div>
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Concepto</label>
+                    <input placeholder="Ej: Arriendo local, Luz, Internet..." value={obForm.name} onChange={e => setObForm({...obForm, name: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:15 }} />
+                 </div>
+                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                    <div>
+                       <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Categoría</label>
+                       <select value={obForm.category} onChange={e => setObForm({...obForm, category: e.target.value as any})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:14 }}>
+                          <option value="utilities">Servicios</option>
+                          <option value="rent">Arriendo</option>
+                          <option value="payroll">Nómina</option>
+                       </select>
+                    </div>
+                    <div>
+                       <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Monto ($)</label>
+                       <input type="number" placeholder="0" value={obForm.amount} onChange={e => setObForm({...obForm, amount: Number(e.target.value)})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#ff4d4d', fontWeight:950, fontSize:16 }} />
+                    </div>
                  </div>
                  <div>
-                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:8, display:'block' }}>PERÍODO</label>
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8, marginBottom:10 }}>
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:10, display:'block' }}>Período</label>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10, marginBottom:12 }}>
                        {[
                          { val: 'complete', label: 'Mes Completo', color: '#00E5FF' },
                          { val: 'q1',       label: '1ra Quincena', color: 'var(--neon-green)' },
@@ -680,7 +689,7 @@ export default function Finances() {
                            type="button"
                            onClick={() => setObPeriod(opt.val as any)}
                            style={{
-                             padding:'10px 4px', borderRadius:10, cursor:'pointer', fontSize:9, fontWeight:950,
+                             padding:'12px 4px', borderRadius:10, cursor:'pointer', fontSize:13, fontWeight:800,
                              background: obPeriod === opt.val ? `${opt.color}20` : 'rgba(255,255,255,0.03)',
                              border: `1px solid ${obPeriod === opt.val ? opt.color : 'rgba(255,255,255,0.08)'}`,
                              color: obPeriod === opt.val ? opt.color : 'var(--text-muted)',
@@ -691,17 +700,20 @@ export default function Finances() {
                          </button>
                        ))}
                     </div>
-                    <input type="date" value={obForm.dueDate} onChange={e => setObForm({...obForm, dueDate: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
+                    <div>
+                       <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Fecha de Vencimiento</label>
+                       <input type="date" value={obForm.dueDate} onChange={e => setObForm({...obForm, dueDate: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:14 }} />
+                    </div>
                  </div>
                  <div style={{ display:'flex', gap:10 }}>
-                    <button onClick={() => setShowObModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:950 }}>CANCELAR</button>
-                    <button onClick={() => { 
+                    <button onClick={() => setShowObModal(false)} style={{ flex:1, padding:16, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer' }}>CANCELAR</button>
+                    <button onClick={() => {
                         let finalName = obForm.name;
                         if (obPeriod === 'q1') finalName = `(1ra Q) ${obForm.name}`;
                         else if (obPeriod === 'q2') finalName = `(2da Q) ${obForm.name}`;
-                        addObligation({...obForm, name: finalName, status:'pending'}); 
-                        setShowObModal(false); 
-                    }} style={{ flex:1, padding:14, borderRadius:12, background:'#ff4d4d', border:'none', color:'#fff', fontWeight:950 }}>REGISTRAR</button>
+                        addObligation({...obForm, name: finalName, status:'pending'});
+                        setShowObModal(false);
+                    }} style={{ flex:1, padding:16, borderRadius:12, background:'#ff4d4d', border:'none', color:'#fff', fontWeight:950, fontSize:14, cursor:'pointer' }}>REGISTRAR</button>
                  </div>
               </div>
            </div>
@@ -712,39 +724,39 @@ export default function Finances() {
 
       {/* ══ MODAL STAFF ══ */}
       {showStaffModal && (
-        <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center' }}>
-           <div className="glass-card" style={{ width:400, padding:32, border:'1px solid var(--neon-green)30' }}>
-              <h3 style={{ fontSize:18, fontWeight:950, marginBottom:24 }}>{editingStaff ? 'EDITAR STAFF' : 'NUEVO EMPLEADO'}</h3>
+        <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center', padding:16 }}>
+           <div className="glass-card" style={{ width:'100%', maxWidth:460, padding:32, border:'1px solid var(--neon-green)30', maxHeight:'90vh', overflowY:'auto' }}>
+              <h3 style={{ fontSize:22, fontWeight:950, marginBottom:24 }}>{editingStaff ? 'EDITAR STAFF' : 'NUEVO EMPLEADO'}</h3>
               <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
                  <div>
-                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>NOMBRE COMPLETO</label>
-                    <input className="input-field" value={staffForm.name} onChange={e => setStaffForm({...staffForm, name: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Nombre Completo</label>
+                    <input className="input-field" value={staffForm.name} onChange={e => setStaffForm({...staffForm, name: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:15 }} />
                  </div>
                  <div>
-                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>CARGO / FUNCIÓN</label>
-                    <input className="input-field" value={staffForm.role} onChange={e => setStaffForm({...staffForm, role: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Cargo / Función</label>
+                    <input className="input-field" value={staffForm.role} onChange={e => setStaffForm({...staffForm, role: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:15 }} />
                  </div>
                  <div>
-                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>SALARIO BASE ($)</label>
-                    <input type="number" className="input-field" value={staffForm.salary} onChange={e => setStaffForm({...staffForm, salary: Number(e.target.value)})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--neon-green)', fontWeight:950 }} />
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Salario Base ($)</label>
+                    <input type="number" className="input-field" value={staffForm.salary} onChange={e => setStaffForm({...staffForm, salary: Number(e.target.value)})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--neon-green)', fontWeight:950, fontSize:16 }} />
                  </div>
-                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                 <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                     <div>
-                       <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>TELÉFONO (WA)</label>
-                       <input className="input-field" value={staffForm.phone} onChange={e => setStaffForm({...staffForm, phone: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
+                       <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Teléfono (WhatsApp)</label>
+                       <input className="input-field" value={staffForm.phone} onChange={e => setStaffForm({...staffForm, phone: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:15 }} />
                     </div>
                     <div>
-                       <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>CONTRASEÑA TEMP</label>
-                       <input className="input-field" value={staffForm.tempPassword} onChange={e => setStaffForm({...staffForm, tempPassword: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--neon-green)', fontWeight:950 }} />
+                       <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Contraseña Temporal</label>
+                       <input className="input-field" value={staffForm.tempPassword} onChange={e => setStaffForm({...staffForm, tempPassword: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'var(--neon-green)', fontWeight:950, fontSize:15 }} />
                     </div>
                  </div>
                  <div>
-                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:4, display:'block' }}>EMAIL DE ACCESO</label>
-                    <input className="input-field" value={staffForm.email} onChange={e => setStaffForm({...staffForm, email: e.target.value})} style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff' }} />
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Email de Acceso</label>
+                    <input className="input-field" value={staffForm.email} onChange={e => setStaffForm({...staffForm, email: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:15 }} />
                  </div>
                  <div>
-                    <label style={{ fontSize:9, fontWeight:950, color:'var(--text-muted)', marginBottom:8, display:'block' }}>PERÍODO DE PAGO</label>
-                    <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8 }}>
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:10, display:'block' }}>Período de Pago</label>
+                    <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10 }}>
                        {[
                          { val: 'complete', label: 'Mes Completo', color: '#00E5FF' },
                          { val: 'q1',       label: '1ra Quincena', color: 'var(--neon-green)' },
@@ -755,7 +767,7 @@ export default function Finances() {
                            type="button"
                            onClick={() => setStaffForm({...staffForm, payPeriod: opt.val as any})}
                            style={{
-                             padding:'10px 6px', borderRadius:10, cursor:'pointer', fontSize:9, fontWeight:950,
+                             padding:'12px 6px', borderRadius:10, cursor:'pointer', fontSize:13, fontWeight:800,
                              background: staffForm.payPeriod === opt.val ? `${opt.color}20` : 'rgba(255,255,255,0.03)',
                              border: `1px solid ${staffForm.payPeriod === opt.val ? opt.color : 'rgba(255,255,255,0.08)'}`,
                              color: staffForm.payPeriod === opt.val ? opt.color : 'var(--text-muted)',
@@ -768,13 +780,13 @@ export default function Finances() {
                     </div>
                  </div>
                  <div style={{ display:'flex', gap:10, marginTop:10 }}>
-                    <button onClick={() => setShowStaffModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:950, cursor:'pointer' }}>CANCELAR</button>
+                    <button onClick={() => setShowStaffModal(false)} style={{ flex:1, padding:16, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer' }}>CANCELAR</button>
                     <button onClick={() => {
                         if (editingStaff) updateStaff(editingStaff.id, staffForm);
                         else addStaff(staffForm);
                         setShowStaffModal(true);
                         setShowStaffModal(false);
-                    }} style={{ flex:1, padding:14, borderRadius:12, background:'var(--neon-green)', border:'none', color:'#000', fontWeight:950, cursor:'pointer' }}>GUARDAR STAFF</button>
+                    }} style={{ flex:1, padding:16, borderRadius:12, background:'var(--neon-green)', border:'none', color:'#000', fontWeight:950, fontSize:14, cursor:'pointer' }}>GUARDAR STAFF</button>
                  </div>
               </div>
            </div>
