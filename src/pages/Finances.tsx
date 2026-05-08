@@ -108,6 +108,22 @@ export default function Finances() {
   const [advanceAmount, setAdvanceAmount] = useState(0);
   const [loanTarget, setLoanTarget] = useState<any>(null);
   const [loanForm, setLoanForm] = useState({ total: 0, installment: 0, description: '' });
+
+  const handleDeleteObligation = (ob: any) => {
+    const reason = window.prompt('¿Por qué eliminas esta obligación?');
+    if (reason) {
+      const history = JSON.parse(localStorage.getItem('fuxion_obligations_history') || '[]');
+      history.push({
+        id: ob.id,
+        name: ob.name,
+        amount: ob.amount,
+        deletedAt: new Date().toISOString(),
+        reason: reason
+      });
+      localStorage.setItem('fuxion_obligations_history', JSON.stringify(history));
+      deleteObligation(ob.id);
+    }
+  };
   const [staffForm, setStaffForm] = useState({ name:'', role:'', salary:0, phone:'', email:'', tempPassword:'', status:'active' as any, payPeriod: 'complete' as 'complete' | 'q1' | 'q2' });
 
   const [receivedAmount, setReceivedAmount] = useState<number>(0);
@@ -185,11 +201,12 @@ export default function Finances() {
 
   // Abono: pago parcial contra deuda existente
   const handleAbono = async () => {
-    if (!selectedMember || abonoAmount <= 0) return;
+    if (!selectedMember || abonoAmount <= 0 || isProcessing) return;
     const memberSnap = selectedMember;
     const deuda = memberSnap.debt || 0;
     const pagoReal = Math.min(abonoAmount, deuda);
     const nuevaDeuda = Math.max(0, deuda - pagoReal);
+    setIsProcessing(true);
     try {
       await updateMemberStatus(memberSnap.id, { debt: nuevaDeuda });
       const newTx = await injectTransaction({
@@ -202,40 +219,51 @@ export default function Finances() {
         method: method,
         client: memberSnap.name
       });
+      setCobroOk({ name: memberSnap.name, amount: pagoReal, method: `Abono · Saldo: $${nuevaDeuda.toLocaleString()}` });
       setShowVoucher(newTx);
       setAbonoAmount(0);
       setSelectedMember(null);
       setSearchTerm('');
+      setTimeout(() => setCobroOk(null), 5000);
     } catch (e) {
       console.error("Error al registrar abono:", e);
+      alert(`⚠️ Error al registrar el abono: ${e}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   // A crédito: el servicio se presta ahora, se cobra después (suma a deuda)
   const handleDarCredito = async () => {
-    if (!selectedMember || amount <= 0) return;
+    if (!selectedMember || amount <= 0 || isProcessing) return;
     const memberSnap = selectedMember;
+    const amountSnap = amount;
     const deudaActual = memberSnap.debt || 0;
-    const nuevaDeuda = deudaActual + amount;
+    const nuevaDeuda = deudaActual + amountSnap;
+    setIsProcessing(true);
     try {
       await updateMemberStatus(memberSnap.id, { debt: nuevaDeuda });
       await injectTransaction({
         date: new Date().toISOString().split('T')[0],
         time: new Date().toLocaleTimeString().slice(0, 5),
-        description: `Crédito otorgado: ${memberSnap.name} (+$${amount.toLocaleString()})`,
+        description: `Crédito otorgado: ${memberSnap.name} (+$${amountSnap.toLocaleString()})`,
         category: category,
         type: 'expense',
-        amount: amount,
+        amount: amountSnap,
         method: 'Crédito',
         client: memberSnap.name
       });
-      alert(`Crédito de $${amount.toLocaleString()} registrado. La deuda de ${memberSnap.name} es ahora $${nuevaDeuda.toLocaleString()}.`);
+      setCobroOk({ name: memberSnap.name, amount: amountSnap, method: `Crédito · Deuda total: $${nuevaDeuda.toLocaleString()}` });
+      setTimeout(() => setCobroOk(null), 6000);
       setSelectedMember(null);
       setSearchTerm('');
       setAmount(0);
       setACredito(false);
     } catch (e) {
       console.error("Error al registrar crédito:", e);
+      alert(`⚠️ Error al registrar el crédito: ${e}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -274,9 +302,9 @@ export default function Finances() {
         <div>
            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
               <div style={{ width:8, height:8, background:'var(--neon-green)', borderRadius:'50%', boxShadow:'0 0 10px var(--neon-green)' }} />
-              <h2 style={{ fontSize: 22, fontWeight: 950, letterSpacing: -1 }}>OMNI_CAPITAL <span style={{ color: 'var(--neon-green)', fontWeight: 300 }}>V.4.5</span></h2>
+              <h2 style={{ fontSize: 22, fontWeight: 950, letterSpacing: -1 }}>Gestión Financiera <span style={{ color: 'var(--neon-green)', fontWeight: 300 }}>V.4.5</span></h2>
            </div>
-           <p style={{ color:'var(--text-muted)', fontSize:10, fontWeight:800, letterSpacing: 1.5 }}>ULTRA COMMAND CENTER - CASH & OBLIGATIONS</p>
+           <p style={{ color:'var(--text-muted)', fontSize:10, fontWeight:800, letterSpacing: 1.5 }}>CONTROL DE CAJA Y OBLIGACIONES</p>
         </div>
         <div style={{ background:'rgba(255,255,255,0.03)', padding:4, borderRadius:12, display:'flex', border:'1px solid rgba(255,255,255,0.05)', gap:4 }}>
            {[
@@ -568,6 +596,27 @@ export default function Finances() {
                   ))}
                </div>
             </div>
+            
+            <div className="glass-card" style={{ padding:32, marginTop: 20 }}>
+               <h3 style={{ fontSize:12, fontWeight:950, marginBottom:20 }}>OBLIGACIONES ELIMINADAS (HISTORIAL)</h3>
+               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                 {(() => {
+                    const history = JSON.parse(localStorage.getItem('fuxion_obligations_history') || '[]');
+                    return history.length === 0 ? (
+                      <div style={{ fontSize:11, color:'var(--text-muted)' }}>No hay registro de eliminaciones.</div>
+                    ) : history.reverse().map((item: any) => (
+                        <div key={item.id} style={{ display:'flex', justifyContent:'space-between', padding:12, background:'rgba(255,77,77,0.03)', borderRadius:12 }}>
+                           <div>
+                              <div style={{ fontSize:11, fontWeight:800 }}>{item.name}</div>
+                              <div style={{ fontSize:9, color:'var(--text-muted)' }}>Eliminado el: {new Date(item.deletedAt).toLocaleString()}</div>
+                              <div style={{ fontSize:10, color:'#ff4d4d', marginTop: 4 }}>Motivo: {item.reason}</div>
+                           </div>
+                           <div style={{ color:'#ff4d4d', fontWeight:950 }}>${item.amount.toLocaleString()}</div>
+                        </div>
+                    ));
+                 })()}
+               </div>
+            </div>
          </div>
       ) : activeTab === 'expense' ? (
         <div style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:24, flex:1 }}>
@@ -603,7 +652,8 @@ export default function Finances() {
                           ) : (
                              <span style={{ fontSize:10, fontWeight:950, color:'var(--neon-green)' }}>PAGADO ✓</span>
                           )}
-                          <button onClick={() => deleteObligation(ob.id)} style={{ color:'#ff4d4d', opacity:0.3, background:'none', border:'none', cursor:'pointer' }}><X size={14}/></button>
+                          <button onClick={() => { setEditingOb(ob); setObForm({ name: ob.name, amount: ob.amount, dueDate: ob.dueDate, category: ob.category }); setShowObModal(true); }} style={{ color:'var(--neon-green)', opacity:0.5, background:'none', border:'none', cursor:'pointer', marginRight: 10 }} title="Editar"><PenTool size={14}/></button>
+                          <button onClick={() => handleDeleteObligation(ob)} style={{ color:'#ff4d4d', opacity:0.3, background:'none', border:'none', cursor:'pointer' }} title="Eliminar"><X size={14}/></button>
                        </div>
                     </div>
                  ))}
@@ -920,7 +970,7 @@ export default function Finances() {
       {showObModal && (
         <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center', padding:16 }}>
            <div className="glass-card" style={{ width:'100%', maxWidth:460, padding:32, border:'1px solid #ff4d4d50' }}>
-              <h3 style={{ fontSize:22, fontWeight:950, color:'#ff4d4d', marginBottom:24 }}>NUEVA OBLIGACIÓN</h3>
+              <h3 style={{ fontSize:22, fontWeight:950, color:'#ff4d4d', marginBottom:24 }}>{editingOb ? 'EDITAR OBLIGACIÓN' : 'NUEVA OBLIGACIÓN'}</h3>
               <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
                  <div>
                     <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Concepto</label>
@@ -973,11 +1023,17 @@ export default function Finances() {
                     <button onClick={() => setShowObModal(false)} style={{ flex:1, padding:16, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer' }}>CANCELAR</button>
                     <button onClick={() => {
                         let finalName = obForm.name;
-                        if (obPeriod === 'q1') finalName = `(1ra Q) ${obForm.name}`;
-                        else if (obPeriod === 'q2') finalName = `(2da Q) ${obForm.name}`;
-                        addObligation({...obForm, name: finalName, status:'pending'});
+                        if (!editingOb) {
+                          if (obPeriod === 'q1') finalName = `(1ra Q) ${obForm.name}`;
+                          else if (obPeriod === 'q2') finalName = `(2da Q) ${obForm.name}`;
+                        }
+                        if (editingOb) {
+                          updateObligation(editingOb.id, { ...obForm, name: finalName });
+                        } else {
+                          addObligation({...obForm, name: finalName, status:'pending'});
+                        }
                         setShowObModal(false);
-                    }} style={{ flex:1, padding:16, borderRadius:12, background:'#ff4d4d', border:'none', color:'#fff', fontWeight:950, fontSize:14, cursor:'pointer' }}>REGISTRAR</button>
+                    }} style={{ flex:1, padding:16, borderRadius:12, background:'#ff4d4d', border:'none', color:'#fff', fontWeight:950, fontSize:14, cursor:'pointer' }}>{editingOb ? 'GUARDAR' : 'REGISTRAR'}</button>
                  </div>
               </div>
            </div>
