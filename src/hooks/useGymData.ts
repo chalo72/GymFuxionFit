@@ -464,7 +464,11 @@ function useGymDataInternal() {
       hash: 'TX_' + Math.random().toString(16).slice(2, 6).toUpperCase()
     };
     setTransactions(prev => [newTx, ...prev]);
-    await trioSync.create('transactions', newTx);
+    try {
+      await trioSync.create('transactions', newTx);
+    } catch (e) {
+      console.warn("⚠️ Transacción guardada localmente. Sync pendiente:", e);
+    }
     return newTx;
   };
 

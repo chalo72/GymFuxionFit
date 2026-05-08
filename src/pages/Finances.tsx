@@ -149,74 +149,84 @@ export default function Finances() {
 
   const handleProcessPayment = async () => {
     if (amount <= 0 || !selectedMember) return;
-    const newTx = await injectTransaction({
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString().slice(0, 5),
-      description: `Pago ${category.toUpperCase()}: ${selectedMember.name}`,
-      category: category,
-      type: 'income',
-      amount: amount,
-      method: method,
-      client: selectedMember.name
-    });
-    
-    // Notificación Automática WhatsApp (Adaptada a Gym de Barrio)
-    if (selectedMember.phone) {
-      notifyViaWhatsApp(selectedMember.name, selectedMember.phone, amount, category);
+    const memberSnap = selectedMember; // snapshot antes de limpiar estado
+    try {
+      const newTx = await injectTransaction({
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString().slice(0, 5),
+        description: `Pago ${category.toUpperCase()}: ${memberSnap.name}`,
+        category: category,
+        type: 'income',
+        amount: amount,
+        method: method,
+        client: memberSnap.name
+      });
+      setShowVoucher(newTx);
+      setSelectedMember(null);
+      setSearchTerm('');
+      setAmount(0);
+      setReceivedAmount(0);
+      setACredito(false);
+    } catch (e) {
+      console.error("Error al procesar pago:", e);
+      alert("⚠️ El cobro se guardó localmente pero hubo un error de sincronización. Revisa tu conexión.");
     }
-
-    setShowVoucher(newTx);
-    setSelectedMember(null);
-    setSearchTerm('');
-    setAmount(0);
-    setReceivedAmount(0);
-    setACredito(false);
   };
 
   // Abono: pago parcial contra deuda existente
   const handleAbono = async () => {
     if (!selectedMember || abonoAmount <= 0) return;
-    const deuda = selectedMember.debt || 0;
+    const memberSnap = selectedMember;
+    const deuda = memberSnap.debt || 0;
     const pagoReal = Math.min(abonoAmount, deuda);
     const nuevaDeuda = Math.max(0, deuda - pagoReal);
-    await updateMemberStatus(selectedMember.id, { debt: nuevaDeuda });
-    const newTx = await injectTransaction({
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString().slice(0, 5),
-      description: `Abono deuda: ${selectedMember.name} (Saldo restante: $${nuevaDeuda.toLocaleString()})`,
-      category: 'membership',
-      type: 'income',
-      amount: pagoReal,
-      method: method,
-      client: selectedMember.name
-    });
-    setShowVoucher(newTx);
-    setAbonoAmount(0);
-    setSelectedMember(null);
-    setSearchTerm('');
+    try {
+      await updateMemberStatus(memberSnap.id, { debt: nuevaDeuda });
+      const newTx = await injectTransaction({
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString().slice(0, 5),
+        description: `Abono deuda: ${memberSnap.name} (Saldo restante: $${nuevaDeuda.toLocaleString()})`,
+        category: 'membership',
+        type: 'income',
+        amount: pagoReal,
+        method: method,
+        client: memberSnap.name
+      });
+      setShowVoucher(newTx);
+      setAbonoAmount(0);
+      setSelectedMember(null);
+      setSearchTerm('');
+    } catch (e) {
+      console.error("Error al registrar abono:", e);
+    }
   };
 
   // A crédito: el servicio se presta ahora, se cobra después (suma a deuda)
   const handleDarCredito = async () => {
     if (!selectedMember || amount <= 0) return;
-    const deudaActual = selectedMember.debt || 0;
+    const memberSnap = selectedMember;
+    const deudaActual = memberSnap.debt || 0;
     const nuevaDeuda = deudaActual + amount;
-    await updateMemberStatus(selectedMember.id, { debt: nuevaDeuda });
-    await injectTransaction({
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString().slice(0, 5),
-      description: `Crédito otorgado: ${selectedMember.name} (+$${amount.toLocaleString()})`,
-      category: category,
-      type: 'expense',
-      amount: amount,
-      method: 'Crédito',
-      client: selectedMember.name
-    });
-    alert(`Crédito de $${amount.toLocaleString()} registrado. La deuda de ${selectedMember.name} es ahora $${nuevaDeuda.toLocaleString()}.`);
-    setSelectedMember(null);
-    setSearchTerm('');
-    setAmount(0);
-    setACredito(false);
+    try {
+      await updateMemberStatus(memberSnap.id, { debt: nuevaDeuda });
+      await injectTransaction({
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString().slice(0, 5),
+        description: `Crédito otorgado: ${memberSnap.name} (+$${amount.toLocaleString()})`,
+        category: category,
+        type: 'expense',
+        amount: amount,
+        method: 'Crédito',
+        client: memberSnap.name
+      });
+      alert(`Crédito de $${amount.toLocaleString()} registrado. La deuda de ${memberSnap.name} es ahora $${nuevaDeuda.toLocaleString()}.`);
+      setSelectedMember(null);
+      setSearchTerm('');
+      setAmount(0);
+      setACredito(false);
+    } catch (e) {
+      console.error("Error al registrar crédito:", e);
+    }
   };
 
   const handleWaterWithdraw = () => {
