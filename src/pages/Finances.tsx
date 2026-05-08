@@ -83,7 +83,8 @@ export default function Finances() {
     staff, addStaff, updateStaff, deleteStaff, generateMonthlyPayroll,
     staffLoans, addStaffAdvance, addStaffLoan, deleteStaffLoan,
     waterConfig, updateWaterConfig, withdrawFromGoal,
-    plans, plansConfig
+    plans, plansConfig,
+    updateMemberStatus, clearMemberDebt
   } = useGymData();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expense' | 'payroll' | 'goals' | 'agua'>('dashboard');
   
@@ -117,6 +118,8 @@ export default function Finances() {
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [showVoucher, setShowVoucher] = useState<any | null>(null);
   const [isExpectingNequi, setIsExpectingNequi] = useState(false);
+  const [aCredito, setACredito] = useState(false);
+  const [abonoAmount, setAbonoAmount] = useState(0);
 
   // Estados Agua
   const [withdrawAmount, setWithdrawAmount] = useState(0);
@@ -167,6 +170,53 @@ export default function Finances() {
     setSearchTerm('');
     setAmount(0);
     setReceivedAmount(0);
+    setACredito(false);
+  };
+
+  // Abono: pago parcial contra deuda existente
+  const handleAbono = async () => {
+    if (!selectedMember || abonoAmount <= 0) return;
+    const deuda = selectedMember.debt || 0;
+    const pagoReal = Math.min(abonoAmount, deuda);
+    const nuevaDeuda = Math.max(0, deuda - pagoReal);
+    await updateMemberStatus(selectedMember.id, { debt: nuevaDeuda });
+    const newTx = await injectTransaction({
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toLocaleTimeString().slice(0, 5),
+      description: `Abono deuda: ${selectedMember.name} (Saldo restante: $${nuevaDeuda.toLocaleString()})`,
+      category: 'membership',
+      type: 'income',
+      amount: pagoReal,
+      method: method,
+      client: selectedMember.name
+    });
+    setShowVoucher(newTx);
+    setAbonoAmount(0);
+    setSelectedMember(null);
+    setSearchTerm('');
+  };
+
+  // A crédito: el servicio se presta ahora, se cobra después (suma a deuda)
+  const handleDarCredito = async () => {
+    if (!selectedMember || amount <= 0) return;
+    const deudaActual = selectedMember.debt || 0;
+    const nuevaDeuda = deudaActual + amount;
+    await updateMemberStatus(selectedMember.id, { debt: nuevaDeuda });
+    await injectTransaction({
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toLocaleTimeString().slice(0, 5),
+      description: `Crédito otorgado: ${selectedMember.name} (+$${amount.toLocaleString()})`,
+      category: category,
+      type: 'expense',
+      amount: amount,
+      method: 'Crédito',
+      client: selectedMember.name
+    });
+    alert(`Crédito de $${amount.toLocaleString()} registrado. La deuda de ${selectedMember.name} es ahora $${nuevaDeuda.toLocaleString()}.`);
+    setSelectedMember(null);
+    setSearchTerm('');
+    setAmount(0);
+    setACredito(false);
   };
 
   const handleWaterWithdraw = () => {
@@ -339,6 +389,50 @@ export default function Finances() {
                     )}
                  </div>
 
+                 {/* ── ALERTA DE DEUDA + ABONO ── */}
+                 {selectedMember && (selectedMember.debt || 0) > 0 && (
+                   <div style={{ background:'rgba(255,214,0,0.06)', border:'1px solid rgba(255,214,0,0.25)', borderRadius:14, padding:16 }}>
+                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+                       <div>
+                         <div style={{ fontSize:13, fontWeight:950, color:'#FFD600' }}>⚠️ Tiene deuda pendiente</div>
+                         <div style={{ fontSize:18, fontWeight:950, color:'#fff', marginTop:2 }}>${(selectedMember.debt || 0).toLocaleString()}</div>
+                       </div>
+                       <button
+                         onClick={() => clearMemberDebt(selectedMember.id)}
+                         style={{ padding:'8px 14px', borderRadius:10, background:'rgba(255,214,0,0.15)', border:'1px solid rgba(255,214,0,0.4)', color:'#FFD600', fontSize:12, fontWeight:950, cursor:'pointer' }}
+                       >
+                         Pagar todo
+                       </button>
+                     </div>
+                     <label style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Abonar un valor parcial:</label>
+                     <div style={{ display:'flex', gap:8 }}>
+                       <input
+                         type="number" placeholder="¿Cuánto abona?"
+                         value={abonoAmount || ''}
+                         onChange={e => setAbonoAmount(Number(e.target.value))}
+                         style={{ flex:1, padding:'11px 12px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,214,0,0.2)', color:'#FFD600', fontWeight:950, fontSize:15 }}
+                       />
+                       <button
+                         onClick={handleAbono}
+                         disabled={abonoAmount <= 0}
+                         style={{ padding:'11px 18px', borderRadius:10, background: abonoAmount > 0 ? '#FFD600' : 'rgba(255,214,0,0.1)', border:'none', color:'#000', fontWeight:950, fontSize:13, cursor: abonoAmount > 0 ? 'pointer' : 'not-allowed' }}
+                       >
+                         Abonar
+                       </button>
+                     </div>
+                   </div>
+                 )}
+
+                 {/* ── MODO A CRÉDITO ── */}
+                 {selectedMember && (
+                   <button
+                     onClick={() => setACredito(v => !v)}
+                     style={{ padding:'10px 16px', borderRadius:12, background: aCredito ? 'rgba(255,77,77,0.15)' : 'rgba(255,255,255,0.03)', border: `1px solid ${aCredito ? '#ff4d4d' : 'rgba(255,255,255,0.1)'}`, color: aCredito ? '#ff4d4d' : 'var(--text-muted)', fontSize:13, fontWeight:800, cursor:'pointer', textAlign:'left', transition:'0.2s' }}
+                   >
+                     {aCredito ? '🔴 Modo Crédito ACTIVO — el cliente pagará después' : '💳 Dar a crédito (cobrar después)'}
+                   </button>
+                 )}
+
                  {/* Valor + método de pago */}
                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
                     <div>
@@ -391,11 +485,22 @@ export default function Finances() {
                       </button>
                     )}
                     <button
-                      onClick={handleProcessPayment}
+                      onClick={aCredito ? handleDarCredito : handleProcessPayment}
                       disabled={!selectedMember || amount <= 0}
-                      style={{ flex:2, padding:18, borderRadius:14, background: (!selectedMember || amount <= 0) ? 'rgba(0,255,136,0.3)' : 'var(--neon-green)', color:'#000', border:'none', fontSize:16, fontWeight:950, cursor: (!selectedMember || amount <= 0) ? 'not-allowed' : 'pointer', transition:'0.2s' }}
+                      style={{
+                        flex:2, padding:18, borderRadius:14, border:'none', fontSize:16, fontWeight:950,
+                        cursor: (!selectedMember || amount <= 0) ? 'not-allowed' : 'pointer', transition:'0.2s',
+                        background: (!selectedMember || amount <= 0) ? 'rgba(255,255,255,0.1)' : aCredito ? '#ff4d4d' : 'var(--neon-green)',
+                        color: aCredito ? '#fff' : '#000'
+                      }}
                     >
-                      {!selectedMember ? 'Busca un cliente primero' : amount <= 0 ? 'Ingresa el valor' : `✓ Cobrar $${amount.toLocaleString()}`}
+                      {!selectedMember
+                        ? 'Busca un cliente primero'
+                        : amount <= 0
+                          ? 'Ingresa el valor'
+                          : aCredito
+                            ? `💳 Dar a crédito $${amount.toLocaleString()}`
+                            : `✓ Cobrar $${amount.toLocaleString()}`}
                     </button>
                  </div>
               </div>
