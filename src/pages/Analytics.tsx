@@ -18,7 +18,7 @@ import { useGymData } from '../hooks/useGymData';
 export default function Analytics() {
   const { transactions, members } = useGymData();
 
-  const { monthlyRevenue, planDistribution, metrics } = useMemo(() => {
+  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients } = useMemo(() => {
     // 1. Distribution of Plans
     const plans: Record<string, number> = { Básico: 0, Pro: 0, HYROX: 0, VIP: 0, Estudiante: 0, Otro: 0 };
     members.forEach(m => {
@@ -56,15 +56,53 @@ export default function Analytics() {
     const totalRevenue = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
     const activeCount = members.filter(m => m.status === 'active').length || 1;
     const arpu = totalRevenue / activeCount;
+    const inactiveCount = members.filter(m => !m.visits || m.visits === 0).length;
 
     const computedMetrics = [
       { icon: CreditCard, label: 'ARPU (Ingreso Prom. por Usuario)', value: `$${Math.round(arpu).toLocaleString()}`, change: 'Histórico', up: true },
       { icon: Users, label: 'Total Atletas Activos', value: `${activeCount}`, change: 'Actual', up: true },
       { icon: Activity, label: 'Ingreso Bruto Total', value: `$${totalRevenue.toLocaleString()}`, change: 'Todas las ventas', up: true },
-      { icon: Target, label: 'Tasa de Actividad', value: `${Math.round((activeCount / (members.length || 1)) * 100)}%`, change: 'Miembros activos', up: true },
+      { icon: Target, label: 'Inactivos (0 Visitas)', value: `${inactiveCount}`, change: 'Atención', up: false },
     ];
 
-    return { monthlyRevenue: monthlyData, planDistribution: distData, metrics: computedMetrics };
+    // 4. Client Trend Data
+    const clientDayMap: Record<string, number> = {};
+    const clientMonthMap: Record<string, number> = {};
+    
+    members.forEach(m => {
+      const dateStr = m.joined || m.expiryDate;
+      if (!dateStr) return;
+      
+      const dayStr = dateStr.substring(0, 10);
+      clientDayMap[dayStr] = (clientDayMap[dayStr] || 0) + 1;
+      
+      const monthStr = dateStr.substring(0, 7);
+      clientMonthMap[monthStr] = (clientMonthMap[monthStr] || 0) + 1;
+    });
+    
+    const sortedDays = Object.keys(clientDayMap).sort().slice(-15);
+    const dailyClientData = sortedDays.map(d => ({
+      date: d.substring(5),
+      count: clientDayMap[d]
+    }));
+    
+    const sortedMonthsClients = Object.keys(clientMonthMap).sort().slice(-6);
+    const monthlyClientData = sortedMonthsClients.map(mStr => {
+      const date = new Date(mStr + '-02');
+      const monthName = date.toLocaleString('es-CO', { month: 'short' });
+      return {
+        month: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+        count: clientMonthMap[mStr]
+      };
+    });
+
+    return { 
+      monthlyRevenue: monthlyData, 
+      planDistribution: distData, 
+      metrics: computedMetrics,
+      dailyClients: dailyClientData,
+      monthlyClients: monthlyClientData
+    };
   }, [transactions, members]);
 
 
@@ -177,6 +215,81 @@ export default function Analytics() {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ─── NUEVOS CLIENTES (DÍA / MES) ─── */}
+      <div className="dashboard-grid" style={{ marginTop: 24 }}>
+        {/* Clientes por Día */}
+        <div className="glass-card">
+          <div className="glass-card-header">
+            <div>
+              <div className="glass-card-title">Nuevos Clientes por Día</div>
+              <div className="glass-card-subtitle">Últimos 15 días</div>
+            </div>
+          </div>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dailyClients} barSize={20}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 10 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{
+                    background: 'rgba(14,14,21,0.95)',
+                    border: '1px solid rgba(0,255,136,0.2)',
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                  formatter={(value: number) => [value, 'Nuevos Clientes']}
+                />
+                <Bar dataKey="count" fill="#00FF88" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Clientes por Mes */}
+        <div className="glass-card">
+          <div className="glass-card-header">
+            <div>
+              <div className="glass-card-title">Nuevos Clientes por Mes</div>
+              <div className="glass-card-subtitle">Últimos 6 meses</div>
+            </div>
+          </div>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyClients}>
+                <defs>
+                  <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#00FF88" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#00FF88" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 11 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{
+                    background: 'rgba(14,14,21,0.95)',
+                    border: '1px solid rgba(0,255,136,0.2)',
+                    borderRadius: 12,
+                    fontSize: 12,
+                  }}
+                  formatter={(value: number) => [value, 'Nuevos Clientes']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#00FF88"
+                  strokeWidth={2}
+                  fill="url(#greenGrad)"
+                  dot={{ r: 4, fill: '#00FF88' }}
+                  activeDot={{ r: 6, fill: '#00FF88', stroke: 'rgba(0,255,136,0.3)', strokeWidth: 4 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
