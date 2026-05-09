@@ -2,7 +2,7 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, CalendarDays, BarChart3, Settings,
-  Dumbbell, Zap, Scan, Kanban, Apple, Brain, Trophy, CreditCard,
+  Dumbbell, Zap, Scan, Kanban, Apple, Brain, Trophy, CreditCard, Wallet,
   Watch, CalendarRange, UserCheck, LogOut, ShieldCheck, Radio, Smartphone,
   TrendingUp, Package, X, ChevronLeft, ChevronRight, BookOpen, ClipboardList, PieChart, Shield, HeartPulse, BrainCircuit
 } from 'lucide-react';
@@ -32,6 +32,7 @@ const adminNav = [
   ]},
   { section: 'Negocio', items: [
     { to: '/analytics', icon: BarChart3,  label: 'Analíticas' },
+    { to: '/accounting', icon: Wallet,    label: 'Contabilidad' },
     { to: '/kpis',      icon: PieChart,   label: 'KPIs Gerenciales', badge: 'NEW' },
     { to: '/finances',  icon: TrendingUp, label: 'Finanzas' },
     { to: '/inventory', icon: Package,    label: 'Inventario' },
@@ -78,6 +79,7 @@ const receptionNav = [
   ]},
   { section: 'Negocio', items: [
     { to: '/analytics', icon: BarChart3,  label: 'Analíticas' },
+    { to: '/accounting', icon: Wallet,    label: 'Contabilidad' },
     { to: '/finances',  icon: TrendingUp, label: 'Finanzas' },
     { to: '/inventory', icon: Package,    label: 'Inventario' },
     { to: '/crm',       icon: Kanban,     label: 'CRM Ventas' },

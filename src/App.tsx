@@ -22,6 +22,7 @@ import AICoach from './pages/AICoach';
 import Wearables from './pages/Wearables';
 import Leaderboard from './pages/Leaderboard';
 import Analytics from './pages/Analytics';
+import Accounting from './pages/Accounting';
 import GerencialKPIs from './pages/GerencialKPIs';
 import Finances from './pages/Finances';
 import Inventory from './pages/Inventory';
@@ -57,6 +58,7 @@ function App() {
         <Route path="/wearables" element={<Wearables />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/accounting" element={<Accounting />} />
         <Route path="/kpis" element={<GerencialKPIs />} />
         <Route path="/finances" element={<Finances />} />
         <Route path="/inventory" element={<Inventory />} />

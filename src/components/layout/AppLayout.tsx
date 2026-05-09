@@ -10,6 +10,7 @@ const pageTitles: Record<string, string> = {
   '/classes':      'Clases del Día',
   '/schedule':     'Calendario',
   '/analytics':    'Analíticas',
+  '/accounting':   'Contabilidad',
   '/settings':     'Configuración',
   '/genesis-scan': 'Genesis Scan',
   '/crm':          'CRM Ventas',
