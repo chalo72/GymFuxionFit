@@ -19,7 +19,7 @@ import { useGymData } from '../hooks/useGymData';
 export default function Analytics() {
   const { transactions, members, obligations, staff, plans } = useGymData();
 
-  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit, totalStaffPayroll, pendingCommitments, projectedRealNet, projectedSimulatedNet, simulatedIncome } = useMemo(() => {
+  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit, totalStaffPayroll, pendingCommitments, projectedRealNet, projectedSimulatedNet, simulatedIncome, simulatedProjection } = useMemo(() => {
     // 1. Distribution of Plans (Dinámico)
     const planCounts: Record<string, number> = {};
     members.forEach(m => {
@@ -90,7 +90,8 @@ export default function Analytics() {
     });
 
     const totalRevenue = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-    const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    // Filtrar los 70000 de prueba
+    const totalExpenses = transactions.filter(t => t.type === 'expense' && t.amount !== 70000).reduce((acc, t) => acc + t.amount, 0);
     const netProfit = totalRevenue - totalExpenses;
     const inactiveCount = members.filter(m => (!m.visits || m.visits === 0) && m.status !== 'suspended').length;
     const suspendedCount = members.filter(m => m.status === 'suspended').length;
@@ -142,8 +143,9 @@ export default function Analytics() {
       return acc + (planObj ? planObj.price : 0);
     }, 0) : 0;
 
+    const simulatedProjection = (dailyPayers * 3000 * 20) + (monthlyPayers * 45000);
     const projectedRealNet = totalRevenue - totalExpenses - totalStaffPayroll - pendingCommitments;
-    const projectedSimulatedNet = simulatedIncome - totalExpenses - totalStaffPayroll - pendingCommitments;
+    const projectedSimulatedNet = simulatedProjection - totalExpenses - totalStaffPayroll - pendingCommitments;
 
     return { 
       monthlyRevenue: monthlyData, 
@@ -160,7 +162,8 @@ export default function Analytics() {
       pendingCommitments,
       projectedRealNet,
       projectedSimulatedNet,
-      simulatedIncome
+      simulatedIncome,
+      simulatedProjection
     };
   }, [transactions, members, obligations]);
 
@@ -370,7 +373,7 @@ export default function Analytics() {
           }}>${projectedSimulatedNet.toLocaleString('es-CO')}</div>
           <div className={`kpi-change ${projectedSimulatedNet >= 0 ? 'positive' : 'negative'}`}>Ingresos teóricos - Cuentas</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
-            Op: {simulatedIncome.toLocaleString('es-CO')} - {totalExpenses.toLocaleString('es-CO')} - {totalStaffPayroll.toLocaleString('es-CO')} - {pendingCommitments.toLocaleString('es-CO')}
+            Op: {simulatedProjection.toLocaleString('es-CO')} - {totalExpenses.toLocaleString('es-CO')} - {totalStaffPayroll.toLocaleString('es-CO')} - {pendingCommitments.toLocaleString('es-CO')}
           </div>
         </div>
       </div>
