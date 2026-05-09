@@ -17,14 +17,14 @@ import { useMemo } from 'react';
 import { useGymData } from '../hooks/useGymData';
 
 export default function Analytics() {
-  const { transactions, members, obligations, staff } = useGymData();
+  const { transactions, members, obligations, staff, plans } = useGymData();
 
-  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit, totalStaffPayroll, pendingCommitments } = useMemo(() => {
+  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit, totalStaffPayroll, pendingCommitments, projectedRealNet, projectedSimulatedNet } = useMemo(() => {
     // 1. Distribution of Plans (Dinámico)
-    const plans: Record<string, number> = {};
+    const planCounts: Record<string, number> = {};
     members.forEach(m => {
       const p = m.plan || 'Sin Plan';
-      plans[p] = (plans[p] || 0) + 1;
+      planCounts[p] = (planCounts[p] || 0) + 1;
     });
     
     let dailyPayers = 0;
@@ -132,6 +132,14 @@ export default function Analytics() {
     const totalStaffPayroll = staff ? staff.filter(s => s.status === 'active').reduce((acc, s) => acc + (s.salary || 0), 0) : 0;
     const pendingCommitments = obligations ? obligations.filter(o => o.status === 'pending' && o.category !== 'payroll').reduce((acc, o) => acc + o.amount, 0) : 0;
 
+    const simulatedIncome = members ? members.filter(m => m.status === 'active' || m.status === 'expiring').reduce((acc, m) => {
+      const planObj = plans ? plans.find((p: any) => p.id === m.plan) : null;
+      return acc + (planObj ? planObj.price : 0);
+    }, 0) : 0;
+
+    const projectedRealNet = totalRevenue - totalExpenses - totalStaffPayroll - pendingCommitments;
+    const projectedSimulatedNet = simulatedIncome - totalExpenses - totalStaffPayroll - pendingCommitments;
+
     return { 
       monthlyRevenue: monthlyData, 
       planDistribution: distData, 
@@ -144,7 +152,9 @@ export default function Analytics() {
       totalExpenses,
       netProfit,
       totalStaffPayroll,
-      pendingCommitments
+      pendingCommitments,
+      projectedRealNet,
+      projectedSimulatedNet
     };
   }, [transactions, members, obligations]);
 
@@ -318,6 +328,38 @@ export default function Analytics() {
             color: '#FF4B4B'
           }}>${pendingCommitments.toLocaleString('es-CO')}</div>
           <div className="kpi-change negative">Servicios, arriendo, etc.</div>
+        </div>
+        {/* Balance Proyectado Real */}
+        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+          <div className="kpi-label">Balance Proyectado (Real)</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: projectedRealNet >= 0 ? 'rgba(0, 255, 136, 0.05)' : 'rgba(255, 75, 75, 0.05)', 
+            border: projectedRealNet >= 0 ? '1px solid rgba(0, 255, 136, 0.2)' : '1px solid rgba(255, 75, 75, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: projectedRealNet >= 0 ? '#00FF88' : '#FF4B4B'
+          }}>${projectedRealNet.toLocaleString('es-CO')}</div>
+          <div className={`kpi-change ${projectedRealNet >= 0 ? 'positive' : 'negative'}`}>Caja real - Cuentas</div>
+        </div>
+        {/* Balance Proyectado Simulado */}
+        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+          <div className="kpi-label">Balance Proyectado (Simulado)</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: projectedSimulatedNet >= 0 ? 'rgba(0, 255, 136, 0.05)' : 'rgba(255, 75, 75, 0.05)', 
+            border: projectedSimulatedNet >= 0 ? '1px solid rgba(0, 255, 136, 0.2)' : '1px solid rgba(255, 75, 75, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: projectedSimulatedNet >= 0 ? '#00FF88' : '#FF4B4B'
+          }}>${projectedSimulatedNet.toLocaleString('es-CO')}</div>
+          <div className={`kpi-change ${projectedSimulatedNet >= 0 ? 'positive' : 'negative'}`}>Ingresos teóricos - Cuentas</div>
         </div>
       </div>
 
