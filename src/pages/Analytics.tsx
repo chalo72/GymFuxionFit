@@ -10,7 +10,7 @@ import {
   Bar,
   Cell,
 } from 'recharts';
-import { TrendingUp, TrendingDown, Users, CreditCard, Activity, Target } from 'lucide-react';
+import { TrendingUp, TrendingDown, Users, CreditCard, Activity, Target, Shield } from 'lucide-react';
 
 import { useMemo } from 'react';
 import { useGymData } from '../hooks/useGymData';
@@ -65,13 +65,15 @@ export default function Analytics() {
 
     // 3. KPI Metrics
     const totalRevenue = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-    const inactiveCount = members.filter(m => !m.visits || m.visits === 0).length;
+    const inactiveCount = members.filter(m => (!m.visits || m.visits === 0) && m.status !== 'suspended').length;
+    const suspendedCount = members.filter(m => m.status === 'suspended').length;
 
     const computedMetrics = [
-      { icon: Users, label: 'Pagan Diario (Día)', value: `${dailyPayers}`, change: 'Clientes activos', up: true },
+      { icon: Users, label: 'Visitantes (Día)', value: `${dailyPayers}`, change: 'Clientes activos', up: true },
       { icon: Users, label: 'Pagan Mensual', value: `${monthlyPayers}`, change: 'Clientes activos', up: true },
       { icon: Activity, label: 'Ingreso Bruto Total', value: `$${totalRevenue.toLocaleString()}`, change: 'Todas las ventas', up: true },
-      { icon: Target, label: 'Inactivos (0 Visitas)', value: `${inactiveCount}`, change: 'Atención', up: false },
+      { icon: Target, label: 'Inactivos (0 Visitas)', value: `${inactiveCount}`, change: 'Sin asistencia', up: false },
+      { icon: Shield, label: 'Suspendidos', value: `${suspendedCount}`, change: 'Pausados', up: false },
     ];
 
     // 4. Client Trend Data
