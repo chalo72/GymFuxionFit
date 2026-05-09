@@ -183,7 +183,7 @@ export default function Analytics() {
       </div>
       <div className="kpi-row" style={{ marginBottom: 24 }}>
         <div className="kpi-card cyan">
-          <div className="kpi-label">Simulación Día (Visitas)</div>
+          <div className="kpi-label">Simulación Día (al Mes)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
             background: 'rgba(0, 255, 136, 0.05)', 
@@ -194,8 +194,8 @@ export default function Analytics() {
             marginTop: '6px',
             fontWeight: 700,
             color: '#00FF88'
-          }}>${(dailyPayers * 3000).toLocaleString('es-CO')}</div>
-          <div className="kpi-change positive">Ingreso diario estimado</div>
+          }}>${(dailyPayers * 3000 * 20).toLocaleString('es-CO')}</div>
+          <div className="kpi-change positive">${(dailyPayers * 3000).toLocaleString('es-CO')} por día</div>
         </div>
         <div className="kpi-card cyan">
           <div className="kpi-label">Simulación Mes (Planes)</div>
@@ -210,7 +210,7 @@ export default function Analytics() {
             fontWeight: 700,
             color: '#00FF88'
           }}>${(monthlyPayers * 45000).toLocaleString('es-CO')}</div>
-          <div className="kpi-change positive">Ingreso mensual estimado</div>
+          <div className="kpi-change positive">Mensualidades fijas</div>
         </div>
         <div className="kpi-card cyan">
           <div className="kpi-label">Proyección Total Mes</div>
@@ -225,7 +225,7 @@ export default function Analytics() {
             fontWeight: 700,
             color: '#00FF88'
           }}>${((dailyPayers * 3000 * 20) + (monthlyPayers * 45000)).toLocaleString('es-CO')}</div>
-          <div className="kpi-change positive">20 días hábiles + Planes</div>
+          <div className="kpi-change positive">Suma de ambos (20 días)</div>
         </div>
       </div>
 
@@ -233,8 +233,8 @@ export default function Analytics() {
       <div style={{ marginBottom: 12, marginTop: 24 }}>
         <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-muted)' }}>Contabilidad Real (Movimientos de Caja)</h3>
       </div>
-      <div className="kpi-row" style={{ marginBottom: 24 }}>
-        <div className="kpi-card cyan">
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
           <div className="kpi-label">Entradas (Ingresos)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
@@ -249,7 +249,7 @@ export default function Analytics() {
           }}>${totalRevenue.toLocaleString('es-CO')}</div>
           <div className="kpi-change positive">Dinero ingresado</div>
         </div>
-        <div className="kpi-card cyan">
+        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
           <div className="kpi-label">Salidas (Gastos)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
@@ -264,7 +264,7 @@ export default function Analytics() {
           }}>${totalExpenses.toLocaleString('es-CO')}</div>
           <div className="kpi-change negative">Dinero gastado</div>
         </div>
-        <div className="kpi-card cyan">
+        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
           <div className="kpi-label">Lo que queda (Neto)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
