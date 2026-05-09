@@ -20,14 +20,18 @@ export default function Analytics() {
 
   const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients } = useMemo(() => {
     // 1. Distribution of Plans
-    const plans: Record<string, number> = { Básico: 0, Pro: 0, HYROX: 0, VIP: 0, Estudiante: 0, Otro: 0 };
+    const plans: Record<string, number> = { 'Día': 0, 'Semanal': 0, 'Básico': 0, 'Pro': 0, 'HYROX Pro': 0, 'Otro': 0 };
     members.forEach(m => {
       const p = m.plan || 'Otro';
-      if (plans[p] !== undefined) plans[p]++;
+      if (p.toLowerCase().includes('día') || p.toLowerCase() === 'dia') plans['Día']++;
+      else if (p.toLowerCase().includes('semana')) plans['Semanal']++;
+      else if (p.toLowerCase().includes('básico') || p.toLowerCase() === 'basico') plans['Básico']++;
+      else if (p.toLowerCase().includes('pro')) plans['Pro']++;
+      else if (p.toLowerCase().includes('hyrox')) plans['HYROX Pro']++;
       else plans['Otro']++;
     });
     
-    const colors = ['#00F0FF', '#FF6B35', '#00E676', '#A78BFA', '#FFD600', '#888888'];
+    const colors = ['#FFD600', '#00E5FF', '#00F0FF', '#FF6B35', '#00E676', '#888888'];
     const distData = Object.entries(plans)
       .filter(([_, count]) => count > 0)
       .map(([plan, count], i) => ({ plan, count, color: colors[i % colors.length] }));
@@ -54,13 +58,12 @@ export default function Analytics() {
 
     // 3. KPI Metrics
     const totalRevenue = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-    const activeCount = members.filter(m => m.status === 'active').length || 1;
-    const arpu = totalRevenue / activeCount;
     const inactiveCount = members.filter(m => !m.visits || m.visits === 0).length;
+    const monthlyPayers = plans['Básico'] + plans['Pro'] + plans['HYROX Pro'];
 
     const computedMetrics = [
-      { icon: CreditCard, label: 'ARPU (Ingreso Prom. por Usuario)', value: `$${Math.round(arpu).toLocaleString()}`, change: 'Histórico', up: true },
-      { icon: Users, label: 'Total Atletas Activos', value: `${activeCount}`, change: 'Actual', up: true },
+      { icon: Users, label: 'Pagan Diario (Día)', value: `${plans['Día']}`, change: 'Clientes activos', up: true },
+      { icon: Users, label: 'Pagan Mensual', value: `${monthlyPayers}`, change: 'Clientes activos', up: true },
       { icon: Activity, label: 'Ingreso Bruto Total', value: `$${totalRevenue.toLocaleString()}`, change: 'Todas las ventas', up: true },
       { icon: Target, label: 'Inactivos (0 Visitas)', value: `${inactiveCount}`, change: 'Atención', up: false },
     ];
