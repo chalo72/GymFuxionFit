@@ -76,6 +76,7 @@ const receptionNav = [
     { to: '/classes',   icon: CalendarDays,   label: 'Clases' },
   ]},
   { section: 'Negocio', items: [
+    { to: '/analytics', icon: BarChart3,  label: 'Analíticas' },
     { to: '/finances',  icon: TrendingUp, label: 'Finanzas' },
     { to: '/inventory', icon: Package,    label: 'Inventario' },
     { to: '/crm',       icon: Kanban,     label: 'CRM Ventas' },
