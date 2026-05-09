@@ -126,7 +126,17 @@ export default function Analytics() {
               <m.icon size={20} />
             </div>
             <div className="kpi-label">{m.label}</div>
-            <div className="kpi-value" style={{ fontSize: 'var(--text-2xl)' }}>{m.value}</div>
+            <div className="kpi-value" style={{ 
+              fontSize: 'var(--text-2xl)', 
+              background: 'rgba(0, 240, 255, 0.05)', 
+              border: '1px solid rgba(0, 240, 255, 0.2)', 
+              borderRadius: '6px', 
+              padding: '4px 12px', 
+              display: 'inline-block',
+              marginTop: '6px',
+              fontWeight: 700,
+              color: '#00F0FF'
+            }}>{m.value}</div>
             <div className={`kpi-change ${m.up ? 'positive' : 'negative'}`}>
               {m.up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
               {m.change}
