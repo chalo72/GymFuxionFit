@@ -172,8 +172,10 @@ export default function Accounting() {
       <div style={{ marginBottom: 12, marginTop: 24 }}>
         <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-muted)' }}>Contabilidad Real (Movimientos de Caja)</h3>
       </div>
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+      
+      {/* Fila 1: Caja Real */}
+      <div className="kpi-row" style={{ marginBottom: 16 }}>
+        <div className="kpi-card cyan">
           <div className="kpi-label">Entradas (Ingresos)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
@@ -188,7 +190,7 @@ export default function Accounting() {
           }}>${totalRevenue.toLocaleString('es-CO')}</div>
           <div className="kpi-change positive">Dinero ingresado</div>
         </div>
-        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+        <div className="kpi-card cyan">
           <div className="kpi-label">Salidas (Gastos)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
@@ -203,7 +205,7 @@ export default function Accounting() {
           }}>${totalExpenses.toLocaleString('es-CO')}</div>
           <div className="kpi-change negative">Dinero gastado</div>
         </div>
-        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+        <div className="kpi-card cyan">
           <div className="kpi-label">Lo que queda (Neto)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
@@ -218,7 +220,11 @@ export default function Accounting() {
           }}>${netProfit.toLocaleString('es-CO')}</div>
           <div className={`kpi-change ${netProfit >= 0 ? 'positive' : 'negative'}`}>Balance final</div>
         </div>
-        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+      </div>
+
+      {/* Fila 2: Egresos y Compromisos */}
+      <div className="kpi-row" style={{ marginBottom: 16 }}>
+        <div className="kpi-card cyan">
           <div className="kpi-label">Nómina (Suma de Sueldos)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
@@ -233,7 +239,7 @@ export default function Accounting() {
           }}>${totalStaffPayroll.toLocaleString('es-CO')}</div>
           <div className="kpi-change negative">Total mensual activo</div>
         </div>
-        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+        <div className="kpi-card cyan">
           <div className="kpi-label">Otros Compromisos</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
@@ -248,7 +254,11 @@ export default function Accounting() {
           }}>${pendingCommitments.toLocaleString('es-CO')}</div>
           <div className="kpi-change negative">Servicios, arriendo, etc.</div>
         </div>
-        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+      </div>
+
+      {/* Fila 3: Proyecciones */}
+      <div className="kpi-row" style={{ marginBottom: 24 }}>
+        <div className="kpi-card cyan">
           <div className="kpi-label">Balance Proyectado (Real)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
@@ -262,8 +272,11 @@ export default function Accounting() {
             color: projectedRealNet >= 0 ? '#00FF88' : '#FF4B4B'
           }}>${projectedRealNet.toLocaleString('es-CO')}</div>
           <div className={`kpi-change ${projectedRealNet >= 0 ? 'positive' : 'negative'}`}>Caja real - Cuentas</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
+            Op: {totalRevenue.toLocaleString('es-CO')} - {totalExpenses.toLocaleString('es-CO')} - {totalStaffPayroll.toLocaleString('es-CO')} - {pendingCommitments.toLocaleString('es-CO')}
+          </div>
         </div>
-        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+        <div className="kpi-card cyan">
           <div className="kpi-label">Balance Proyectado (Simulado)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
