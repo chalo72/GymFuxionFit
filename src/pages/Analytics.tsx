@@ -18,7 +18,7 @@ import { useGymData } from '../hooks/useGymData';
 export default function Analytics() {
   const { transactions, members } = useGymData();
 
-  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients } = useMemo(() => {
+  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers } = useMemo(() => {
     // 1. Distribution of Plans (Dinámico)
     const plans: Record<string, number> = {};
     members.forEach(m => {
@@ -88,9 +88,9 @@ export default function Analytics() {
     const suspendedCount = members.filter(m => m.status === 'suspended').length;
 
     const computedMetrics = [
-      { icon: Activity, label: 'Dinero por Día (Visitas)', value: `$${moneyDaily.toLocaleString()}`, change: 'Total histórico', up: true },
-      { icon: Activity, label: 'Dinero por Mes (Planes)', value: `$${moneyMonthly.toLocaleString()}`, change: 'Total histórico', up: true },
-      { icon: Activity, label: 'Total Recaudado (Ambos)', value: `$${(moneyDaily + moneyMonthly).toLocaleString()}`, change: 'Suma de ambos', up: true },
+      { icon: Activity, label: 'Dinero por Día (Visitas)', value: `$${moneyDaily.toLocaleString('es-CO')}`, change: `${dailyPayers} Clientes`, up: true },
+      { icon: Activity, label: 'Dinero por Mes (Planes)', value: `$${moneyMonthly.toLocaleString('es-CO')}`, change: `${monthlyPayers} Clientes`, up: true },
+      { icon: Activity, label: 'Total Recaudado (Ambos)', value: `$${(moneyDaily + moneyMonthly).toLocaleString('es-CO')}`, change: 'Suma de ambos', up: true },
       { icon: Target, label: 'Inactivos (0 Visitas)', value: `${inactiveCount}`, change: 'Sin asistencia', up: false },
       { icon: Shield, label: 'Suspendidos', value: `${suspendedCount}`, change: 'Pausados', up: false },
     ];
@@ -131,7 +131,9 @@ export default function Analytics() {
       planDistribution: distData, 
       metrics: computedMetrics,
       dailyClients: dailyClientData,
-      monthlyClients: monthlyClientData
+      monthlyClients: monthlyClientData,
+      dailyPayers,
+      monthlyPayers
     };
   }, [transactions, members]);
 
@@ -170,6 +172,58 @@ export default function Analytics() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* ─── SIMULATION ROW ─── */}
+      <div style={{ marginBottom: 12, marginTop: 24 }}>
+        <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-muted)' }}>Simulación de Ingresos (Basado en Clientes Activos)</h3>
+      </div>
+      <div className="kpi-row" style={{ marginBottom: 24 }}>
+        <div className="kpi-card cyan">
+          <div className="kpi-label">Simulación Día (Visitas)</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: 'rgba(0, 255, 136, 0.05)', 
+            border: '1px solid rgba(0, 255, 136, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: '#00FF88'
+          }}>${(dailyPayers * 3000).toLocaleString('es-CO')}</div>
+          <div className="kpi-change positive">Ingreso diario estimado</div>
+        </div>
+        <div className="kpi-card cyan">
+          <div className="kpi-label">Simulación Mes (Planes)</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: 'rgba(0, 255, 136, 0.05)', 
+            border: '1px solid rgba(0, 255, 136, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: '#00FF88'
+          }}>${(monthlyPayers * 45000).toLocaleString('es-CO')}</div>
+          <div className="kpi-change positive">Ingreso mensual estimado</div>
+        </div>
+        <div className="kpi-card cyan">
+          <div className="kpi-label">Proyección Total Mes</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: 'rgba(0, 255, 136, 0.05)', 
+            border: '1px solid rgba(0, 255, 136, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: '#00FF88'
+          }}>${((dailyPayers * 3000 * 20) + (monthlyPayers * 45000)).toLocaleString('es-CO')}</div>
+          <div className="kpi-change positive">20 días hábiles + Planes</div>
+        </div>
       </div>
 
       <div className="dashboard-grid">
