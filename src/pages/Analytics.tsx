@@ -19,7 +19,7 @@ import { useGymData } from '../hooks/useGymData';
 export default function Analytics() {
   const { transactions, members, obligations, staff, plans } = useGymData();
 
-  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit, totalStaffPayroll, pendingCommitments, projectedRealNet, projectedSimulatedNet } = useMemo(() => {
+  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit, totalStaffPayroll, pendingCommitments, projectedRealNet, projectedSimulatedNet, simulatedIncome } = useMemo(() => {
     // 1. Distribution of Plans (Dinámico)
     const planCounts: Record<string, number> = {};
     members.forEach(m => {
@@ -154,7 +154,8 @@ export default function Analytics() {
       totalStaffPayroll,
       pendingCommitments,
       projectedRealNet,
-      projectedSimulatedNet
+      projectedSimulatedNet,
+      simulatedIncome
     };
   }, [transactions, members, obligations]);
 
@@ -344,6 +345,9 @@ export default function Analytics() {
             color: projectedRealNet >= 0 ? '#00FF88' : '#FF4B4B'
           }}>${projectedRealNet.toLocaleString('es-CO')}</div>
           <div className={`kpi-change ${projectedRealNet >= 0 ? 'positive' : 'negative'}`}>Caja real - Cuentas</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
+            Op: {totalRevenue.toLocaleString('es-CO')} - {totalExpenses.toLocaleString('es-CO')} - {totalStaffPayroll.toLocaleString('es-CO')} - {pendingCommitments.toLocaleString('es-CO')}
+          </div>
         </div>
         {/* Balance Proyectado Simulado */}
         <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
@@ -360,6 +364,9 @@ export default function Analytics() {
             color: projectedSimulatedNet >= 0 ? '#00FF88' : '#FF4B4B'
           }}>${projectedSimulatedNet.toLocaleString('es-CO')}</div>
           <div className={`kpi-change ${projectedSimulatedNet >= 0 ? 'positive' : 'negative'}`}>Ingresos teóricos - Cuentas</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>
+            Op: {simulatedIncome.toLocaleString('es-CO')} - {totalExpenses.toLocaleString('es-CO')} - {totalStaffPayroll.toLocaleString('es-CO')} - {pendingCommitments.toLocaleString('es-CO')}
+          </div>
         </div>
       </div>
 
