@@ -84,6 +84,8 @@ export default function Analytics() {
     });
 
     const totalRevenue = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+    const totalExpenses = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    const netProfit = totalRevenue - totalExpenses;
     const inactiveCount = members.filter(m => (!m.visits || m.visits === 0) && m.status !== 'suspended').length;
     const suspendedCount = members.filter(m => m.status === 'suspended').length;
 
@@ -223,6 +225,58 @@ export default function Analytics() {
             color: '#00FF88'
           }}>${((dailyPayers * 3000 * 20) + (monthlyPayers * 45000)).toLocaleString('es-CO')}</div>
           <div className="kpi-change positive">20 días hábiles + Planes</div>
+        </div>
+      </div>
+
+      {/* ─── ACCOUNTING ROW ─── */}
+      <div style={{ marginBottom: 12, marginTop: 24 }}>
+        <h3 style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-muted)' }}>Contabilidad Real (Movimientos de Caja)</h3>
+      </div>
+      <div className="kpi-row" style={{ marginBottom: 24 }}>
+        <div className="kpi-card cyan">
+          <div className="kpi-label">Entradas (Ingresos)</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: 'rgba(0, 255, 136, 0.05)', 
+            border: '1px solid rgba(0, 255, 136, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: '#00FF88'
+          }}>${totalRevenue.toLocaleString('es-CO')}</div>
+          <div className="kpi-change positive">Dinero ingresado</div>
+        </div>
+        <div className="kpi-card cyan">
+          <div className="kpi-label">Salidas (Gastos)</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: 'rgba(255, 75, 75, 0.05)', 
+            border: '1px solid rgba(255, 75, 75, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: '#FF4B4B'
+          }}>${totalExpenses.toLocaleString('es-CO')}</div>
+          <div className="kpi-change negative">Dinero gastado</div>
+        </div>
+        <div className="kpi-card cyan">
+          <div className="kpi-label">Lo que queda (Neto)</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: netProfit >= 0 ? 'rgba(0, 255, 136, 0.05)' : 'rgba(255, 75, 75, 0.05)', 
+            border: netProfit >= 0 ? '1px solid rgba(0, 255, 136, 0.2)' : '1px solid rgba(255, 75, 75, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: netProfit >= 0 ? '#00FF88' : '#FF4B4B'
+          }}>${netProfit.toLocaleString('es-CO')}</div>
+          <div className={`kpi-change ${netProfit >= 0 ? 'positive' : 'negative'}`}>Balance final</div>
         </div>
       </div>
 
