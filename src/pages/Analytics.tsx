@@ -19,7 +19,7 @@ import { useGymData } from '../hooks/useGymData';
 export default function Analytics() {
   const { transactions, members } = useGymData();
 
-  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers } = useMemo(() => {
+  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit } = useMemo(() => {
     // 1. Distribution of Plans (Dinámico)
     const plans: Record<string, number> = {};
     members.forEach(m => {
@@ -136,7 +136,10 @@ export default function Analytics() {
       dailyClients: dailyClientData,
       monthlyClients: monthlyClientData,
       dailyPayers,
-      monthlyPayers
+      monthlyPayers,
+      totalRevenue,
+      totalExpenses,
+      netProfit
     };
   }, [transactions, members]);
 
