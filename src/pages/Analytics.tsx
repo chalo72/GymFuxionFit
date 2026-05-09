@@ -30,8 +30,9 @@ export default function Analytics() {
     let dailyPayers = 0;
     let monthlyPayers = 0;
     
-    Object.entries(plans).forEach(([plan, count]) => {
-      const pLow = plan.toLowerCase();
+    Object.entries(planCounts).forEach(([planId, count]) => {
+      const planObj = plans ? plans.find((p: any) => p.id === planId) : null;
+      const pLow = (planObj?.name || planId).toLowerCase();
       if (pLow.includes('día') || pLow === 'dia' || pLow.includes('diario')) {
         dailyPayers += count;
       } else if (pLow.includes('mes') || pLow.includes('básico') || pLow.includes('basico') || pLow.includes('pro') || pLow.includes('hyrox')) {
@@ -40,9 +41,13 @@ export default function Analytics() {
     });
     
     const colors = ['#FFD600', '#00E5FF', '#00F0FF', '#FF6B35', '#00E676', '#888888'];
-    const distData = Object.entries(plans)
+    const distData = Object.entries(planCounts)
       .filter(([_, count]) => count > 0)
-      .map(([plan, count], i) => ({ plan, count, color: colors[i % colors.length] }));
+      .map(([planId, count], i) => {
+        const planObj = plans ? plans.find((p: any) => p.id === planId) : null;
+        const planName = planObj ? planObj.name : planId;
+        return { plan: planName, count, color: colors[i % colors.length] };
+      });
 
     // 2. Monthly Revenue (Last 6-12 months from transactions)
     const revMap: Record<string, number> = {};
