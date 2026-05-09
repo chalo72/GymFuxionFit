@@ -17,9 +17,9 @@ import { useMemo } from 'react';
 import { useGymData } from '../hooks/useGymData';
 
 export default function Analytics() {
-  const { transactions, members } = useGymData();
+  const { transactions, members, obligations } = useGymData();
 
-  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit } = useMemo(() => {
+  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit, pendingPayroll, pendingCommitments } = useMemo(() => {
     // 1. Distribution of Plans (Dinámico)
     const plans: Record<string, number> = {};
     members.forEach(m => {
@@ -129,6 +129,9 @@ export default function Analytics() {
       };
     });
 
+    const pendingPayroll = obligations ? obligations.filter(o => o.status === 'pending' && o.category === 'payroll').reduce((acc, o) => acc + o.amount, 0) : 0;
+    const pendingCommitments = obligations ? obligations.filter(o => o.status === 'pending' && o.category !== 'payroll').reduce((acc, o) => acc + o.amount, 0) : 0;
+
     return { 
       monthlyRevenue: monthlyData, 
       planDistribution: distData, 
@@ -139,9 +142,11 @@ export default function Analytics() {
       monthlyPayers,
       totalRevenue,
       totalExpenses,
-      netProfit
+      netProfit,
+      pendingPayroll,
+      pendingCommitments
     };
-  }, [transactions, members]);
+  }, [transactions, members, obligations]);
 
 
   return (
@@ -281,6 +286,38 @@ export default function Analytics() {
             color: netProfit >= 0 ? '#00FF88' : '#FF4B4B'
           }}>${netProfit.toLocaleString('es-CO')}</div>
           <div className={`kpi-change ${netProfit >= 0 ? 'positive' : 'negative'}`}>Balance final</div>
+        </div>
+        {/* Nómina Pendiente */}
+        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+          <div className="kpi-label">Nómina Pendiente</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: 'rgba(255, 75, 75, 0.05)', 
+            border: '1px solid rgba(255, 75, 75, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: '#FF4B4B'
+          }}>${pendingPayroll.toLocaleString('es-CO')}</div>
+          <div className="kpi-change negative">Por pagar al personal</div>
+        </div>
+        {/* Otros Compromisos */}
+        <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
+          <div className="kpi-label">Otros Compromisos</div>
+          <div className="kpi-value" style={{ 
+            fontSize: 'var(--text-2xl)', 
+            background: 'rgba(255, 75, 75, 0.05)', 
+            border: '1px solid rgba(255, 75, 75, 0.2)', 
+            borderRadius: '6px', 
+            padding: '4px 12px', 
+            display: 'inline-block',
+            marginTop: '6px',
+            fontWeight: 700,
+            color: '#FF4B4B'
+          }}>${pendingCommitments.toLocaleString('es-CO')}</div>
+          <div className="kpi-change negative">Servicios, arriendo, etc.</div>
         </div>
       </div>
 
