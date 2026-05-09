@@ -63,15 +63,34 @@ export default function Analytics() {
       };
     });
 
-    // 3. KPI Metrics
+    // 3. KPI Metrics (Análisis Financiero por Heurística)
+    let moneyDaily = 0;
+    let moneyMonthly = 0;
+    
+    transactions.filter(t => t.type === 'income').forEach(t => {
+      const amount = t.amount;
+      const desc = (t.description || '').toLowerCase();
+      
+      // Heurística por descripción o por monto
+      if (desc.includes('día') || desc.includes('dia') || desc.includes('visita')) {
+        moneyDaily += amount;
+      } else if (desc.includes('mes') || desc.includes('mensual') || desc.includes('básico') || desc.includes('pro')) {
+        moneyMonthly += amount;
+      } else if (amount === 3000) {
+        moneyDaily += amount;
+      } else if (amount >= 45000) {
+        moneyMonthly += amount;
+      }
+    });
+
     const totalRevenue = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
     const inactiveCount = members.filter(m => (!m.visits || m.visits === 0) && m.status !== 'suspended').length;
     const suspendedCount = members.filter(m => m.status === 'suspended').length;
 
     const computedMetrics = [
-      { icon: Users, label: 'Visitantes (Día)', value: `${dailyPayers}`, change: 'Clientes activos', up: true },
-      { icon: Users, label: 'Pagan Mensual', value: `${monthlyPayers}`, change: 'Clientes activos', up: true },
-      { icon: Activity, label: 'Ingreso Bruto Total', value: `$${totalRevenue.toLocaleString()}`, change: 'Todas las ventas', up: true },
+      { icon: Activity, label: 'Dinero por Día (Visitas)', value: `$${moneyDaily.toLocaleString()}`, change: 'Total histórico', up: true },
+      { icon: Activity, label: 'Dinero por Mes (Planes)', value: `$${moneyMonthly.toLocaleString()}`, change: 'Total histórico', up: true },
+      { icon: Activity, label: 'Total Recaudado (Ambos)', value: `$${(moneyDaily + moneyMonthly).toLocaleString()}`, change: 'Suma de ambos', up: true },
       { icon: Target, label: 'Inactivos (0 Visitas)', value: `${inactiveCount}`, change: 'Sin asistencia', up: false },
       { icon: Shield, label: 'Suspendidos', value: `${suspendedCount}`, change: 'Pausados', up: false },
     ];
