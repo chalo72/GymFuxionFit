@@ -1,3 +1,4 @@
+// Force update: 2026-05-08 v2
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, CalendarDays, BarChart3, Settings,
