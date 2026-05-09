@@ -19,16 +19,23 @@ export default function Analytics() {
   const { transactions, members } = useGymData();
 
   const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients } = useMemo(() => {
-    // 1. Distribution of Plans
-    const plans: Record<string, number> = { 'Día': 0, 'Semanal': 0, 'Básico': 0, 'Pro': 0, 'HYROX Pro': 0, 'Otro': 0 };
+    // 1. Distribution of Plans (Dinámico)
+    const plans: Record<string, number> = {};
     members.forEach(m => {
-      const p = m.plan || 'Otro';
-      if (p.toLowerCase().includes('día') || p.toLowerCase() === 'dia') plans['Día']++;
-      else if (p.toLowerCase().includes('semana')) plans['Semanal']++;
-      else if (p.toLowerCase().includes('básico') || p.toLowerCase() === 'basico') plans['Básico']++;
-      else if (p.toLowerCase().includes('pro')) plans['Pro']++;
-      else if (p.toLowerCase().includes('hyrox')) plans['HYROX Pro']++;
-      else plans['Otro']++;
+      const p = m.plan || 'Sin Plan';
+      plans[p] = (plans[p] || 0) + 1;
+    });
+    
+    let dailyPayers = 0;
+    let monthlyPayers = 0;
+    
+    Object.entries(plans).forEach(([plan, count]) => {
+      const pLow = plan.toLowerCase();
+      if (pLow.includes('día') || pLow === 'dia' || pLow.includes('diario')) {
+        dailyPayers += count;
+      } else if (pLow.includes('mes') || pLow.includes('básico') || pLow.includes('basico') || pLow.includes('pro') || pLow.includes('hyrox')) {
+        monthlyPayers += count;
+      }
     });
     
     const colors = ['#FFD600', '#00E5FF', '#00F0FF', '#FF6B35', '#00E676', '#888888'];
@@ -59,10 +66,9 @@ export default function Analytics() {
     // 3. KPI Metrics
     const totalRevenue = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
     const inactiveCount = members.filter(m => !m.visits || m.visits === 0).length;
-    const monthlyPayers = plans['Básico'] + plans['Pro'] + plans['HYROX Pro'];
 
     const computedMetrics = [
-      { icon: Users, label: 'Pagan Diario (Día)', value: `${plans['Día']}`, change: 'Clientes activos', up: true },
+      { icon: Users, label: 'Pagan Diario (Día)', value: `${dailyPayers}`, change: 'Clientes activos', up: true },
       { icon: Users, label: 'Pagan Mensual', value: `${monthlyPayers}`, change: 'Clientes activos', up: true },
       { icon: Activity, label: 'Ingreso Bruto Total', value: `$${totalRevenue.toLocaleString()}`, change: 'Todas las ventas', up: true },
       { icon: Target, label: 'Inactivos (0 Visitas)', value: `${inactiveCount}`, change: 'Atención', up: false },
