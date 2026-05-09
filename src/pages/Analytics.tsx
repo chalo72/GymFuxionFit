@@ -17,9 +17,9 @@ import { useMemo } from 'react';
 import { useGymData } from '../hooks/useGymData';
 
 export default function Analytics() {
-  const { transactions, members, obligations } = useGymData();
+  const { transactions, members, obligations, staff } = useGymData();
 
-  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit, pendingPayroll, pendingCommitments } = useMemo(() => {
+  const { monthlyRevenue, planDistribution, metrics, dailyClients, monthlyClients, dailyPayers, monthlyPayers, totalRevenue, totalExpenses, netProfit, totalStaffPayroll, pendingCommitments } = useMemo(() => {
     // 1. Distribution of Plans (Dinámico)
     const plans: Record<string, number> = {};
     members.forEach(m => {
@@ -129,7 +129,7 @@ export default function Analytics() {
       };
     });
 
-    const pendingPayroll = obligations ? obligations.filter(o => o.status === 'pending' && o.category === 'payroll').reduce((acc, o) => acc + o.amount, 0) : 0;
+    const totalStaffPayroll = staff ? staff.filter(s => s.status === 'active').reduce((acc, s) => acc + (s.salary || 0), 0) : 0;
     const pendingCommitments = obligations ? obligations.filter(o => o.status === 'pending' && o.category !== 'payroll').reduce((acc, o) => acc + o.amount, 0) : 0;
 
     return { 
@@ -143,7 +143,7 @@ export default function Analytics() {
       totalRevenue,
       totalExpenses,
       netProfit,
-      pendingPayroll,
+      totalStaffPayroll,
       pendingCommitments
     };
   }, [transactions, members, obligations]);
@@ -289,7 +289,7 @@ export default function Analytics() {
         </div>
         {/* Nómina Pendiente */}
         <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
-          <div className="kpi-label">Nómina Pendiente</div>
+          <div className="kpi-label">Nómina (Suma de Sueldos)</div>
           <div className="kpi-value" style={{ 
             fontSize: 'var(--text-2xl)', 
             background: 'rgba(255, 75, 75, 0.05)', 
@@ -300,8 +300,8 @@ export default function Analytics() {
             marginTop: '6px',
             fontWeight: 700,
             color: '#FF4B4B'
-          }}>${pendingPayroll.toLocaleString('es-CO')}</div>
-          <div className="kpi-change negative">Por pagar al personal</div>
+          }}>${totalStaffPayroll.toLocaleString('es-CO')}</div>
+          <div className="kpi-change negative">Total mensual activo</div>
         </div>
         {/* Otros Compromisos */}
         <div className="kpi-card cyan" style={{ flex: '1 1 250px' }}>
