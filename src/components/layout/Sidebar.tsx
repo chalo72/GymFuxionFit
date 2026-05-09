@@ -173,21 +173,32 @@ export default function Sidebar({
       {/* ─── NAVIGATION ─── */}
       <nav className="sidebar-nav">
         {navGroups.map((group: any) => (
-          <div key={group.section}>
-            <span className="sidebar-section-label">{group.section}</span>
-            {group.items.map((item: any) => (
-              <NavLink
-                key={`${group.section}__${item.to}`}
-                to={item.to}
-                className={`sidebar-item ${location.pathname === item.to ? 'active' : ''}`}
-              >
-                <item.icon />
-                <span>{item.label}</span>
-                {'badge' in item && item.badge && (
-                  <span className="sidebar-badge">{item.badge}</span>
-                )}
-              </NavLink>
-            ))}
+          <div key={group.section} style={{ marginBottom: '16px', padding: '0 8px' }}>
+            <span className="sidebar-section-label" style={{ paddingLeft: '8px', marginBottom: '6px', display: 'block' }}>{group.section}</span>
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: '12px',
+              padding: '6px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px'
+            }}>
+              {group.items.map((item: any) => (
+                <NavLink
+                  key={`${group.section}__${item.to}`}
+                  to={item.to}
+                  className={`sidebar-item ${location.pathname === item.to ? 'active' : ''}`}
+                  style={{ borderRadius: '8px' }}
+                >
+                  <item.icon />
+                  <span>{item.label}</span>
+                  {'badge' in item && item.badge && (
+                    <span className="sidebar-badge">{item.badge}</span>
+                  )}
+                </NavLink>
+              ))}
+            </div>
           </div>
         ))}
       </nav>
