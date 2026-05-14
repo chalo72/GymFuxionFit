@@ -1,10 +1,12 @@
 {
-  "version": "7.1.3",
-  "build": "20260514.2",
-  "status": "FORCE_SYNC_ONLINE",
+  "version": "7.0.10",
+  "build": "20260514.1739",
+  "status": "ULTRA_STABLE_V7",
   "author": "Antigravity Nexus",
   "features": [
-    "🚀 FORCE_SYNC: Botón de sincronización manual para empujar datos locales a Vercel/Firebase",
-    "🛡️ CACHE_SLAYER: Eliminación de Service Workers atascados en dispositivos móviles"
+    "🚀 OMNI_STABILITY: Blindaje masivo contra errores de nulidad (toLowerCase)",
+    "🛡️ CORE_INTEGRITY: Parche crítico en Member List y Reception POS",
+    "💎 PREMIUM_RECOVERY: Estabilización de flujos tras fallo de build local",
+    "🔄 CACHE_PURGE: Incremento de versión para forzar actualización en clientes"
   ]
 }
