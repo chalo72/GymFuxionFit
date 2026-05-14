@@ -222,6 +222,18 @@ export default function Sidebar({
             <div className="sidebar-user-role">{roleLabels[role]}</div>
           </div>
           <button
+            onClick={async () => {
+              const { useGymData } = await import('../../hooks/useGymData');
+              // Llamamos a un evento custom o disparamos la alerta
+              alert("Iniciando escaneo de datos locales...");
+              window.dispatchEvent(new CustomEvent('FORCE_NEXUS_SYNC'));
+            }}
+            title="Forzar Sincronización a la Nube"
+            style={{ color: '#00F0FF', cursor: 'pointer', background: 'none', padding: 4, marginLeft: '8px', borderRadius: 'var(--radius-sm)' }}
+          >
+            <Zap size={16} />
+          </button>
+          <button
             onClick={handleLogout}
             title="Cerrar sesión"
             style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'none', padding: 4, marginLeft: 'auto', borderRadius: 'var(--radius-sm)', transition: 'color var(--transition-fast)' }}

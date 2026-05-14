@@ -612,6 +612,21 @@ function useGymDataInternal() {
     }
   };
 
+  // 🚀 ESCUCHADOR GLOBAL DE SINCRONIZACIÓN
+  useEffect(() => {
+    const handleForceSync = async () => {
+      console.log("⚡ [NEXUS]: Señal de Sincronización Forzada recibida.");
+      const success = await forceSyncAll();
+      if (success) {
+        alert("✅ Sincronización completada. Los datos locales fueron empujados a la nube.");
+      } else {
+        alert("❌ Error en sincronización. Revisa la consola o asegúrate de tener conexión.");
+      }
+    };
+    window.addEventListener('FORCE_NEXUS_SYNC', handleForceSync);
+    return () => window.removeEventListener('FORCE_NEXUS_SYNC', handleForceSync);
+  }, [members, products, transactions]);
+
   return { 
     transactions, assets, members, products, plans, plansConfig, waterConfig,
     syncError, syncStatus, pendingTasks,
