@@ -2,6 +2,15 @@ import { DatabaseAdapter, setAdapter } from './dbAdapter';
 import { FirebaseAdapter } from './firebaseAdapter';
 import { IndexedDBAdapter } from './indexedDBAdapter';
 
+const COLLECTION_MAPPING: Record<string, string> = {
+  'members': 'Members',
+  'products': 'Productos'
+};
+
+function mapCollectionName(name: string): string {
+  return COLLECTION_MAPPING[name] || name;
+}
+
 /**
  * 🛰️ MULTI-ENGINE ADAPTER
  * Esta clase especial coordina múltiples bases de datos al mismo tiempo.
@@ -24,24 +33,26 @@ class MultiAdapter implements DatabaseAdapter {
   }
 
   async getCollection<T>(name: string) {
+    const mappedName = mapCollectionName(name);
     try {
       // 🔍 DEEP FETCH: Si el primario está vacío, probamos con el suplente
-      const data = await this.withTimeout(this.primary.getCollection<T>(name));
+      const data = await this.withTimeout(this.primary.getCollection<T>(mappedName));
       if ((!data || data.length === 0) && this.shadow) {
-        console.log(`⚠️ [NEXUS]: ${name} vacío en Capitán. Intentando recuperar desde Suplente...`);
-        return this.withTimeout(this.shadow.getCollection<T>(name));
+        console.log(`⚠️ [NEXUS]: ${mappedName} vacío en Capitán. Intentando recuperar desde Suplente...`);
+        return this.withTimeout(this.shadow.getCollection<T>(mappedName));
       }
       return data || [];
     } catch (e) {
-      console.warn(`⏳ [NEXUS]: Timeout/Error en ${name}. Usando memoria local.`);
+      console.warn(`⏳ [NEXUS]: Timeout/Error en ${mappedName}. Usando memoria local.`);
       return [];
     }
   }
 
   async getDocument<T>(collection: string, id: string) {
+    const mappedName = mapCollectionName(collection);
     try {
-      const doc = await this.withTimeout(this.primary.getDocument<T>(collection, id));
-      if (!doc && this.shadow) return this.withTimeout(this.shadow.getDocument<T>(collection, id));
+      const doc = await this.withTimeout(this.primary.getDocument<T>(mappedName, id));
+      if (!doc && this.shadow) return this.withTimeout(this.shadow.getDocument<T>(mappedName, id));
       return doc;
     } catch (e) {
       return null;
@@ -49,25 +60,28 @@ class MultiAdapter implements DatabaseAdapter {
   }
 
   async setDocument<T>(collection: string, id: string, data: T) {
-    // ✍️ El Capitán (Appwrite) manda. Si falla, lanzamos error para reintentar.
-    await this.primary.setDocument(collection, id, data);
+    const mappedName = mapCollectionName(collection);
+    // ✍️ El Capitán manda.
+    await this.primary.setDocument(mappedName, id, data);
     
-    // El Suplente (Firebase) es opcional. Si falla, solo avisamos.
+    // El Suplente (Firebase) es opcional.
     if (this.shadow) {
       try {
-        await this.shadow.setDocument(collection, id, data);
+        await this.shadow.setDocument(mappedName, id, data);
+        console.log(`✅ [NEXUS]: Sincronizado con Firebase: ${mappedName}/${id}`);
       } catch (e) {
-        console.warn(`⚠️ [NEXUS]: Fallo silencioso en Suplente (Firebase).`);
+        console.warn(`⚠️ [NEXUS]: Fallo silencioso en Suplente (Firebase).`, e);
       }
     }
   }
 
   async deleteDocument(collection: string, id: string) {
-    await this.primary.deleteDocument(collection, id);
+    const mappedName = mapCollectionName(collection);
+    await this.primary.deleteDocument(mappedName, id);
 
     if (this.shadow) {
       try {
-        await this.shadow.deleteDocument(collection, id);
+        await this.shadow.deleteDocument(mappedName, id);
       } catch (e) {
         console.warn(`⚠️ [NEXUS]: Fallo silencioso en Suplente al borrar.`);
       }
@@ -75,8 +89,9 @@ class MultiAdapter implements DatabaseAdapter {
   }
 
   subscribe<T>(collection: string, callback: (data: T[]) => void) {
+    const mappedName = mapCollectionName(collection);
     // Nos suscribimos al primario
-    return this.primary.subscribe(collection, callback);
+    return this.primary.subscribe(mappedName, callback);
   }
 }
 
@@ -115,8 +130,8 @@ class LocalFallbackAdapter implements DatabaseAdapter {
 
 // ─── COLECCIONES QUE SE HIDRATAN DESDE FIREBASE AL ARRANCAR ───
 const COLECCIONES_PRINCIPALES = [
-  'Members',
-  'Productos',
+  'members',
+  'products',
   'catalogs',
   'transactions',
   'configuracion'
@@ -133,18 +148,19 @@ async function hydratarDesdeNube(
 ): Promise<void> {
   console.log('🌊 [NEXUS]: Iniciando hidratación Firebase → IndexedDB...');
   for (const col of colecciones) {
+    const firebaseCol = mapCollectionName(col);
     try {
-      const localCount = await localDB.count(col);
+      const localCount = await localDB.count(firebaseCol);
       if (localCount === 0) {
-        const datosNube = await nube.getCollection<any>(col);
+        const datosNube = await nube.getCollection<any>(firebaseCol);
         if (datosNube.length > 0) {
-          await localDB.hydrateFromCloud(col, datosNube);
+          await localDB.hydrateFromCloud(firebaseCol, datosNube);
         }
       } else {
-        console.log(`✅ [NEXUS]: '${col}' ya tiene ${localCount} items locales. No se sobrescribe.`);
+        console.log(`✅ [NEXUS]: '${firebaseCol}' ya tiene ${localCount} items locales. No se sobrescribe.`);
       }
     } catch (e) {
-      console.warn(`⚠️ [NEXUS]: No se pudo hidratar '${col}'.`, e);
+      console.warn(`⚠️ [NEXUS]: No se pudo hidratar '${firebaseCol}'.`, e);
     }
   }
   console.log('✅ [NEXUS]: Hidratación completada.');
