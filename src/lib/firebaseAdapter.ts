@@ -1,14 +1,14 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  getFirestore, 
-  collection, 
-  getDocs, 
-  doc, 
-  getDoc, 
-  setDoc, 
-  deleteDoc, 
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  setDoc,
+  deleteDoc,
   onSnapshot,
-  enableIndexedDbPersistence
 } from 'firebase/firestore';
 import { DatabaseAdapter } from './dbAdapter';
 
@@ -21,16 +21,13 @@ export class FirebaseAdapter implements DatabaseAdapter {
 
   constructor(config: any) {
     const app = initializeApp(config);
-    this.db = getFirestore(app);
+    this.db = initializeFirestore(app, {
+      localCache: persistentLocalCache({})
+    });
   }
 
   async init(): Promise<void> {
-    try {
-      await enableIndexedDbPersistence(this.db);
-      console.log("🔥 Firebase Adapter Initialized with Offline Sync");
-    } catch (err: any) {
-      console.warn("Offline persistence failed (could be multiple tabs):", err.message);
-    }
+    console.log("🔥 Firebase Adapter Initialized with Offline Sync");
   }
 
   private normalizeName(name: string): string {
@@ -66,9 +63,20 @@ export class FirebaseAdapter implements DatabaseAdapter {
 
   subscribe<T>(name: string, callback: (data: T[]) => void): () => void {
     const colName = this.normalizeName(name);
-    return onSnapshot(collection(this.db, colName), (snap) => {
-      const data = snap.docs.map(d => ({ ...d.data(), id: d.id })) as T[];
-      callback(data);
-    });
+    try {
+      return onSnapshot(
+        collection(this.db, colName),
+        (snap) => {
+          const data = snap.docs.map(d => ({ ...d.data(), id: d.id })) as T[];
+          callback(data);
+        },
+        (error) => {
+          console.warn(`⚠️ [Firebase]: onSnapshot bloqueado/error en '${colName}':`, error.message);
+        }
+      );
+    } catch (error: any) {
+      console.warn(`⚠️ [Firebase]: No se pudo suscribir a '${colName}'.`, error);
+      return () => {};
+    }
   }
 }

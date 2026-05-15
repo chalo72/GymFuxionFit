@@ -179,10 +179,15 @@ export class IndexedDBAdapter implements DatabaseAdapter {
    * Suscripción a cambios en tiempo real (Polling de compatibilidad).
    */
   subscribe<T>(collection: string, callback: (data: T[]) => void): () => void {
-    this.getCollection<T>(collection).then(callback);
+    // Guard: solo ejecutar si DB ya está inicializada
+    if (this.db) {
+      this.getCollection<T>(collection).then(callback).catch(console.error);
+    }
 
     const interval = setInterval(() => {
-      this.getCollection<T>(collection).then(callback);
+      if (this.db) {
+        this.getCollection<T>(collection).then(callback).catch(console.error);
+      }
     }, 3000);
 
     return () => clearInterval(interval);
