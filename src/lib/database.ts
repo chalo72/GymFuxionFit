@@ -1,5 +1,7 @@
 import { DatabaseAdapter, setAdapter } from './dbAdapter';
 import { FirebaseAdapter } from './firebaseAdapter';
+import { SupabaseAdapter } from './supabaseAdapter';
+import { hasSupabase } from './supabase';
 import { IndexedDBAdapter } from './indexedDBAdapter';
 
 const COLLECTION_MAPPING: Record<string, string> = {
@@ -64,13 +66,13 @@ class MultiAdapter implements DatabaseAdapter {
     // ✍️ El Capitán manda.
     await this.primary.setDocument(mappedName, id, data);
     
-    // El Suplente (Firebase) es opcional.
+    // El Suplente (Supabase) es opcional.
     if (this.shadow) {
       try {
         await this.shadow.setDocument(mappedName, id, data);
-        console.log(`✅ [NEXUS]: Sincronizado con Firebase: ${mappedName}/${id}`);
+        console.log(`✅ [NEXUS]: Sincronizado con Supabase: ${mappedName}/${id}`);
       } catch (e) {
-        console.warn(`⚠️ [NEXUS]: Fallo silencioso en Suplente (Firebase).`, e);
+        console.warn(`⚠️ [NEXUS]: Fallo silencioso en Suplente (Supabase).`, e);
       }
     }
   }
@@ -94,11 +96,11 @@ class MultiAdapter implements DatabaseAdapter {
     // Nos suscribimos al primario (IndexedDB - Polling)
     const unsubPrimary = this.primary.subscribe(mappedName, callback);
     
-    // 🚀 MODO ARMAGEDON: Nos suscribimos también a Firebase (Tiempo Real)
+    // 🚀 MODO ARMAGEDON: Nos suscribimos a Supabase (Tiempo Real via WebSockets)
     let unsubShadow = () => {};
     if (this.shadow) {
       unsubShadow = this.shadow.subscribe(mappedName, (data) => {
-        console.log(`📡 [NEXUS]: Actualización en tiempo real desde Firebase para ${mappedName}`);
+        console.log(`📡 [NEXUS]: Actualización en tiempo real desde Supabase para ${mappedName}`);
         callback(data as T[]);
       });
     }
@@ -153,15 +155,15 @@ const COLECCIONES_PRINCIPALES = [
 ];
 
 /**
- * 🌊 HYDRATE: Carga datos de Firebase → IndexedDB al arrancar.
+ * 🌊 HYDRATE: Carga datos de la nube → IndexedDB al arrancar.
  * Solo hidrata si la colección local está vacía.
  */
 async function hydratarDesdeNube(
   localDB: IndexedDBAdapter,
-  nube: FirebaseAdapter,
+  nube: DatabaseAdapter,
   colecciones: string[]
 ): Promise<void> {
-  console.log('🌊 [NEXUS]: Iniciando hidratación Firebase → IndexedDB...');
+  console.log('🌊 [NEXUS]: Iniciando hidratación Nube → IndexedDB...');
   for (const col of colecciones) {
     const firebaseCol = mapCollectionName(col);
     try {
@@ -187,29 +189,33 @@ const hasFirebase = !!import.meta.env.VITE_FIREBASE_API_KEY;
 
 console.log("📡 [NEXUS CONFIG]:", {
   hasFirebase,
+  hasSupabase,
   project: import.meta.env.VITE_FIREBASE_PROJECT_ID
 });
 
 // 1️⃣ MOTOR LOCAL — IndexedDB: SIEMPRE activo, fuente de verdad offline
 const localAdapter = new IndexedDBAdapter();
 
-// 2️⃣ MOTOR NUBE — Firebase: activo solo si hay credenciales
+// 2️⃣ MOTOR NUBE — Supabase primero (WebSockets, no bloqueado por adblockers)
+//    Firebase como fallback si no hay Supabase
+const supabaseAdapter = hasSupabase ? new SupabaseAdapter() : null;
 const firebaseAdapter = hasFirebase ? new FirebaseAdapter(firebaseConfig) : null;
+const shadowAdapter = supabaseAdapter || firebaseAdapter;
 
-// 3️⃣ ORQUESTADOR — IndexedDB (primario) + Firebase (sombra)
-const activeAdapter: DatabaseAdapter = firebaseAdapter
-  ? new MultiAdapter(localAdapter, firebaseAdapter)
+// 3️⃣ ORQUESTADOR — IndexedDB (primario) + Supabase (sombra realtime)
+const activeAdapter: DatabaseAdapter = shadowAdapter
+  ? new MultiAdapter(localAdapter, shadowAdapter)
   : localAdapter;
 
 // Inicialización con hidratación automática al arrancar
 (async () => {
   try {
     await activeAdapter.init();
-    if (firebaseAdapter) {
-      // Cargar datos de Firebase → IndexedDB si el local está vacío
-      await hydratarDesdeNube(localAdapter, firebaseAdapter, COLECCIONES_PRINCIPALES);
+    const cloudSource = supabaseAdapter || firebaseAdapter;
+    if (cloudSource) {
+      await hydratarDesdeNube(localAdapter, cloudSource, COLECCIONES_PRINCIPALES);
     } else {
-      console.log('📴 [NEXUS]: Sin Firebase. Modo 100% Offline (IndexedDB).');
+      console.log('📴 [NEXUS]: Sin nube. Modo 100% Offline (IndexedDB).');
     }
   } catch (e) {
     console.error('❌ [NEXUS]: Error crítico al inicializar DB.', e);

@@ -65,25 +65,25 @@ export class SupabaseAdapter implements DatabaseAdapter {
   }
 
   subscribe<T>(name: string, callback: (data: T[]) => void): () => void {
-    // 🛡️ TRIO SYNC STEP 1: Unified Broadcast (Misma frecuencia para todos)
-    const channelId = `${name}-global-sync`;
-    
+    const tableName = this.normalizeName(name); // 'Members' → 'members' para Postgres
+    const channelId = `${tableName}-global-sync`;
+
     // Limpieza agresiva: buscamos tanto el nombre del canal como el tópico
     const allChannels = supabase.getChannels();
     const existing = allChannels.find(c => c.topic === `realtime:${channelId}` || c.topic === channelId || (c as any).name === channelId);
-    
+
     if (existing) {
       supabase.removeChannel(existing);
     }
 
     const channel = supabase
       .channel(channelId)
-      .on('postgres_changes', { event: '*', schema: 'public', table: name }, async () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: tableName }, async () => {
         try {
           const data = await this.getCollection<T>(name);
           callback(data);
         } catch (err) {
-          console.error(`❌ Error en actualización realtime (${name}):`, err);
+          console.error(`❌ Error en actualización realtime (${tableName}):`, err);
         }
       })
       .subscribe((status) => {
