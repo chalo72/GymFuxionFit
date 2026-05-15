@@ -99,7 +99,7 @@ class MultiAdapter implements DatabaseAdapter {
     if (this.shadow) {
       unsubShadow = this.shadow.subscribe(mappedName, (data) => {
         console.log(`📡 [NEXUS]: Actualización en tiempo real desde Firebase para \${mappedName}`);
-        callback(data);
+        callback(data as T[]);
       });
     }
     
