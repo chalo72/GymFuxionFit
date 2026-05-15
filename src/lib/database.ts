@@ -1,6 +1,6 @@
 import { DatabaseAdapter, setAdapter } from './dbAdapter';
 import { FirebaseAdapter } from './firebaseAdapter';
-import { AppwriteAdapter } from './appwriteAdapter';
+import { IndexedDBAdapter } from './indexedDBAdapter';
 
 /**
  * 🛰️ MULTI-ENGINE ADAPTER
@@ -113,43 +113,78 @@ class LocalFallbackAdapter implements DatabaseAdapter {
   subscribe() { return () => {}; }
 }
 
+// ─── COLECCIONES QUE SE HIDRATAN DESDE FIREBASE AL ARRANCAR ───
+const COLECCIONES_PRINCIPALES = [
+  'Members',
+  'Productos',
+  'catalogs',
+  'transactions',
+  'configuracion'
+];
+
+/**
+ * 🌊 HYDRATE: Carga datos de Firebase → IndexedDB al arrancar.
+ * Solo hidrata si la colección local está vacía.
+ */
+async function hydratarDesdeNube(
+  localDB: IndexedDBAdapter,
+  nube: FirebaseAdapter,
+  colecciones: string[]
+): Promise<void> {
+  console.log('🌊 [NEXUS]: Iniciando hidratación Firebase → IndexedDB...');
+  for (const col of colecciones) {
+    try {
+      const localCount = await localDB.count(col);
+      if (localCount === 0) {
+        const datosNube = await nube.getCollection<any>(col);
+        if (datosNube.length > 0) {
+          await localDB.hydrateFromCloud(col, datosNube);
+        }
+      } else {
+        console.log(`✅ [NEXUS]: '${col}' ya tiene ${localCount} items locales. No se sobrescribe.`);
+      }
+    } catch (e) {
+      console.warn(`⚠️ [NEXUS]: No se pudo hidratar '${col}'.`, e);
+    }
+  }
+  console.log('✅ [NEXUS]: Hidratación completada.');
+}
+
 let mainDatabase: DatabaseAdapter;
 
 const hasFirebase = !!import.meta.env.VITE_FIREBASE_API_KEY;
-const hasAppwrite = !!import.meta.env.VITE_APPWRITE_ENDPOINT;
 
 console.log("📡 [NEXUS CONFIG]:", {
   hasFirebase,
-  hasAppwrite,
-  appwriteDb: appwriteConfig.database,
-  appwriteProject: appwriteConfig.project
+  project: import.meta.env.VITE_FIREBASE_PROJECT_ID
 });
 
-// 🛡️ REGLA DE ORO ANTIGRAVITY: Prioridad Total a Appwrite (Capitán) y Firebase (Suplente)
+// 1️⃣ MOTOR LOCAL — IndexedDB: SIEMPRE activo, fuente de verdad offline
+const localAdapter = new IndexedDBAdapter();
+
+// 2️⃣ MOTOR NUBE — Firebase: activo solo si hay credenciales
 const firebaseAdapter = hasFirebase ? new FirebaseAdapter(firebaseConfig) : null;
-const appwriteAdapter = hasAppwrite ? new AppwriteAdapter(appwriteConfig.endpoint, appwriteConfig.project, appwriteConfig.database) : null;
 
-try {
-  if (appwriteAdapter && firebaseAdapter) {
-    console.log("💎 [NEXUS]: MODO HÍBRIDO ELITE — Appwrite (Capitán) + Firebase (Suplente)");
-    mainDatabase = new MultiAdapter(appwriteAdapter, firebaseAdapter);
-  } else if (appwriteAdapter) {
-    console.log("🖋️ [NEXUS]: MODO SINGLE — Usando Appwrite como Capitán principal.");
-    mainDatabase = appwriteAdapter;
-  } else if (firebaseAdapter) {
-    console.log("🔥 [NEXUS]: MODO SINGLE — Usando Firebase de emergencia.");
-    mainDatabase = firebaseAdapter;
-  } else {
-    // 🛡️ MODO LOCAL SEGURO: Sin bases de datos cloud
-    console.warn("🛡️ [NEXUS]: Sin conexión Cloud. Iniciando en Modo Local Seguro.");
-    mainDatabase = new LocalFallbackAdapter();
+// 3️⃣ ORQUESTADOR — IndexedDB (primario) + Firebase (sombra)
+const activeAdapter: DatabaseAdapter = firebaseAdapter
+  ? new MultiAdapter(localAdapter, firebaseAdapter)
+  : localAdapter;
+
+// Inicialización con hidratación automática al arrancar
+(async () => {
+  try {
+    await activeAdapter.init();
+    if (firebaseAdapter) {
+      // Cargar datos de Firebase → IndexedDB si el local está vacío
+      await hydratarDesdeNube(localAdapter, firebaseAdapter, COLECCIONES_PRINCIPALES);
+    } else {
+      console.log('📴 [NEXUS]: Sin Firebase. Modo 100% Offline (IndexedDB).');
+    }
+  } catch (e) {
+    console.error('❌ [NEXUS]: Error crítico al inicializar DB.', e);
   }
-} catch (e) {
-  console.error("❌ [NEXUS]: Error en inicialización. Usando Modo Local.", e);
-  mainDatabase = new LocalFallbackAdapter();
-}
+})();
 
-mainDatabase.init();
-setAdapter(mainDatabase);
+setAdapter(activeAdapter);
+export const gymDatabase = activeAdapter;
 
-export const gymDatabase = mainDatabase;
