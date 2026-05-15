@@ -145,42 +145,43 @@ class LocalFallbackAdapter implements DatabaseAdapter {
   subscribe() { return () => {}; }
 }
 
-// ─── COLECCIONES QUE SE HIDRATAN DESDE FIREBASE AL ARRANCAR ───
+// ─── COLECCIONES QUE SE SINCRONIZAN DESDE SUPABASE AL ARRANCAR ───
 const COLECCIONES_PRINCIPALES = [
   'members',
   'products',
   'catalogs',
   'transactions',
-  'configuracion'
+  'configuracion',
+  'goals',
+  'obligations',
+  'staff',
+  'assets',
 ];
 
 /**
- * 🌊 HYDRATE: Carga datos de la nube → IndexedDB al arrancar.
- * Solo hidrata si la colección local está vacía.
+ * 🌊 SYNC: Siempre descarga Supabase → IndexedDB al arrancar.
+ * Garantiza que cada dispositivo tenga los datos más recientes de la nube.
+ * Los items locales que no existen en la nube se preservan (merge, no overwrite).
  */
 async function hydratarDesdeNube(
   localDB: IndexedDBAdapter,
   nube: DatabaseAdapter,
   colecciones: string[]
 ): Promise<void> {
-  console.log('🌊 [NEXUS]: Iniciando hidratación Nube → IndexedDB...');
+  console.log('🌊 [NEXUS]: Sincronizando Supabase → IndexedDB...');
   for (const col of colecciones) {
-    const firebaseCol = mapCollectionName(col);
+    const mappedCol = mapCollectionName(col);
     try {
-      const localCount = await localDB.count(firebaseCol);
-      if (localCount === 0) {
-        const datosNube = await nube.getCollection<any>(firebaseCol);
-        if (datosNube.length > 0) {
-          await localDB.hydrateFromCloud(firebaseCol, datosNube);
-        }
-      } else {
-        console.log(`✅ [NEXUS]: '${firebaseCol}' ya tiene ${localCount} items locales. No se sobrescribe.`);
+      const datosNube = await nube.getCollection<any>(mappedCol);
+      if (datosNube.length > 0) {
+        await localDB.hydrateFromCloud(mappedCol, datosNube);
+        console.log(`✅ [NEXUS]: '${mappedCol}' sincronizado (${datosNube.length} items)`);
       }
     } catch (e) {
-      console.warn(`⚠️ [NEXUS]: No se pudo hidratar '${firebaseCol}'.`, e);
+      console.warn(`⚠️ [NEXUS]: No se pudo sincronizar '${mappedCol}'.`, e);
     }
   }
-  console.log('✅ [NEXUS]: Hidratación completada.');
+  console.log('✅ [NEXUS]: Sincronización inicial completada.');
 }
 
 let mainDatabase: DatabaseAdapter;
@@ -208,7 +209,8 @@ const activeAdapter: DatabaseAdapter = shadowAdapter
   : localAdapter;
 
 // Inicialización con hidratación automática al arrancar
-(async () => {
+// dbReady se exporta para que los consumidores esperen antes de leer datos
+export const dbReady = (async () => {
   try {
     await activeAdapter.init();
     const cloudSource = supabaseAdapter || firebaseAdapter;

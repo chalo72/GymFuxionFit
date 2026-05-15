@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext, createElement, ReactNode } from 'react';
-import { gymDatabase } from '../lib/database';
+import { gymDatabase, dbReady } from '../lib/database';
 import { supabase, hasSupabase } from '../lib/supabase';
 import { trioSync } from '../lib/trioSync';
 
@@ -209,7 +209,12 @@ function useGymDataInternal() {
         if (currentStaff.length > 0) setStaff(currentStaff);
         if (currentGoals.length > 0) setGoals(currentGoals);
 
-        console.log(`🛠️ [BOOT]: Memoria local cargada (${currentMembers.length} miembros). Iniciando sincronización cloud...`);
+        console.log(`🛠️ [BOOT]: Memoria local cargada (${currentMembers.length} miembros). Esperando DB...`);
+
+        // Esperar a que IndexedDB esté lista Y Supabase haya hidratado
+        await dbReady;
+
+        console.log(`☁️ [BOOT]: DB lista. Leyendo datos de la nube...`);
 
         // 2. Sincronización de Miembros
         try {
