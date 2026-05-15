@@ -90,8 +90,23 @@ class MultiAdapter implements DatabaseAdapter {
 
   subscribe<T>(collection: string, callback: (data: T[]) => void) {
     const mappedName = mapCollectionName(collection);
-    // Nos suscribimos al primario
-    return this.primary.subscribe(mappedName, callback);
+    
+    // Nos suscribimos al primario (IndexedDB - Polling)
+    const unsubPrimary = this.primary.subscribe(mappedName, callback);
+    
+    // 🚀 MODO ARMAGEDON: Nos suscribimos también a Firebase (Tiempo Real)
+    let unsubShadow = () => {};
+    if (this.shadow) {
+      unsubShadow = this.shadow.subscribe(mappedName, (data) => {
+        console.log(`📡 [NEXUS]: Actualización en tiempo real desde Firebase para \${mappedName}`);
+        callback(data);
+      });
+    }
+    
+    return () => {
+      unsubPrimary();
+      unsubShadow();
+    };
   }
 }
 
