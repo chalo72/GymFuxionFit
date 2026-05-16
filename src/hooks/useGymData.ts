@@ -587,27 +587,19 @@ function useGymDataInternal() {
     setSyncStatus('syncing');
     try {
       console.log("🚀 [NEXUS]: Iniciando empuje masivo a la nube...");
-      
-      // Empujar Miembros con mapeo correcto
+
       for (const m of members) {
-        await trioSync.create('members', { 
-          ...m, 
-          expiry_date: m.expiryDate, 
-          biometric_status: m.biometricStatus 
-        });
+        await trioSync.create('members', { ...m, expiry_date: m.expiryDate, biometric_status: m.biometricStatus });
       }
-      
-      // Empujar Productos con mapeo correcto
       for (const p of products) {
-        await trioSync.create('products', {
-          ...p,
-          buy_price: p.buyPrice,
-          sell_price: p.sellPrice,
-          min_stock: p.minStock
-        });
+        await trioSync.create('products', { ...p, buy_price: p.buyPrice, sell_price: p.sellPrice, min_stock: p.minStock });
       }
-      
-      for (const tx of transactions.slice(0, 50)) await trioSync.create('transactions', tx);
+      for (const tx of transactions) await trioSync.create('transactions', tx);
+      for (const g of goals) await trioSync.create('goals', g);
+      for (const o of obligations) await trioSync.create('obligations', o);
+      for (const s of staff) await trioSync.create('staff', s);
+      for (const a of assets) await trioSync.create('assets', a);
+
       setSyncStatus('live');
       return true;
     } catch (error) {
