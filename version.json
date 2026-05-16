@@ -1,12 +1,12 @@
 {
-  "version": "7.0.11",
-  "build": "20260515.928",
+  "version": "7.0.12",
+  "build": "20260516.001",
   "status": "ULTRA_STABLE_V7",
   "author": "Antigravity Nexus",
   "features": [
-    "🚀 OMNI_STABILITY: Blindaje masivo contra errores de nulidad (toLowerCase)",
-    "🛡️ CORE_INTEGRITY: Parche crítico en Member List y Reception POS",
-    "💎 PREMIUM_RECOVERY: Estabilización de flujos tras fallo de build local",
-    "🔄 CACHE_PURGE: Incremento de versión para forzar actualización en clientes"
+    "📱 MOBILE_FIX: Sidebar abre completo (85vw) con scroll en móvil",
+    "📐 VIEWPORT_FIX: Interfaz se adapta al ancho del celular sin desbordamiento",
+    "🧹 NAVBAR_MOBILE: Breadcrumb y búsqueda ocultos en pantallas pequeñas",
+    "🔧 MEDIA_QUERY_FIX: Eliminado conflicto entre media queries 768px y 1100px"
   ]
 }
