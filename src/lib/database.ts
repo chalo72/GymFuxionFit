@@ -92,23 +92,24 @@ class MultiAdapter implements DatabaseAdapter {
 
   subscribe<T>(collection: string, callback: (data: T[]) => void) {
     const mappedName = mapCollectionName(collection);
-    
-    // Nos suscribimos al primario (IndexedDB - Polling)
-    const unsubPrimary = this.primary.subscribe(mappedName, callback);
-    
-    // 🚀 MODO ARMAGEDON: Nos suscribimos a Supabase (Tiempo Real via WebSockets)
-    let unsubShadow = () => {};
+
     if (this.shadow) {
-      unsubShadow = this.shadow.subscribe(mappedName, (data) => {
-        console.log(`📡 [NEXUS]: Actualización en tiempo real desde Supabase para ${mappedName}`);
+      // Con Supabase activo: carga inicial de IndexedDB + realtime exclusivo de Supabase
+      // NO hacemos polling de IndexedDB para evitar conflictos con borrados/ediciones
+      this.primary.getCollection<T>(mappedName)
+        .then(data => { if (data && data.length > 0) callback(data); })
+        .catch(console.error);
+
+      const unsubShadow = this.shadow.subscribe(mappedName, (data) => {
+        console.log(`📡 [NEXUS]: Realtime Supabase → ${mappedName}`);
         callback(data as T[]);
       });
+
+      return unsubShadow;
     }
-    
-    return () => {
-      unsubPrimary();
-      unsubShadow();
-    };
+
+    // Sin Supabase: polling de IndexedDB como fallback
+    return this.primary.subscribe(mappedName, callback);
   }
 }
 
