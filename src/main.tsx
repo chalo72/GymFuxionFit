@@ -7,6 +7,9 @@ import { AuthProvider } from './contexts/AuthContext';
 import { GymConfigProvider } from './contexts/GymConfigContext';
 import { GymDataProvider } from './hooks/useGymData';
 
+// 🧪 Tests internos disponibles en consola: window.__runSyncTests()
+import('./lib/syncTests').catch(console.error);
+
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean; error: Error | null }

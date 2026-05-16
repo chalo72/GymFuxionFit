@@ -1,12 +1,23 @@
-import { useState, useEffect, createContext, useContext, createElement, ReactNode } from 'react';
+import { useState, useEffect, useRef, createContext, useContext, createElement, ReactNode } from 'react';
 import { gymDatabase, dbReady } from '../lib/database';
 import { supabase, hasSupabase } from '../lib/supabase';
 import { trioSync } from '../lib/trioSync';
+import { backupService } from '../lib/backupService';
 
 /* ══════════════════════════════════════════
-   GLOBAL_SYNC_SERVICE V.1.0
+   GLOBAL_SYNC_SERVICE V.1.1
    Persistence & Synchronization Layer
+   Rounding Protocol: COP Standard (100s)
 ══════════════════════════════════════════ */
+
+/**
+ * Redondea un valor al múltiplo de 100 más cercano.
+ * Estándar para transacciones en pesos colombianos (COP).
+ */
+export const roundPrice = (val: number): number => {
+  if (!val || isNaN(val)) return 0;
+  return Math.round(val / 100) * 100;
+};
 
 export interface Transaction {
   id: string | number; date: string; time: string; description: string;
@@ -151,12 +162,38 @@ function useGymDataInternal() {
     return saved ? JSON.parse(saved) : [];
   });
   const [syncStatus, setSyncStatus] = useState<'live' | 'local' | 'syncing'>('local');
+
+  // ── BACKUP: ref siempre actualizado con el estado más reciente ──
+  const latestDataRef = useRef({
+    members: [] as any[], products: [] as any[], transactions: [] as any[],
+    goals: [] as any[], obligations: [] as any[], staff: [] as any[], assets: [] as any[]
+  });
+
+  // ── BACKUP: trigger para debounce (500ms tras la última operación) ──
+  const [backupPending, setBackupPending] = useState<{ ts: number; trigger: string } | null>(null);
   const [pendingTasks, setPendingTasks] = useState(0);
 
   // 🔄 Suscripción a la cola de sincronización
   useEffect(() => {
     return trioSync.subscribe(count => setPendingTasks(count));
   }, []);
+
+  // Mantiene el ref actualizado con el estado más reciente
+  useEffect(() => {
+    latestDataRef.current = { members, products, transactions, goals, obligations, staff, assets };
+  }, [members, products, transactions, goals, obligations, staff, assets]);
+
+  // Ejecuta el backup con debounce de 600ms tras la última operación de escritura
+  useEffect(() => {
+    if (!backupPending) return;
+    const timer = setTimeout(() => {
+      backupService.createBackup(latestDataRef.current, backupPending.trigger).catch(console.error);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [backupPending]);
+
+  const triggerBackup = (trigger: string) =>
+    setBackupPending({ ts: Date.now(), trigger });
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [waterConfig, setWaterConfig] = useState({
@@ -606,32 +643,40 @@ function useGymDataInternal() {
     
     addProduct: async (p: Omit<Product, 'id'>) => {
       const tempId = crypto.randomUUID();
-      const newProduct = { ...p, id: tempId };
-      
+      const buyPrice = roundPrice(p.buyPrice);
+      const sellPrice = roundPrice(p.sellPrice);
+      const newProduct = { ...p, id: tempId, buyPrice, sellPrice };
+
       setProducts(prev => [newProduct, ...prev]);
-      
+      triggerBackup('add_product');
+
       try {
-        const cloudData = { 
+        const cloudData = {
           ...p, id: tempId,
-          buy_price: p.buyPrice,
-          sell_price: p.sellPrice,
+          buy_price: buyPrice,
+          sell_price: sellPrice,
           min_stock: p.minStock
         };
         await trioSync.create('products', cloudData);
         setSyncError(null);
       } catch (error: any) {
-        // 🛡️ Silencio de sincronización: El producto se guardó localmente, BD en background
         console.warn("⚠️ Producto creado localmente. Sync BD pendiente:", error.message);
-        // No mostramos error en franja roja para no bloquear UX
       }
     },
     updateProduct: async (id: string, p: Partial<Product>) => {
-      setProducts(prev => prev.map(item => item.id === id ? { ...item, ...p } : item));
+      const buyPrice = p.buyPrice !== undefined ? roundPrice(p.buyPrice) : undefined;
+      const sellPrice = p.sellPrice !== undefined ? roundPrice(p.sellPrice) : undefined;
+      
+      const updates = { ...p };
+      if (buyPrice !== undefined) updates.buyPrice = buyPrice;
+      if (sellPrice !== undefined) updates.sellPrice = sellPrice;
+
+      setProducts(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
       try {
-        const cloudData = { ...p };
-        if (p.buyPrice) (cloudData as any).buy_price = p.buyPrice;
-        if (p.sellPrice) (cloudData as any).sell_price = p.sellPrice;
-        if (p.minStock) (cloudData as any).min_stock = p.minStock;
+        const cloudData: any = { ...updates };
+        if (buyPrice !== undefined) cloudData.buy_price = buyPrice;
+        if (sellPrice !== undefined) cloudData.sell_price = sellPrice;
+        if (p.minStock !== undefined) cloudData.min_stock = p.minStock;
         await trioSync.update('products', id, cloudData);
       } catch (error: any) {
         console.warn("⚠️ Producto actualizado localmente. Sync BD pendiente:", error.message);
@@ -639,6 +684,7 @@ function useGymDataInternal() {
     },
     deleteProduct: async (id: string) => {
       setProducts(prev => prev.filter(p => p.id !== id));
+      triggerBackup('delete_product');
       try {
         await trioSync.delete('products', id);
       } catch (error: any) {
@@ -651,6 +697,7 @@ function useGymDataInternal() {
       const id = crypto.randomUUID();
       const newGoal = { ...g, id };
       setGoals(prev => [newGoal, ...prev]);
+      triggerBackup('add_goal');
       try {
         await trioSync.create('goals', newGoal);
       } catch (e) {
@@ -667,6 +714,7 @@ function useGymDataInternal() {
     },
     deleteGoal: async (id: string) => {
       setGoals(prev => prev.filter(g => g.id !== id));
+      triggerBackup('delete_goal');
       try {
         await trioSync.delete('goals', id);
       } catch (e) {
@@ -679,6 +727,7 @@ function useGymDataInternal() {
       const id = crypto.randomUUID();
       const newOb = { ...o, id };
       setObligations(prev => [newOb, ...prev]);
+      triggerBackup('add_obligation');
       try {
         await trioSync.create('obligations', newOb);
       } catch (e) {
@@ -695,6 +744,7 @@ function useGymDataInternal() {
     },
     deleteObligation: async (id: string) => {
       setObligations(prev => prev.filter(o => o.id !== id));
+      triggerBackup('delete_obligation');
       try {
         await trioSync.delete('obligations', id);
       } catch (e) {
@@ -721,6 +771,7 @@ function useGymDataInternal() {
       const id = crypto.randomUUID();
       const newStaff = { ...s, id };
       setStaff(prev => [newStaff, ...prev]);
+      triggerBackup('add_staff');
       try {
         await trioSync.create('staff', newStaff);
       } catch (e) {
@@ -737,6 +788,7 @@ function useGymDataInternal() {
     },
     deleteStaff: async (id: string) => {
       setStaff(prev => prev.filter(s => s.id !== id));
+      triggerBackup('delete_staff');
       try {
         await trioSync.delete('staff', id);
       } catch (e) {
@@ -857,8 +909,8 @@ function useGymDataInternal() {
 
     addMember: async (m: Omit<Member, 'id'>) => {
       const tempId = crypto.randomUUID();
-      const newMember = { 
-        ...m, 
+      const newMember = {
+        ...m,
         id: tempId,
         biometricStatus: m.biometricStatus || 'pending',
         joined: m.joined || new Date().toISOString().split('T')[0],
@@ -866,12 +918,12 @@ function useGymDataInternal() {
         debt: m.debt || 0,
         streak: 0
       };
-      
+
       setMembers(prev => [newMember as Member, ...prev]);
-      
+      triggerBackup('add_member');
+
       try {
-        // 🔄 MAPEO DE ESQUEMA: Appwrite usa snake_case en los atributos
-        const cloudData = { 
+        const cloudData = {
           ...newMember,
           expiry_date: newMember.expiryDate,
           biometric_status: newMember.biometricStatus
@@ -884,7 +936,16 @@ function useGymDataInternal() {
     },
     deleteMember: async (id: string) => {
       setMembers(prev => prev.filter(m => m.id !== id));
+      triggerBackup('delete_member');
       await trioSync.delete('members', id);
+    },
+
+    // ── BACKUP ──
+    downloadBackup: (id?: string) => backupService.downloadBackup(id),
+    listBackups:    ()             => backupService.listBackups(),
+    createManualBackup: () => {
+      const data = latestDataRef.current;
+      return backupService.createBackup(data, 'manual');
     }
   };
 }
