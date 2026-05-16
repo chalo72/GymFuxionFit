@@ -582,23 +582,34 @@ function useGymDataInternal() {
     }
   };
 
-  // 🚀 NEXUS PUSH: Fuerza la subida de TODO lo local a la nube
+  // 🚀 NEXUS PUSH: Escribe directo a Supabase (sin cola, sin intermediarios)
   const forceSyncAll = async () => {
     setSyncStatus('syncing');
     try {
-      console.log("🚀 [NEXUS]: Iniciando empuje masivo a la nube...");
+      if (!hasSupabase) { console.warn('Sin Supabase configurado'); return false; }
 
-      for (const m of members) {
-        await trioSync.create('members', { ...m, expiry_date: m.expiryDate, biometric_status: m.biometricStatus });
-      }
-      for (const p of products) {
-        await trioSync.create('products', { ...p, buy_price: p.buyPrice, sell_price: p.sellPrice, min_stock: p.minStock });
-      }
-      for (const tx of transactions) await trioSync.create('transactions', tx);
-      for (const g of goals) await trioSync.create('goals', g);
-      for (const o of obligations) await trioSync.create('obligations', o);
-      for (const s of staff) await trioSync.create('staff', s);
-      for (const a of assets) await trioSync.create('assets', a);
+      // Limpiar cola de sync para evitar ítems fallidos bloqueando
+      trioSync.clearQueue();
+
+      const push = async (table: string, items: any[]) => {
+        let ok = 0, fail = 0;
+        for (const item of items) {
+          const id = String(item.id || item.$id || item.ID || '');
+          if (!id) continue;
+          const { error } = await supabase.from(table).upsert({ id, payload: item, updated_at: new Date().toISOString() });
+          if (error) { console.warn(`⚠️ [SYNC] ${table}/${id}:`, error.message); fail++; }
+          else ok++;
+        }
+        console.log(`✅ [SYNC] ${table}: ${ok} ok, ${fail} fallidos`);
+      };
+
+      await push('members',      members);
+      await push('products',     products);
+      await push('transactions', transactions);
+      await push('goals',        goals);
+      await push('obligations',  obligations);
+      await push('staff',        staff);
+      await push('assets',       assets);
 
       setSyncStatus('live');
       return true;
