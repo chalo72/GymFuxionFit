@@ -216,21 +216,15 @@ function useGymDataInternal() {
 
         console.log(`☁️ [BOOT]: DB lista. Leyendo datos de la nube...`);
 
-        // 2. Sincronización de Miembros
+        // 2. Sincronización de Miembros (Supabase es fuente de verdad — no merge)
         try {
           const cloudMembers = await gymDatabase.getCollection<any>('members');
           if (cloudMembers && cloudMembers.length > 0) {
-            const mappedMembers = cloudMembers.map(m => ({
+            currentMembers = cloudMembers.map(m => ({
               ...m,
               expiryDate: m.expiry_date || m.expiry || m.expiryDate,
               biometricStatus: m.biometric_status || m.biometricStatus
             }));
-            
-            // Mezcla Híbrida usando la variable local como base
-            const cloudIds = new Set(mappedMembers.map(m => String(m.id)));
-            const localOnly = currentMembers.filter(m => !cloudIds.has(String(m.id)));
-            currentMembers = [...mappedMembers, ...localOnly];
-            
             setMembers(currentMembers);
             localStorage.setItem('fuxion_members', JSON.stringify(currentMembers));
           }
@@ -242,10 +236,7 @@ function useGymDataInternal() {
         try {
           const cloudTx = await gymDatabase.getCollection<any>('transactions');
           if (cloudTx && cloudTx.length > 0) {
-            const cloudIds = new Set(cloudTx.map(t => String(t.id)));
-            const localOnly = currentTx.filter(t => !cloudIds.has(String(t.id)));
-            currentTx = [...cloudTx, ...localOnly];
-            
+            currentTx = cloudTx;
             setTransactions(currentTx);
             localStorage.setItem('fuxion_tx', JSON.stringify(currentTx));
           }
@@ -257,18 +248,13 @@ function useGymDataInternal() {
         try {
           const cloudProducts = await gymDatabase.getCollection<any>('products');
           if (cloudProducts && cloudProducts.length > 0) {
-            const mappedCloud = cloudProducts.map((p: any) => ({
+            currentProducts = cloudProducts.map((p: any) => ({
               ...p,
-              id: String(p.id || p.$id || p.ID), 
+              id: String(p.id || p.$id || p.ID),
               buyPrice: p.buy_price || p.buyPrice || 0,
               sellPrice: p.sell_price || p.sellPrice || 0,
               minStock: p.min_stock || p.minStock || 0
             }));
-
-            const cloudIds = new Set(mappedCloud.map(p => String(p.id)));
-            const localOnly = currentProducts.filter(p => !cloudIds.has(String(p.id)));
-            currentProducts = [...mappedCloud, ...localOnly];
-
             setProducts(currentProducts);
             localStorage.setItem('fuxion_products', JSON.stringify(currentProducts));
           }
@@ -327,6 +313,8 @@ function useGymDataInternal() {
     window.addEventListener('storage', handleStorageChange);
 
     // 3. Suscripción Realtime Universal
+    // ⚠️ IMPORTANTE: callbacks reemplazan estado directamente (sin merge local).
+    // Supabase es la fuente de verdad — si un ítem se borró en la nube, no reaparece.
     const unsubMembers = gymDatabase.subscribe<any>('members', (items) => {
       setSyncStatus('live');
       const mapped = items.map(m => ({
@@ -334,20 +322,8 @@ function useGymDataInternal() {
         expiryDate: m.expiry_date || m.expiry || m.expiryDate,
         biometricStatus: m.biometric_status || m.biometricStatus
       }));
-      
-      // Deduplicación inteligente: Solo actualizamos si hay cambios reales
-      setMembers(prev => {
-        const cloudIds = new Set(mapped.map(m => String(m.id)));
-        const localOnly = prev.filter(m => !cloudIds.has(String(m.id)));
-        const merged = [...mapped, ...localOnly];
-        
-        const mergedStr = JSON.stringify(merged);
-        const prevStr = JSON.stringify(prev);
-        if (mergedStr === prevStr) return prev;
-        
-        bc.postMessage({ type: 'MEMBERS_UPDATE', data: merged });
-        return merged;
-      });
+      setMembers(mapped);
+      bc.postMessage({ type: 'MEMBERS_UPDATE', data: mapped });
     });
 
     const unsubProducts = gymDatabase.subscribe<any>('products', (items) => {
@@ -359,77 +335,35 @@ function useGymDataInternal() {
         sellPrice: p.sell_price || p.sellPrice || 0,
         minStock: p.min_stock || p.minStock || 0
       }));
-      
-      setProducts(prev => {
-        const cloudIds = new Set(mapped.map(p => String(p.id)));
-        const localOnly = prev.filter(p => !cloudIds.has(String(p.id)));
-        const merged = [...mapped, ...localOnly];
-        
-        const mergedStr = JSON.stringify(merged);
-        const prevStr = JSON.stringify(prev);
-        if (mergedStr === prevStr) return prev;
-        
-        bc.postMessage({ type: 'PRODUCTS_UPDATE', data: merged });
-        return merged;
-      });
+      setProducts(mapped);
+      bc.postMessage({ type: 'PRODUCTS_UPDATE', data: mapped });
     });
 
     const unsubTx = gymDatabase.subscribe<Transaction>('transactions', (items) => {
       setSyncStatus('live');
-      setTransactions(prev => {
-        const cloudIds = new Set(items.map(t => String(t.id)));
-        const localOnly = prev.filter(t => !cloudIds.has(String(t.id)));
-        const merged = [...items, ...localOnly];
-        
-        const mergedStr = JSON.stringify(merged);
-        const prevStr = JSON.stringify(prev);
-        if (mergedStr === prevStr) return prev;
-        
-        bc.postMessage({ type: 'TX_UPDATE', data: merged });
-        return merged;
-      });
+      setTransactions(items);
+      bc.postMessage({ type: 'TX_UPDATE', data: items });
     });
 
     // 🎯 SUBS: Metas Financieras (Realtime)
-    // 🧠 Escucha cambios en los objetivos de ahorro y expansión.
     const unsubGoals = gymDatabase.subscribe<FinancialGoal>('goals', (items) => {
       setSyncStatus('live');
-      setGoals(prev => {
-        const cloudIds = new Set(items.map(g => String(g.id)));
-        const localOnly = prev.filter(g => !cloudIds.has(String(g.id)));
-        const merged = [...items, ...localOnly];
-        if (JSON.stringify(merged) === JSON.stringify(prev)) return prev;
-        bc.postMessage({ type: 'GOALS_UPDATE', data: merged });
-        return merged;
-      });
+      setGoals(items);
+      bc.postMessage({ type: 'GOALS_UPDATE', data: items });
     });
 
     // 💸 SUBS: Obligaciones (Realtime)
-    // 🧠 Sincroniza facturas pendientes, nóminas y servicios.
     const unsubObligations = gymDatabase.subscribe<Obligation>('obligations', (items) => {
       setSyncStatus('live');
-      setObligations(prev => {
-        const cloudIds = new Set(items.map(o => String(o.id)));
-        const localOnly = prev.filter(o => !cloudIds.has(String(o.id)));
-        const merged = [...items, ...localOnly];
-        if (JSON.stringify(merged) === JSON.stringify(prev)) return prev;
-        bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: merged });
-        return merged;
-      });
+      setObligations(items);
+      bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: items });
     });
 
     // 👥 SUBS: Personal/Staff (Realtime)
-    // 🧠 Refleja cambios en el equipo de trabajo instantáneamente.
     const unsubStaff = gymDatabase.subscribe<Staff>('staff', (items) => {
       setSyncStatus('live');
-      setStaff(prev => {
-        const cloudIds = new Set(items.map(s => String(s.id)));
-        const localOnly = prev.filter(s => !cloudIds.has(String(s.id)));
-        const merged = [...items, ...localOnly];
-        if (JSON.stringify(merged) === JSON.stringify(prev)) return prev;
-        bc.postMessage({ type: 'STAFF_UPDATE', data: merged });
-        return merged;
-      });
+      setStaff(items);
+      bc.postMessage({ type: 'STAFF_UPDATE', data: items });
     });
 
     // 🔧 SUBS: Activos/Gimnasio (Realtime)
