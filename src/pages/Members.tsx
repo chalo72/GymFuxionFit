@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useGymData } from '../hooks/useGymData';
+import { useGymData, roundPrice } from '../hooks/useGymData';
 import {
   Search, Plus, Filter, Edit2, Trash2, Eye,
   UserCheck, UserX, RefreshCw, Phone, Mail,
@@ -275,7 +275,7 @@ function ClientModal({
                     }}>
                       <div style={{ fontSize:15, fontWeight:800, color: form.plan===p.id ? p.color : 'var(--text-primary)', marginBottom:4 }}>{p.label}</div>
                       <div style={{ fontSize:16, fontWeight:900, color: form.plan===p.id ? p.color : 'var(--text-secondary)' }}>
-                        ${(p.price || 0).toLocaleString('es-CO')}
+                        ${roundPrice(p.price || 0).toLocaleString('es-CO')}
                       </div>
                       <div style={{ fontSize:10, color:'var(--text-muted)', marginTop:4, lineHeight:1.4 }}>{p.desc}</div>
                       {form.plan===p.id && <Check size={14} color={p.color} style={{ marginTop:6 }}/>}
@@ -515,7 +515,7 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
                   ) : clientTx.map((tx) => (
                     <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 12 }}>
                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 800 }}>${(tx.amount || 0).toLocaleString()}</div>
+                          <div style={{ fontSize: 12, fontWeight: 800 }}>${roundPrice(tx.amount || 0).toLocaleString()}</div>
                           <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{tx.date} • {tx.method}</div>
                        </div>
                        <div style={{ textAlign: 'right' }}>

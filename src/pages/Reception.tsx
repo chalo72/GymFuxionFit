@@ -10,7 +10,7 @@ import {
   AlertCircle, HeartPulse, ChevronRight, Dumbbell,
   Contact, Star, Target, Clock, History, Edit2, UserX, Check, UserPlus
 } from 'lucide-react';
-import { useGymData, Member } from '../hooks/useGymData';
+import { useGymData, Member, roundPrice } from '../hooks/useGymData';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
 import QuickRegisterModal from '../components/reception/QuickRegisterModal';
 
@@ -277,8 +277,8 @@ export default function Reception() {
         }
       }
       if (paymentMethod === 'Crédito') {
-        const total = cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0);
-        await updateMemberStatus(selectedMember.id, { debt: (selectedMember.debt || 0) + total });
+        const total = roundPrice(cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0));
+        await updateMemberStatus(selectedMember.id, { debt: roundPrice((selectedMember.debt || 0) + total) });
       }
       
       // LOG & CLEANUP
@@ -713,7 +713,7 @@ export default function Reception() {
                                     ))}
                                     <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 16, marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                        <span style={{ fontSize: 12, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 1 }}>TOTAL TRANSACCIÓN</span>
-                                       <span style={{ fontSize: 24, fontWeight: 950, color: 'var(--neon-green)', textShadow: '0 0 20px rgba(0,255,136,0.3)' }}>${cart.reduce((a,c) => a + (c.price*c.qty), 0).toLocaleString()}</span>
+                                       <span style={{ fontSize: 24, fontWeight: 950, color: 'var(--neon-green)', textShadow: '0 0 20px rgba(0,255,136,0.3)' }}>${roundPrice(cart.reduce((a,c) => a + (c.price*c.qty), 0)).toLocaleString()}</span>
                                     </div>
                                  </div>
                               )}
