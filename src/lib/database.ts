@@ -100,9 +100,31 @@ class MultiAdapter implements DatabaseAdapter {
         .then(data => { if (data && data.length > 0) callback(data); })
         .catch(console.error);
 
-      const unsubShadow = this.shadow.subscribe(mappedName, (data) => {
+      const unsubShadow = this.shadow.subscribe(mappedName, async (data) => {
         console.log(`📡 [NEXUS]: Realtime Supabase → ${mappedName}`);
-        callback(data as T[]);
+        
+        try {
+          // Obtener locales para no perder registros offline o pendientes de subida
+          const localData = await this.primary.getCollection<any>(mappedName);
+          const cloudIds = new Set((data as any[]).map(d => String(d.id || d.$id || d.ID)));
+          
+          const localesFaltantes = localData.filter(d => {
+             const id = String(d.id || d.$id || d.ID);
+             return id && id !== 'undefined' && !cloudIds.has(id);
+          });
+
+          // Guardamos en local lo que vino de la nube
+          if ((this.primary as any).hydrateFromCloud) {
+             await (this.primary as any).hydrateFromCloud(mappedName, data);
+          }
+          
+          // Entregamos a la UI la lista combinada
+          const merged = [...data, ...localesFaltantes];
+          callback(merged as T[]);
+        } catch(e) {
+          console.warn(`⚠️ [NEXUS]: Error en merge realtime para ${mappedName}`, e);
+          callback(data as T[]);
+        }
       });
 
       return unsubShadow;
