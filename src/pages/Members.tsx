@@ -4,7 +4,7 @@ import {
   Search, Plus, Filter, Edit2, Trash2, Eye,
   UserCheck, UserX, RefreshCw, Phone, Mail,
   Calendar, CreditCard, Dumbbell, X, Check,
-  ChevronDown, AlertTriangle,
+  ChevronDown, AlertTriangle, Upload,
 } from 'lucide-react';
 
 /* ══════════════════════════════════════════
@@ -562,6 +562,64 @@ function DetailPanel({ client, onClose, onEdit, onDelete }: {
 }
 
 /* ══════════════════════════════════════════
+   IMPORTADOR MASIVO
+══════════════════════════════════════════ */
+function MassImportModal({ onClose, onImport }: { onClose: () => void, onImport: (data: any[]) => void }) {
+  const [text, setText] = useState('');
+  
+  const handleImport = () => {
+    // Basic parser for Excel paste (tab separated)
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const result = [];
+    for (const line of lines) {
+      const parts = line.split('\t');
+      if (parts.length >= 1) {
+         result.push({
+           name: parts[0]?.trim() || 'Desconocido',
+           phone: parts[1]?.trim() || '',
+           email: parts[2]?.trim() || '',
+           plan: 'pro',
+           status: 'active',
+           joined: new Date().toISOString().slice(0, 10),
+           payMethod: 'efectivo',
+           visits: 0
+         });
+      }
+    }
+    if (result.length > 0) onImport(result);
+  };
+
+  return (
+    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:2000, backdropFilter:'blur(8px)' }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="glass-card" style={{ width: 600, padding: 30, background: 'var(--space-dark)', borderRadius: 'var(--radius-2xl)', border: 'var(--glass-border)' }}>
+         <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 15, display: 'flex', alignItems: 'center', gap: 10 }}>
+           <Upload size={24} color="var(--neon-green)" /> Importador Masivo (Excel)
+         </h2>
+         <div style={{ padding: '12px 16px', background: 'rgba(255,255,255,0.05)', borderRadius: 12, marginBottom: 20 }}>
+           <p style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.5, margin: 0 }}>
+             1. Copia las filas directamente desde tu Excel o Google Sheets.<br/>
+             2. Pégalas en el cuadro de abajo.<br/>
+             <strong style={{color:'#fff', marginTop: 8, display: 'block'}}>Orden de columnas obligatorio: Nombre | Teléfono | Email (Opcional)</strong>
+           </p>
+         </div>
+         <textarea
+           value={text}
+           onChange={e => setText(e.target.value)}
+           placeholder="Juan Perez     3101234567     juan@email.com&#10;Maria Gomez    3209876543     maria@email.com"
+           style={{ width: '100%', height: 200, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', padding: 15, borderRadius: 12, outline: 'none', fontFamily: 'monospace', resize: 'none' }}
+         />
+         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
+            <button onClick={onClose} style={{ padding: '12px 20px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Cancelar</button>
+            <button onClick={handleImport} disabled={!text.trim()} style={{ padding: '12px 24px', borderRadius: 10, background: text.trim() ? 'linear-gradient(135deg,#00CC6A,var(--neon-green))' : 'rgba(255,255,255,0.1)', color: text.trim() ? '#000' : 'var(--text-muted)', fontWeight: 900, border: 'none', cursor: text.trim() ? 'pointer' : 'not-allowed', boxShadow: text.trim() ? 'var(--glow-green)' : 'none' }}>
+              Importar {text.split('\n').filter(l => l.trim()).length} Clientes
+            </button>
+         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
    PÁGINA PRINCIPAL
 ══════════════════════════════════════════ */
 export default function Members() {
@@ -570,6 +628,7 @@ export default function Members() {
   const [filterPlan, setFilterPlan] = useState<string | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<Status | 'all'>('all');
   const [showModal, setShowModal]   = useState(false);
+  const [showMassImport, setShowMassImport] = useState(false);
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [viewClient, setViewClient] = useState<Client | null>(null);
   const [toast, setToast]           = useState<string | null>(null);
@@ -683,6 +742,13 @@ export default function Members() {
             }}
           >
             <RefreshCw size={16}/> SINCRONIZAR TODO
+          </button>
+          <button
+            onClick={() => setShowMassImport(true)}
+            className="btn"
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 18px', fontSize:12, fontWeight:700, background:'rgba(255,107,53,0.1)', border:'1px solid rgba(255,107,53,0.3)', color:'#FF6B35', cursor:'pointer' }}
+          >
+            <Upload size={16}/> IMPORTACIÓN MASIVA
           </button>
           <button
             onClick={() => { setEditClient(null); setShowModal(true); }}
@@ -845,6 +911,18 @@ export default function Members() {
       </div>
 
       {/* Modals */}
+      {showMassImport && (
+        <MassImportModal
+          onClose={() => setShowMassImport(false)}
+          onImport={async (clients) => {
+            for (const c of clients) {
+              await addMember(c);
+            }
+            showToast(`✅ ${clients.length} clientes importados correctamente`);
+            setShowMassImport(false);
+          }}
+        />
+      )}
       {showModal && (
         <ClientModal
           initial={editClient}
