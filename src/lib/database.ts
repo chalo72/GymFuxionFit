@@ -174,12 +174,30 @@ async function hydratarDesdeNube(
     const mappedCol = mapCollectionName(col);
     try {
       const datosNube = await nube.getCollection<any>(mappedCol);
+      const datosLocales = await localDB.getCollection<any>(mappedCol);
+      
       if (datosNube.length > 0) {
         await localDB.hydrateFromCloud(mappedCol, datosNube);
-        console.log(`✅ [NEXUS]: '${mappedCol}' sincronizado (${datosNube.length} items)`);
+        console.log(`✅ [NEXUS]: '${mappedCol}' sincronizado desde nube (${datosNube.length} items)`);
+      }
+      
+      if (datosLocales.length > 0) {
+        const nubeIds = new Set(datosNube.map(d => String(d.id || d.$id || d.ID)));
+        const faltantes = datosLocales.filter(d => {
+           const id = String(d.id || d.$id || d.ID);
+           return id && id !== 'undefined' && id !== 'null' && !nubeIds.has(id);
+        });
+        
+        if (faltantes.length > 0) {
+           console.log(`🚀 [NEXUS]: '${mappedCol}' subiendo ${faltantes.length} items locales a la nube...`);
+           for (const item of faltantes) {
+              await nube.setDocument(mappedCol, String(item.id || item.$id || item.ID), item);
+           }
+           console.log(`✅ [NEXUS]: Subida completada para '${mappedCol}'`);
+        }
       }
     } catch (e) {
-      console.warn(`⚠️ [NEXUS]: No se pudo sincronizar '${mappedCol}'.`, e);
+      console.warn(`⚠️ [NEXUS]: Fallo sync bidireccional en '${mappedCol}'.`, e);
     }
   }
   console.log('✅ [NEXUS]: Sincronización inicial completada.');

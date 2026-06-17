@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import CommandPalette from './CommandPalette';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoUpdate } from '../../hooks/useAutoUpdate';
 
 const pageTitles: Record<string, string> = {
@@ -87,10 +89,23 @@ export default function AppLayout() {
 
 
         {/* ─── PAGE CONTENT ─── */}
-        <div className="page-content">
-          <Outlet />
+        <div className="page-content" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
+      
+      <CommandPalette />
     </div>
   );
 }

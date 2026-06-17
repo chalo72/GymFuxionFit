@@ -35,7 +35,7 @@ export class SupabaseAdapter implements DatabaseAdapter {
 
   async getCollection<T>(name: string): Promise<T[]> {
     const table = this.normalizeName(name);
-    const { data, error } = await supabase.from(table).select('id, payload');
+    const { data, error } = await supabase.from(table).select('id, payload').limit(50000);
     if (error) throw error;
     return (data || []).map(row => ({ ...(row.payload || {}), id: row.id })) as T[];
   }
@@ -97,7 +97,27 @@ export class SupabaseAdapter implements DatabaseAdapter {
         }
       });
 
+    // 🛡️ GUARDIAN FALLBACK: Polling silencioso por si WebSockets/Realtime fallan
+    let lastUpdate = '';
+    const interval = setInterval(async () => {
+      try {
+        const { data } = await supabase.from(tableName).select('updated_at').order('updated_at', { ascending: false }).limit(1);
+        if (data && data.length > 0) {
+          const latest = data[0].updated_at;
+          if (lastUpdate && latest !== lastUpdate) {
+            console.log(`🔄 [Supabase Fallback]: Cambio detectado en '${tableName}'. Sincronizando...`);
+            const freshData = await this.getCollection<T>(name);
+            callback(freshData);
+          }
+          lastUpdate = latest;
+        }
+      } catch (e) {
+        // Ignorar errores de red
+      }
+    }, 15000);
+
     return () => {
+      clearInterval(interval);
       supabase.removeChannel(channel);
     };
   }

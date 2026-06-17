@@ -1,10 +1,11 @@
-// Force update: 2026-05-08 v2
+import { useState, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, CalendarDays, BarChart3, Settings,
   Dumbbell, Zap, Scan, Kanban, Apple, Brain, Trophy, CreditCard, Wallet,
   Watch, CalendarRange, UserCheck, LogOut, ShieldCheck, Radio, Smartphone,
-  TrendingUp, Package, X, ChevronLeft, ChevronRight, BookOpen, ClipboardList, PieChart, Shield, HeartPulse, BrainCircuit
+  TrendingUp, Package, X, ChevronLeft, ChevronRight, BookOpen, ClipboardList, PieChart, Shield, HeartPulse, BrainCircuit, ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -96,7 +97,7 @@ const clientNav = [
   ]},
 ];
 
-const roleNavMap: Record<string, any> = { 
+export const roleNavMap: Record<string, any> = { 
   admin: adminNav, 
   trainer: trainerNav, 
   receptionist: receptionNav, 
@@ -134,6 +135,12 @@ export default function Sidebar({
   const location   = useLocation();
   const navigate   = useNavigate();
   const { user, logout } = useAuth();
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    'Principal': true,
+    'Control Gym': true,
+    'Mi Espacio': true,
+    'Mi Área Personal': true
+  });
 
   const role      = user?.role ?? 'admin';
   const navGroups = roleNavMap[role] ?? adminNav;
@@ -175,35 +182,73 @@ export default function Sidebar({
 
       {/* ─── NAVIGATION ─── */}
       <nav className="sidebar-nav">
-        {navGroups.map((group: any) => (
-          <div key={group.section} style={{ marginBottom: '16px', padding: '0 8px' }}>
-            <span className="sidebar-section-label" style={{ paddingLeft: '8px', marginBottom: '6px', display: 'block' }}>{group.section}</span>
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              borderRadius: '12px',
-              padding: '6px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '2px'
-            }}>
-              {group.items.map((item: any) => (
-                <NavLink
-                  key={`${group.section}__${item.to}`}
-                  to={item.to}
-                  className={`sidebar-item ${location.pathname === item.to ? 'active' : ''}`}
-                  style={{ borderRadius: '8px' }}
-                >
-                  <item.icon />
-                  <span>{item.label}</span>
-                  {'badge' in item && item.badge && (
-                    <span className="sidebar-badge">{item.badge}</span>
-                  )}
-                </NavLink>
-              ))}
+        {navGroups.map((group: any) => {
+          const isOpen = openSections[group.section] || false;
+          const isActiveGroup = group.items.some((item: any) => location.pathname === item.to);
+          
+          // Auto-open if active inside and wasn't manually closed
+          useEffect(() => {
+            if (isActiveGroup && !openSections[group.section]) {
+               setOpenSections(prev => ({...prev, [group.section]: true}));
+            }
+          }, [isActiveGroup, group.section]);
+
+          return (
+            <div key={group.section} style={{ marginBottom: '16px', padding: '0 8px' }}>
+              <div 
+                onClick={() => setOpenSections(prev => ({...prev, [group.section]: !prev[group.section]}))}
+                style={{ 
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '8px', marginBottom: '4px', cursor: 'pointer', borderRadius: 8,
+                  background: isOpen ? 'transparent' : 'rgba(255,255,255,0.02)'
+                }}
+              >
+                <span className="sidebar-section-label" style={{ margin: 0, padding: 0 }}>{group.section}</span>
+                <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronDown size={14} color="var(--text-muted)" />
+                </motion.div>
+              </div>
+
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div 
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      borderRadius: '12px',
+                      padding: '6px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px',
+                      marginTop: '4px'
+                    }}>
+                      {group.items.map((item: any) => (
+                        <NavLink
+                          key={`${group.section}__${item.to}`}
+                          to={item.to}
+                          className={`sidebar-item ${location.pathname === item.to ? 'active' : ''}`}
+                          style={{ borderRadius: '8px' }}
+                        >
+                          <item.icon />
+                          <span>{item.label}</span>
+                          {'badge' in item && item.badge && (
+                            <span className="sidebar-badge">{item.badge}</span>
+                          )}
+                        </NavLink>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* ─── FOOTER ─── */}

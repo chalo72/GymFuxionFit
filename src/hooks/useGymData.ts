@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, createContext, useContext, createElement, 
 import { gymDatabase, dbReady } from '../lib/database';
 import { supabase, hasSupabase } from '../lib/supabase';
 import { trioSync } from '../lib/trioSync';
+import { syncManager } from '../services/syncManager';
 import { backupService } from '../lib/backupService';
 
 /* ══════════════════════════════════════════
@@ -175,7 +176,7 @@ function useGymDataInternal() {
 
   // 🔄 Suscripción a la cola de sincronización
   useEffect(() => {
-    return trioSync.subscribe(count => setPendingTasks(count));
+    return syncManager.subscribeQueue(count => setPendingTasks(count));
   }, []);
 
   // Mantiene el ref actualizado con el estado más reciente
@@ -311,9 +312,7 @@ function useGymDataInternal() {
     initData();
 
     // 🔗 BROADCAST CHANNEL: Sincronización inter-pestañas
-    const bc = new BroadcastChannel('fuxion_sync_channel');
-    bc.onmessage = (event) => {
-      const { type, data } = event.data;
+    syncManager.onBroadcast((type, data) => {
       // 🧠 Recibimos mensajes de otras pestañas para actualizar la UI local sin peticiones extra.
       if (type === 'MEMBERS_UPDATE') setMembers(data);
       if (type === 'PRODUCTS_UPDATE') setProducts(data);
@@ -328,7 +327,7 @@ function useGymDataInternal() {
         data.forEach((p: any) => { cfg[p.id] = p.price; });
         setPlansConfig(cfg);
       }
-    };
+    });
 
     // 📡 SINCRONIZACIÓN DE DISCO DURO ENTRE PESTAÑAS (Evita Amnesia de Datos)
     const handleStorageChange = (e: StorageEvent) => {
@@ -352,7 +351,7 @@ function useGymDataInternal() {
     // 3. Suscripción Realtime Universal
     // ⚠️ IMPORTANTE: callbacks reemplazan estado directamente (sin merge local).
     // Supabase es la fuente de verdad — si un ítem se borró en la nube, no reaparece.
-    const unsubMembers = gymDatabase.subscribe<any>('members', (items) => {
+    const unsubMembers = syncManager.subscribeToCollection<any>('members', (items) => {
       setSyncStatus('live');
       const mapped = items.map(m => ({
         ...m,
@@ -360,10 +359,10 @@ function useGymDataInternal() {
         biometricStatus: m.biometric_status || m.biometricStatus
       }));
       setMembers(mapped);
-      bc.postMessage({ type: 'MEMBERS_UPDATE', data: mapped });
+      syncManager.broadcast('MEMBERS_UPDATE', mapped);
     });
 
-    const unsubProducts = gymDatabase.subscribe<any>('products', (items) => {
+    const unsubProducts = syncManager.subscribeToCollection<any>('products', (items) => {
       setSyncStatus('live');
       const mapped = items.map(p => ({
         ...p,
@@ -373,42 +372,42 @@ function useGymDataInternal() {
         minStock: p.min_stock || p.minStock || 0
       }));
       setProducts(mapped);
-      bc.postMessage({ type: 'PRODUCTS_UPDATE', data: mapped });
+      syncManager.broadcast('PRODUCTS_UPDATE', mapped);
     });
 
-    const unsubTx = gymDatabase.subscribe<Transaction>('transactions', (items) => {
+    const unsubTx = syncManager.subscribeToCollection<Transaction>('transactions', (items) => {
       setSyncStatus('live');
       setTransactions(items);
-      bc.postMessage({ type: 'TX_UPDATE', data: items });
+      syncManager.broadcast('TX_UPDATE', items);
     });
 
     // 🎯 SUBS: Metas Financieras (Realtime)
-    const unsubGoals = gymDatabase.subscribe<FinancialGoal>('goals', (items) => {
+    const unsubGoals = syncManager.subscribeToCollection<FinancialGoal>('goals', (items) => {
       setSyncStatus('live');
       setGoals(items);
-      bc.postMessage({ type: 'GOALS_UPDATE', data: items });
+      syncManager.broadcast('GOALS_UPDATE', items);
     });
 
     // 💸 SUBS: Obligaciones (Realtime)
-    const unsubObligations = gymDatabase.subscribe<Obligation>('obligations', (items) => {
+    const unsubObligations = syncManager.subscribeToCollection<Obligation>('obligations', (items) => {
       setSyncStatus('live');
       setObligations(items);
-      bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: items });
+      syncManager.broadcast('OBLIGATIONS_UPDATE', items);
     });
 
     // 👥 SUBS: Personal/Staff (Realtime)
-    const unsubStaff = gymDatabase.subscribe<Staff>('staff', (items) => {
+    const unsubStaff = syncManager.subscribeToCollection<Staff>('staff', (items) => {
       setSyncStatus('live');
       setStaff(items);
-      bc.postMessage({ type: 'STAFF_UPDATE', data: items });
+      syncManager.broadcast('STAFF_UPDATE', items);
     });
 
     // 🔧 SUBS: Activos/Gimnasio (Realtime)
     // 🧠 Mantiene el estado de las máquinas y mantenimiento al día.
-    const unsubAssets = gymDatabase.subscribe<GymAsset>('assets', (items) => {
+    const unsubAssets = syncManager.subscribeToCollection<GymAsset>('assets', (items) => {
       setSyncStatus('live');
       setAssets(items);
-      bc.postMessage({ type: 'ASSETS_UPDATE', data: items });
+      syncManager.broadcast('ASSETS_UPDATE', items);
     });
 
     return () => {
@@ -419,7 +418,6 @@ function useGymDataInternal() {
       unsubObligations();
       unsubStaff();
       unsubAssets();
-      bc.close();
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
@@ -441,7 +439,7 @@ function useGymDataInternal() {
     };
     setTransactions(prev => [newTx, ...prev]);
     try {
-      await trioSync.create('transactions', newTx);
+      await syncManager.create('transactions', newTx);
     } catch (e) {
       console.warn("⚠️ Transacción guardada localmente. Sync pendiente:", e);
     }
@@ -456,7 +454,7 @@ function useGymDataInternal() {
     if (updates.biometricStatus) dbUpdates.biometric_status = updates.biometricStatus;
 
     try {
-      await trioSync.update('members', id, dbUpdates);
+      await syncManager.update('members', id, dbUpdates);
       setSyncError(null);
     } catch (error: any) {
       setSyncError(`Error Miembros: ${error.message}`);
@@ -487,7 +485,7 @@ function useGymDataInternal() {
     setProducts(prev => prev.map(p => p.id === productId ? { ...p, stock: newStock } : p));
     
     try {
-      await trioSync.update('products', productId, { stock: newStock });
+      await syncManager.update('products', productId, { stock: newStock });
       setSyncError(null);
     } catch (error: any) {
       setSyncError(`Error Venta: ${error.message}`);
@@ -521,9 +519,8 @@ function useGymDataInternal() {
     setPlansConfig(cfg);
     localStorage.setItem('fuxion_plans_config', JSON.stringify(cfg));
 
-    const bc = new BroadcastChannel('fuxion_sync_channel');
-    bc.postMessage({ type: 'PLANS_UPDATE', data: nextPlans });
-    bc.close();
+    
+    syncManager.broadcast('PLANS_UPDATE', nextPlans);
   };
 
   // 🆘 SHADOW RECOVERY: Intenta recuperar datos desde el Suplente (Firebase)
@@ -560,7 +557,7 @@ function useGymDataInternal() {
       if (!hasSupabase) { console.warn('Sin Supabase configurado'); return false; }
 
       // Limpiar cola de sync para evitar ítems fallidos bloqueando
-      trioSync.clearQueue();
+      syncManager.clearQueue();
 
       const push = async (table: string, items: any[]) => {
         let ok = 0, fail = 0;
@@ -622,7 +619,7 @@ function useGymDataInternal() {
     updateTransaction: async (id: string | number, t: Partial<Transaction>) => {
       setTransactions(prev => prev.map(item => item.id === id ? { ...item, ...t } : item));
       try {
-        await trioSync.update('transactions', String(id), t);
+        await syncManager.update('transactions', String(id), t);
       } catch (e) {
         console.warn("⚠️ Actualización de transacción local. Sync pendiente.");
       }
@@ -630,7 +627,7 @@ function useGymDataInternal() {
     deleteTransaction: async (id: string | number) => {
       setTransactions(prev => prev.filter(tx => tx.id !== id));
       try {
-        await trioSync.delete('transactions', String(id));
+        await syncManager.delete('transactions', String(id));
       } catch (e) {
         console.warn("⚠️ Eliminación de transacción local. Sync pendiente.");
       }
@@ -657,7 +654,7 @@ function useGymDataInternal() {
           sell_price: sellPrice,
           min_stock: p.minStock
         };
-        await trioSync.create('products', cloudData);
+        await syncManager.create('products', cloudData);
         setSyncError(null);
       } catch (error: any) {
         console.warn("⚠️ Producto creado localmente. Sync BD pendiente:", error.message);
@@ -677,7 +674,7 @@ function useGymDataInternal() {
         if (buyPrice !== undefined) cloudData.buy_price = buyPrice;
         if (sellPrice !== undefined) cloudData.sell_price = sellPrice;
         if (p.minStock !== undefined) cloudData.min_stock = p.minStock;
-        await trioSync.update('products', id, cloudData);
+        await syncManager.update('products', id, cloudData);
       } catch (error: any) {
         console.warn("⚠️ Producto actualizado localmente. Sync BD pendiente:", error.message);
       }
@@ -686,7 +683,7 @@ function useGymDataInternal() {
       setProducts(prev => prev.filter(p => p.id !== id));
       triggerBackup('delete_product');
       try {
-        await trioSync.delete('products', id);
+        await syncManager.delete('products', id);
       } catch (error: any) {
         console.warn("⚠️ Producto eliminado localmente. Sync BD pendiente:", error.message);
       }
@@ -699,7 +696,7 @@ function useGymDataInternal() {
       setGoals(prev => [newGoal, ...prev]);
       triggerBackup('add_goal');
       try {
-        await trioSync.create('goals', newGoal);
+        await syncManager.create('goals', newGoal);
       } catch (e) {
         console.warn("⚠️ Meta guardada localmente. Sync pendiente.");
       }
@@ -707,7 +704,7 @@ function useGymDataInternal() {
     updateGoal: async (id: string, g: Partial<FinancialGoal>) => {
       setGoals(prev => prev.map(item => item.id === id ? { ...item, ...g } : item));
       try {
-        await trioSync.update('goals', id, g);
+        await syncManager.update('goals', id, g);
       } catch (e) {
         console.warn("⚠️ Actualización de meta local. Sync pendiente.");
       }
@@ -716,7 +713,7 @@ function useGymDataInternal() {
       setGoals(prev => prev.filter(g => g.id !== id));
       triggerBackup('delete_goal');
       try {
-        await trioSync.delete('goals', id);
+        await syncManager.delete('goals', id);
       } catch (e) {
         console.warn("⚠️ Eliminación de meta local. Sync pendiente.");
       }
@@ -729,7 +726,7 @@ function useGymDataInternal() {
       setObligations(prev => [newOb, ...prev]);
       triggerBackup('add_obligation');
       try {
-        await trioSync.create('obligations', newOb);
+        await syncManager.create('obligations', newOb);
       } catch (e) {
         console.warn("⚠️ Obligación guardada localmente.");
       }
@@ -737,7 +734,7 @@ function useGymDataInternal() {
     updateObligation: async (id: string, o: Partial<Obligation>) => {
       setObligations(prev => prev.map(item => item.id === id ? { ...item, ...o } : item));
       try {
-        await trioSync.update('obligations', id, o);
+        await syncManager.update('obligations', id, o);
       } catch (e) {
         console.warn("⚠️ Actualización de obligación local.");
       }
@@ -746,7 +743,7 @@ function useGymDataInternal() {
       setObligations(prev => prev.filter(o => o.id !== id));
       triggerBackup('delete_obligation');
       try {
-        await trioSync.delete('obligations', id);
+        await syncManager.delete('obligations', id);
       } catch (e) {
         console.warn("⚠️ Eliminación de obligación local.");
       }
@@ -773,7 +770,7 @@ function useGymDataInternal() {
       setStaff(prev => [newStaff, ...prev]);
       triggerBackup('add_staff');
       try {
-        await trioSync.create('staff', newStaff);
+        await syncManager.create('staff', newStaff);
       } catch (e) {
         console.warn("⚠️ Personal guardado localmente.");
       }
@@ -781,7 +778,7 @@ function useGymDataInternal() {
     updateStaff: async (id: string, s: Partial<Staff>) => {
       setStaff(prev => prev.map(item => item.id === id ? { ...item, ...s } : item));
       try {
-        await trioSync.update('staff', id, s);
+        await syncManager.update('staff', id, s);
       } catch (e) {
         console.warn("⚠️ Actualización de personal local.");
       }
@@ -790,7 +787,7 @@ function useGymDataInternal() {
       setStaff(prev => prev.filter(s => s.id !== id));
       triggerBackup('delete_staff');
       try {
-        await trioSync.delete('staff', id);
+        await syncManager.delete('staff', id);
       } catch (e) {
         console.warn("⚠️ Eliminación de personal local.");
       }
@@ -860,7 +857,7 @@ function useGymDataInternal() {
           loanDeductions.push({ id: l.id, newRemaining: Math.max(0, l.remaining - l.installment) });
         });
 
-        try { await trioSync.create('obligations', newOb); }
+        try { await syncManager.create('obligations', newOb); }
         catch (e) { console.warn(`⚠️ Sync nómina ${s.name}:`, e); }
       }
 
@@ -886,9 +883,8 @@ function useGymDataInternal() {
         }));
       }
 
-      const bc = new BroadcastChannel('fuxion_sync_channel');
-      bc.postMessage({ type: 'OBLIGATIONS_UPDATE', data: [...newObligations, ...obligations] });
-      bc.close();
+      
+      syncManager.broadcast('OBLIGATIONS_UPDATE', [...newObligations]);
       alert(`✅ ${newObligations.length} nómina(s) generada(s). Anticipos y préstamos descontados automáticamente.`);
     },
 
@@ -928,7 +924,7 @@ function useGymDataInternal() {
           expiry_date: newMember.expiryDate,
           biometric_status: newMember.biometricStatus
         };
-        await trioSync.create('members', cloudData);
+        await syncManager.create('members', cloudData);
       } catch (error) {
         console.error("Error sync members:", error);
       }
@@ -937,7 +933,7 @@ function useGymDataInternal() {
     deleteMember: async (id: string) => {
       setMembers(prev => prev.filter(m => m.id !== id));
       triggerBackup('delete_member');
-      await trioSync.delete('members', id);
+      await syncManager.delete('members', id);
     },
 
     // ── BACKUP ──

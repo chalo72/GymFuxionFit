@@ -13,6 +13,9 @@ import {
 import { useGymData, Member, roundPrice } from '../hooks/useGymData';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
 import QuickRegisterModal from '../components/reception/QuickRegisterModal';
+import { PosCart } from '../components/reception/PosCart';
+import { MembersList } from '../components/reception/MembersList';
+
 
 /* ══════════════════════════════════════════
    TIPOS & MOCKS HIDRINOS
