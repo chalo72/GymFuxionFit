@@ -1,12 +1,12 @@
 {
-  "version": "7.0.13",
-  "build": "20260616.001",
-  "status": "ULTRA_STABLE_V7",
+  "version": "7.0.14",
+  "build": "20260619.001",
+  "status": "UX_UI_CLEANUP",
   "author": "Antigravity Nexus",
   "features": [
-    "🚀 OMNI_STABILITY: Blindaje masivo contra errores de nulidad (toLowerCase)",
-    "🛡️ CORE_INTEGRITY: Parche crítico en Member List y Reception POS",
-    "💎 PREMIUM_RECOVERY: Estabilización de flujos tras fallo de build local",
-    "🔄 CACHE_PURGE: Incremento de versión para forzar actualización en clientes"
+    "✨ PREMIUM_UX: Rediseño completo del Menú Lateral en 5 bloques lógicos",
+    "🧹 DASHBOARD_CLEANUP: Reemplazo del panel técnico Nexus por Alertas Rápidas",
+    "🚀 OMNI_STABILITY: Blindaje masivo contra errores de nulidad",
+    "🔄 CACHE_PURGE: Incremento de versión para forzar actualización visual en clientes"
   ]
 }
