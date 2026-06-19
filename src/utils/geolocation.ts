@@ -37,10 +37,10 @@ export function getDistanceBetweenCoordinates(
   return dist;
 }
 
-// Coordenadas base del gimnasio (Montería, Colombia - Reemplazar con exactas de ser necesario)
+// Coordenadas base del gimnasio (Ciénaga de Oro, Córdoba - Barrio Divino Niño, Carrera 15)
 export const GYM_LOCATION: Coordinate = {
-  latitude: 8.74798,
-  longitude: -75.88143
+  latitude: 8.87500,
+  longitude: -75.62110
 };
 
 // Distancia máxima permitida en kilómetros (100 metros)
