@@ -8,7 +8,7 @@ import { trioSync } from '../lib/trioSync';
    SK-20260504-001 | nexus-catalogs-persistence
 ══════════════════════════════════════════ */
 
-const STORAGE_KEY = 'nexus_premium_catalogs_v3';
+const STORAGE_KEY = 'nexus_premium_catalogs_v4';
 
 export function useCatalogs() {
   const [catalogs, setCatalogs] = useState(() => {
