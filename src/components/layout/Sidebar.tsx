@@ -11,44 +11,41 @@ import { useAuth } from '../../contexts/AuthContext';
 
 /* ── Elementos de navegación por rol ── */
 const adminNav = [
-  { section: 'Principal', items: [
+  { section: 'Recepción & Control', items: [
     { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/trainer',     icon: Zap,             label: 'Rendimiento Élite', badge: 'VIBE' },
     { to: '/operations',  icon: Radio,           label: 'Operaciones Live', badge: '●' },
-    { to: '/genesis-scan',icon: Scan,            label: 'Genesis Scan' },
-    { to: '/crm',         icon: Kanban,          label: 'CRM Ventas' },
-    { to: '/members',     icon: Users,           label: 'Miembros', badge: 245 },
+    { to: '/members',     icon: Users,           label: 'Miembros' },
     { to: '/schedule',    icon: CalendarRange,   label: 'Calendario' },
     { to: '/classes',     icon: CalendarDays,    label: 'Clases' },
-    { to: '/catalogs',    icon: BookOpen,        label: 'Catálogos Expertos' },
-    { to: '/evaluacion',  icon: ClipboardList,   label: 'Entrevista Inicial', badge: 'NUEVO' },
-    { to: '/elite-plan',  icon: BrainCircuit,    label: 'Plan de Entrenamiento', badge: 'PRO' },
-    { to: '/elite-rec',   icon: HeartPulse,      label: 'Descanso y Energía', badge: 'VITAL' },
   ]},
-  { section: 'IA & Biometría', items: [
+  { section: 'Área Técnica', items: [
+    { to: '/trainer',     icon: Zap,             label: 'Rendimiento Élite', badge: 'VIBE' },
+    { to: '/evaluacion',  icon: ClipboardList,   label: 'Entrevista Inicial' },
+    { to: '/genesis-scan',icon: Scan,            label: 'Genesis Scan' },
+    { to: '/elite-plan',  icon: BrainCircuit,    label: 'Plan de Entrenamiento', badge: 'PRO' },
+    { to: '/elite-rec',   icon: HeartPulse,      label: 'Descanso y Energía' },
+    { to: '/catalogs',    icon: BookOpen,        label: 'Catálogos Expertos' },
+  ]},
+  { section: 'Inteligencia', items: [
     { to: '/ai-coach',   icon: Brain,   label: 'AI Coach' },
     { to: '/nutrition',  icon: Apple,   label: 'Nutrición' },
     { to: '/wearables',  icon: Watch,   label: 'Wearables' },
     { to: '/leaderboard',icon: Trophy,  label: 'Leaderboard' },
   ]},
-  { section: 'Negocio', items: [
-    { to: '/analytics', icon: BarChart3,  label: 'Analíticas' },
+  { section: 'Finanzas & Negocio', items: [
+    { to: '/crm',         icon: Kanban,          label: 'CRM Ventas' },
+    { to: '/finances',  icon: TrendingUp, label: 'Finanzas' },
+    { to: '/payments',  icon: CreditCard, label: 'Pagos' },
     { to: '/accounting', icon: Wallet,    label: 'Contabilidad' },
     { to: '/kpis',      icon: PieChart,   label: 'KPIs Gerenciales', badge: 'NEW' },
-    { to: '/finances',  icon: TrendingUp, label: 'Finanzas' },
+    { to: '/analytics', icon: BarChart3,  label: 'Analíticas' },
+    { to: '/reports',         icon: BarChart3,  label: 'Reportes Globales' },
     { to: '/inventory', icon: Package,    label: 'Inventario' },
-    { to: '/payments',  icon: CreditCard, label: 'Pagos' },
   ]},
   { section: 'Sistema', items: [
     { to: '/client-app', icon: Smartphone, label: 'App Cliente' },
     { to: '/settings',   icon: Settings,   label: 'Configuración' },
-  ]},
-  { section: 'Dashboards Cliente', items: [
-    { to: '/client/progress', icon: TrendingUp, label: 'Mi Progreso' },
-    { to: '/client/nutrition',icon: Apple,      label: 'Nutrición Cliente' },
-    { to: '/client/training', icon: Dumbbell,   label: 'Entrenamientos' },
-    { to: '/reports',         icon: BarChart3,  label: 'Reportes Globales' },
-  ]},
+  ]}
 ];
 
 const trainerNav = [
@@ -136,7 +133,7 @@ export default function Sidebar({
   const navigate   = useNavigate();
   const { user, logout } = useAuth();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    'Principal': true,
+    'Recepción & Control': true,
     'Control Gym': true,
     'Mi Espacio': true,
     'Mi Área Personal': true
