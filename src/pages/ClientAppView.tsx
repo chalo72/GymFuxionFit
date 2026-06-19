@@ -17,6 +17,8 @@ import { PanelNutrition } from '../components/ClientHUD/PanelNutrition';
 import { PanelWallet } from '../components/ClientHUD/PanelWallet';
 import { PanelProfile } from '../components/ClientHUD/PanelProfile';
 import { PanelStore } from '../components/ClientHUD/PanelStore';
+import { fetchTodaysWorkout } from '../services/exerciseService';
+import type { WorkoutExercise } from '../types/exercise';
 
 
 /* ══════════════════════════════════════════
@@ -26,12 +28,7 @@ import { PanelStore } from '../components/ClientHUD/PanelStore';
 type Tab       = 'scan' | 'workout' | 'leaderboard' | 'nutrition' | 'store' | 'wallet' | 'profile';
 type ScanPhase = 'scanning' | 'found' | 'verified' | 'error_distance' | 'error_gps';
 
-const EXERCISES = [
-  { id: 1, name: 'SQUATS_FRONT_LOADED', sets: 4, reps: 10, rest: '90s', intensity: 85, kcal: 95,  icon: '🏋️' },
-  { id: 2, name: 'BENCH_PRESS_ISOLATION', sets: 3, reps: 12, rest: '60s', intensity: 78, kcal: 72,  icon: '💪' },
-  { id: 3, name: 'CORE_PLANK_STABILIZER', sets: 3, reps: 15, rest: '60s', intensity: 65, kcal: 68,  icon: '🤸' },
-  { id: 4, name: 'PLIC_PLYOMETRIC_JUMP', sets: 4, reps: 8,  rest: '90s', intensity: 92, kcal: 110, icon: '⚡' },
-];
+// Los ejercicios ahora se cargan dinámicamente desde el ExerciseService
 
 const LEADERBOARD = [
   { rank: 1, name: 'ALEX_WARRIOR', time: '32:45', pts: 4800, medal: 'gold',   change: '+2' },
@@ -70,6 +67,16 @@ export default function ClientAppView() {
   const [cartCount, setCartCount] = useState(0);
   const { members, injectTransaction, updateMemberStatus } = useGymData();
   const { user } = useAuth();
+  
+  const [workouts, setWorkouts] = useState<WorkoutExercise[]>([]);
+  const [loadingWorkout, setLoadingWorkout] = useState(true);
+
+  useEffect(() => {
+    fetchTodaysWorkout().then(data => {
+      setWorkouts(data);
+      setLoadingWorkout(false);
+    });
+  }, []);
 
   const athlete = useMemo(() => {
     return members.find(m => m.id === user?.id) || {
@@ -257,18 +264,48 @@ export default function ClientAppView() {
                     </button>
                  </div>
                  
-                 <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {EXERCISES.map((ex, i) => (
-                      <div key={ex.id} className="premium-card-hover" style={{ display: 'flex', alignItems: 'center', gap: 20, padding: 24, background: 'rgba(255,255,255,0.02)', borderRadius: 24, border: '1px solid rgba(255,255,255,0.04)', transition: '0.3s' }}>
-                         <div style={{ fontSize: 32, width: 60, height: 60, background: 'rgba(255,255,255,0.03)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{ex.icon}</div>
-                         <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 16, fontWeight: 950 }}>{ex.name.replace(/_/g, ' ')}</div>
-                            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>{ex.sets} SERIES x {ex.reps} REPS • {ex.rest} DESC.</div>
+                 <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {loadingWorkout ? (
+                      <div style={{ textAlign: 'center', padding: 40, color: 'var(--neon-green)' }}>
+                        <div style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid var(--neon-green)', borderTopColor: 'transparent', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                        <div>Cargando rutina visual...</div>
+                      </div>
+                    ) : workouts.map((ex) => (
+                      <div key={ex.id} className="premium-card-hover" style={{ display: 'flex', flexDirection: 'column', padding: 20, background: 'rgba(255,255,255,0.02)', borderRadius: 24, border: '1px solid rgba(255,255,255,0.04)', transition: '0.3s' }}>
+                         
+                         {/* Cabecera del ejercicio */}
+                         <div style={{ display: 'flex', gap: 20, marginBottom: 16 }}>
+                           <div style={{ width: 100, height: 80, borderRadius: 16, overflow: 'hidden', background: '#000', border: '1px solid rgba(255,255,255,0.1)' }}>
+                             <img src={ex.gifUrl} alt={ex.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.8 }} />
+                           </div>
+                           <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 16, fontWeight: 950, textTransform: 'uppercase', marginBottom: 4 }}>{ex.name}</div>
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: 9, background: 'rgba(0,255,136,0.1)', color: 'var(--neon-green)', padding: '4px 8px', borderRadius: 8, fontWeight: 900 }}>{ex.target}</span>
+                                <span style={{ fontSize: 9, background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: 8, fontWeight: 800 }}>{ex.equipment}</span>
+                              </div>
+                           </div>
+                           <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: 13, fontWeight: 950, color: 'var(--neon-green)' }}>{ex.sets}x{ex.reps}</div>
+                              <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 800 }}>{ex.rest} DESC.</div>
+                           </div>
                          </div>
-                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 13, fontWeight: 950, color: 'var(--neon-green)' }}>{ex.intensity}%</div>
-                            <div style={{ fontSize: 9, color: 'var(--text-muted)', fontWeight: 800 }}>INTENSIDAD</div>
-                         </div>
+                         
+                         {/* Instrucciones desplegables */}
+                         <details style={{ background: 'rgba(0,0,0,0.2)', padding: 12, borderRadius: 12, cursor: 'pointer' }}>
+                           <summary style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                             VER TÉCNICA Y CONSEJOS
+                           </summary>
+                           <ul style={{ marginTop: 12, paddingLeft: 16, fontSize: 12, color: '#ccc', lineHeight: 1.6 }}>
+                             {ex.instructions.map((inst, idx) => (
+                               <li key={idx} style={{ marginBottom: 4 }}>{inst}</li>
+                             ))}
+                           </ul>
+                           <div style={{ marginTop: 12, fontSize: 10, color: 'var(--neon-green)', fontWeight: 800 }}>
+                             Sinergia: {ex.secondaryMuscles.join(', ')}
+                           </div>
+                         </details>
+
                       </div>
                     ))}
                  </div>
