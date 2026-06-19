@@ -1,6 +1,12 @@
 {
+  "crons": [
+    {
+      "path": "/api/keep-alive",
+      "schedule": "0 0 * * *"
+    }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "headers": [
     {
