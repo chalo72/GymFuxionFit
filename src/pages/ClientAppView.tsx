@@ -24,7 +24,7 @@ import { PanelStore } from '../components/ClientHUD/PanelStore';
    Client Performance HUD V.2.6
 ══════════════════════════════════════════ */
 type Tab       = 'scan' | 'workout' | 'leaderboard' | 'nutrition' | 'store' | 'wallet' | 'profile';
-type ScanPhase = 'scanning' | 'found' | 'verified';
+type ScanPhase = 'scanning' | 'found' | 'verified' | 'error_distance' | 'error_gps';
 
 const EXERCISES = [
   { id: 1, name: 'SQUATS_FRONT_LOADED', sets: 4, reps: 10, rest: '90s', intensity: 85, kcal: 95,  icon: '🏋️' },
@@ -82,9 +82,42 @@ export default function ClientAppView() {
 
   useEffect(() => {
     if (tab !== 'scan') { setPhase('scanning'); return; }
-    const t1 = setTimeout(() => setPhase('found'), 1500);
-    const t2 = setTimeout(() => setPhase('verified'), 3000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+
+    if (!('geolocation' in navigator)) {
+      setPhase('error_gps');
+      return;
+    }
+
+    setPhase('scanning');
+    
+    // Simular 1 segundo de escaneo UI antes de leer el GPS para dar sensación premium
+    setTimeout(() => {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          // Importamos el motor matemático
+          const { getDistanceBetweenCoordinates, GYM_LOCATION, MAX_DISTANCE_IN_KILOMETERS } = await import('../utils/geolocation');
+          
+          const distance = getDistanceBetweenCoordinates(
+            { latitude, longitude },
+            GYM_LOCATION
+          );
+
+          if (distance <= MAX_DISTANCE_IN_KILOMETERS) {
+            setPhase('verified');
+          } else {
+            setPhase('error_distance');
+          }
+        },
+        (error) => {
+          console.error("GPS Error:", error);
+          setPhase('error_gps');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    }, 1000);
+    
   }, [tab]);
 
   useEffect(() => {
@@ -193,10 +226,20 @@ export default function ClientAppView() {
               <div className="glass-card" style={{ padding: 60, borderRadius: 40, border: '1px solid var(--neon-green)', textAlign: 'center', maxWidth: 400, width: '100%' }}>
                  <div style={{ position: 'relative', width: 200, height: 200, margin: '0 auto 30px', borderRadius: '50%', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '4px solid rgba(0,255,136,0.1)' }}>
                     <User size={100} style={{ opacity: 0.2 }} />
-                    {phase === 'verified' ? <Check size={80} style={{ color: 'var(--neon-green)' }} /> : <ScanFace size={80} style={{ color: 'var(--neon-green)', animation: 'pulse 1.5s infinite' }} />}
+                    {phase === 'verified' && <Check size={80} style={{ color: 'var(--neon-green)' }} />}
+                    {phase === 'scanning' && <ScanFace size={80} style={{ color: 'var(--neon-green)', animation: 'pulse 1.5s infinite' }} />}
+                    {(phase === 'error_distance' || phase === 'error_gps') && <Lock size={80} style={{ color: 'var(--danger-red)' }} />}
                  </div>
-                 <h2 style={{ fontSize: 24, fontWeight: 950, marginBottom: 8 }}>{phase === 'verified' ? '¡ACCESO CONCEDIDO!' : 'ESCANEANDO ROSTRO...'}</h2>
-                 <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>{phase === 'verified' ? 'Bienvenido a Fuxion Fit, Alex.' : 'Acércate al sensor de la entrada.'}</p>
+                 <h2 style={{ fontSize: 24, fontWeight: 950, marginBottom: 8, color: phase.includes('error') ? 'var(--danger-red)' : '#fff' }}>
+                    {phase === 'verified' ? '¡ACCESO CONCEDIDO!' : 
+                     phase === 'error_distance' ? 'ZONA RESTRINGIDA' :
+                     phase === 'error_gps' ? 'GPS DESACTIVADO' : 'LEYENDO GPS...'}
+                 </h2>
+                 <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+                    {phase === 'verified' ? 'Bienvenido a Fuxion Fit. Registramos tu asistencia.' : 
+                     phase === 'error_distance' ? 'Estás a más de 100m del gimnasio. Acércate para registrar tu entrada.' :
+                     phase === 'error_gps' ? 'Debes otorgar permisos de ubicación para registrar asistencia.' : 'Buscando satélites y calculando distancia...'}
+                 </p>
               </div>
            </div>
          )}
