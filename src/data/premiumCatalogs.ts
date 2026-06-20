@@ -57,32 +57,32 @@ export const EXERCISE_CATALOG = [
   // ABDOMEN Y CORE (Patrón: Carry/Core)
   { id: 'c2', name: 'Plancha Abdominal (Plank)', muscleGroup: 'Abdomen', equipment: 'Peso Corporal', difficulty: 'Principiante', pattern: 'carry', imageUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Plank/0.jpg', videoUrl: '' },
   { id: 'c1', name: 'Crunch en Polea Alta', muscleGroup: 'Abdomen', equipment: 'Poleas', difficulty: 'Intermedio', pattern: 'carry', imageUrl: 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/Bosu_Ball_Cable_Crunch_With_Side_Bends/0.jpg', videoUrl: '' },
-  { id: 'c3', name: 'Elevaciones de Piernas Colgado', muscleGroup: 'Abdomen', equipment: 'Barra', difficulty: 'Avanzado', pattern: 'carry', videoUrl: '' },
-  { id: 'c4', name: 'Rueda Abdominal (Ab Wheel)', muscleGroup: 'Abdomen', equipment: 'Herramienta', difficulty: 'Avanzado', pattern: 'carry', videoUrl: '' },
-  { id: 'c5', name: 'Giros Rusos (Russian Twists)', muscleGroup: 'Abdomen', equipment: 'Disco/Kettlebell', difficulty: 'Intermedio', pattern: 'carry', videoUrl: '' },
-  { id: 'c6', name: 'Press Pallof', muscleGroup: 'Abdomen', equipment: 'Poleas', difficulty: 'Intermedio', pattern: 'carry', videoUrl: '' },
-  { id: 'c7', name: 'Woodchopper', muscleGroup: 'Abdomen', equipment: 'Poleas', difficulty: 'Intermedio', pattern: 'carry', videoUrl: '' },
+  { id: 'c3', name: 'Elevaciones de Piernas Colgado', muscleGroup: 'Abdomen', equipment: 'Barra', difficulty: 'Avanzado', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'c4', name: 'Rueda Abdominal (Ab Wheel)', muscleGroup: 'Abdomen', equipment: 'Herramienta', difficulty: 'Avanzado', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'c5', name: 'Giros Rusos (Russian Twists)', muscleGroup: 'Abdomen', equipment: 'Disco/Kettlebell', difficulty: 'Intermedio', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'c6', name: 'Press Pallof', muscleGroup: 'Abdomen', equipment: 'Poleas', difficulty: 'Intermedio', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'c7', name: 'Woodchopper', muscleGroup: 'Abdomen', equipment: 'Poleas', difficulty: 'Intermedio', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
 
   // HYROX / FUNCIONAL
-  { id: 'e20', name: 'SkiErg', muscleGroup: 'Cuerpo Completo', equipment: 'Máquina Cardio', difficulty: 'Avanzado', pattern: 'pull', videoUrl: '' },
-  { id: 'e21', name: 'Empuje de Trineo (Sled Push)', muscleGroup: 'Pierna', equipment: 'Trineo', difficulty: 'Avanzado', pattern: 'push', videoUrl: '' },
-  { id: 'e22', name: 'Tiro de Trineo (Sled Pull)', muscleGroup: 'Espalda', equipment: 'Trineo', difficulty: 'Avanzado', pattern: 'pull', videoUrl: '' },
-  { id: 'e23', name: 'Wall Balls', muscleGroup: 'Cuerpo Completo', equipment: 'Balón Medicinal', difficulty: 'Intermedio', pattern: 'push', videoUrl: '' },
-  { id: 'e24', name: 'Burpee Broad Jumps', muscleGroup: 'Cuerpo Completo', equipment: 'Peso Corporal', difficulty: 'Avanzado', pattern: 'squat', videoUrl: '' },
-  { id: 'e25', name: 'Sandbag Lunges', muscleGroup: 'Pierna', equipment: 'Saco de Arena', difficulty: 'Avanzado', pattern: 'squat', videoUrl: '' },
-  { id: 'e26', name: 'Farmer Carry', muscleGroup: 'Cuerpo Completo', equipment: 'Kettlebells', difficulty: 'Intermedio', pattern: 'carry', videoUrl: '' },
-  { id: 'e27', name: 'Kettlebell Swings', muscleGroup: 'Cuerpo Completo', equipment: 'Kettlebells', difficulty: 'Intermedio', pattern: 'hinge', videoUrl: '' },
-  { id: 'e28', name: 'Box Jumps', muscleGroup: 'Pierna', equipment: 'Cajón', difficulty: 'Intermedio', pattern: 'squat', videoUrl: '' },
-  { id: 'e29', name: 'Thrusters', muscleGroup: 'Cuerpo Completo', equipment: 'Barra', difficulty: 'Avanzado', pattern: 'push', videoUrl: '' },
-  { id: 'e30', name: 'Rope Climbs', muscleGroup: 'Espalda', equipment: 'Cuerda', difficulty: 'Avanzado', pattern: 'pull', videoUrl: '' },
-  { id: 'e31', name: 'Assault Bike', muscleGroup: 'Cuerpo Completo', equipment: 'Máquina Cardio', difficulty: 'Intermedio', pattern: 'squat', videoUrl: '' },
+  { id: 'e20', name: 'SkiErg', muscleGroup: 'Cuerpo Completo', equipment: 'Máquina Cardio', difficulty: 'Avanzado', pattern: 'pull', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e21', name: 'Empuje de Trineo (Sled Push)', muscleGroup: 'Pierna', equipment: 'Trineo', difficulty: 'Avanzado', pattern: 'push', imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e22', name: 'Tiro de Trineo (Sled Pull)', muscleGroup: 'Espalda', equipment: 'Trineo', difficulty: 'Avanzado', pattern: 'pull', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e23', name: 'Wall Balls', muscleGroup: 'Cuerpo Completo', equipment: 'Balón Medicinal', difficulty: 'Intermedio', pattern: 'push', imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e24', name: 'Burpee Broad Jumps', muscleGroup: 'Cuerpo Completo', equipment: 'Peso Corporal', difficulty: 'Avanzado', pattern: 'squat', imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e25', name: 'Sandbag Lunges', muscleGroup: 'Pierna', equipment: 'Saco de Arena', difficulty: 'Avanzado', pattern: 'squat', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e26', name: 'Farmer Carry', muscleGroup: 'Cuerpo Completo', equipment: 'Kettlebells', difficulty: 'Intermedio', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e27', name: 'Kettlebell Swings', muscleGroup: 'Cuerpo Completo', equipment: 'Kettlebells', difficulty: 'Intermedio', pattern: 'hinge', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e28', name: 'Box Jumps', muscleGroup: 'Pierna', equipment: 'Cajón', difficulty: 'Intermedio', pattern: 'squat', imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e29', name: 'Thrusters', muscleGroup: 'Cuerpo Completo', equipment: 'Barra', difficulty: 'Avanzado', pattern: 'push', imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e30', name: 'Rope Climbs', muscleGroup: 'Espalda', equipment: 'Cuerda', difficulty: 'Avanzado', pattern: 'pull', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'e31', name: 'Assault Bike', muscleGroup: 'Cuerpo Completo', equipment: 'Máquina Cardio', difficulty: 'Intermedio', pattern: 'squat', imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
 
   // MOVILIDAD / CALENTAMIENTO
-  { id: 'm1', name: 'World Greatest Stretch', muscleGroup: 'Cuerpo Completo', equipment: 'Peso Corporal', difficulty: 'Principiante', pattern: 'carry', videoUrl: '' },
-  { id: 'm2', name: 'Cat-Cow', muscleGroup: 'Espalda', equipment: 'Peso Corporal', difficulty: 'Principiante', pattern: 'carry', videoUrl: '' },
-  { id: 'm3', name: 'Movilidad 90/90 Cadera', muscleGroup: 'Pierna', equipment: 'Peso Corporal', difficulty: 'Principiante', pattern: 'carry', videoUrl: '' },
-  { id: 'm4', name: 'Dislocaciones de Hombro con PVC', muscleGroup: 'Hombro', equipment: 'Palo PVC', difficulty: 'Principiante', pattern: 'carry', videoUrl: '' },
-  { id: 'm5', name: 'Sentadilla Profunda Pasiva', muscleGroup: 'Pierna', equipment: 'Peso Corporal', difficulty: 'Principiante', pattern: 'squat', videoUrl: '' }
+  { id: 'm1', name: 'World Greatest Stretch', muscleGroup: 'Cuerpo Completo', equipment: 'Peso Corporal', difficulty: 'Principiante', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'm2', name: 'Cat-Cow', muscleGroup: 'Espalda', equipment: 'Peso Corporal', difficulty: 'Principiante', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'm3', name: 'Movilidad 90/90 Cadera', muscleGroup: 'Pierna', equipment: 'Peso Corporal', difficulty: 'Principiante', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'm4', name: 'Dislocaciones de Hombro con PVC', muscleGroup: 'Hombro', equipment: 'Palo PVC', difficulty: 'Principiante', pattern: 'carry', imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800', videoUrl: '' },
+  { id: 'm5', name: 'Sentadilla Profunda Pasiva', muscleGroup: 'Pierna', equipment: 'Peso Corporal', difficulty: 'Principiante', pattern: 'squat', imageUrl: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&q=80&w=800', videoUrl: '' }
 ];
 
 export const SUPPLEMENT_CATALOG = [
