@@ -4,7 +4,7 @@ import { useCatalogs } from '../hooks/useCatalogs';
 import { 
   Zap, TrendingUp, Target, BarChart3, ChevronRight, 
   Dumbbell, Repeat, Layers, Info, Save, Plus, Trash2, 
-  Search, Filter, Activity, Flame
+  Search, Filter, Activity, Flame, Check
 } from 'lucide-react';
 
 /* ══════════════════════════════════════════
@@ -53,11 +53,13 @@ export default function ElitePlanner() {
   // State para Selección (Pilar 3)
   const [selectedExercises, setSelectedExercises] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterMuscle, setFilterMuscle] = useState('Todos');
 
-  const filteredExercises = catalogs.exercises.filter((ex: any) => 
-    (ex.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-    (ex.muscleGroup || '').toLowerCase().includes((searchTerm || '').toLowerCase())
-  );
+  const filteredExercises = catalogs.exercises.filter((ex: any) => {
+    const matchesSearch = (ex.name || '').toLowerCase().includes((searchTerm || '').toLowerCase());
+    const matchesMuscle = filterMuscle === 'Todos' || ex.muscleGroup === filterMuscle;
+    return matchesSearch && matchesMuscle;
+  });
 
   const addExercise = (ex: any) => {
     if (!selectedExercises.find(e => e.id === ex.id)) {
@@ -373,26 +375,55 @@ export default function ElitePlanner() {
                 />
                 <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: 14 }} />
               </div>
+
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10, marginTop: 16, scrollbarWidth: 'none' }}>
+                {['Todos', 'Pecho', 'Espalda', 'Pierna', 'Hombro', 'Brazos', 'Abdomen', 'Cuerpo Completo'].map(m => (
+                  <button 
+                    key={m} 
+                    onClick={() => setFilterMuscle(m)}
+                    style={{ 
+                      padding: '6px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
+                      background: filterMuscle === m ? 'var(--nexus-primary)' : 'rgba(255,255,255,0.05)',
+                      color: filterMuscle === m ? '#000' : 'var(--text-primary)', border: 'none', cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                  >{m}</button>
+                ))}
+              </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {filteredExercises.map((ex: any) => (
-                <div 
-                  key={ex.id} 
-                  onClick={() => addExercise(ex)}
-                  style={{ 
-                    padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: '0.2s' 
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(0,240,255,0.3)'}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{ex.name}</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                    <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>{ex.muscleGroup}</span>
-                    <Plus size={14} color="#00F0FF" />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
+              {filteredExercises.map((ex: any) => {
+                const isSelected = selectedExercises.find(e => e.id === ex.id);
+                return (
+                  <div 
+                    key={ex.id} 
+                    onClick={() => isSelected ? removeExercise(ex.id) : addExercise(ex)}
+                    style={{ 
+                      position: 'relative', borderRadius: 16, overflow: 'hidden', cursor: 'pointer',
+                      border: isSelected ? '2px solid #00F0FF' : '2px solid transparent',
+                      background: 'rgba(255,255,255,0.03)', height: 150, transition: 'all 0.2s',
+                      boxShadow: isSelected ? '0 0 15px rgba(0,240,255,0.2)' : 'none'
+                    }}
+                  >
+                    {ex.imageUrl ? (
+                      <img src={ex.imageUrl} alt={ex.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isSelected ? 0.8 : 0.4 }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Dumbbell size={30} opacity={0.2} />
+                      </div>
+                    )}
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 60%, transparent 100%)', padding: '30px 10px 10px' }}>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: '#FFF', lineHeight: 1.2 }}>{ex.name}</div>
+                      <div style={{ fontSize: 9, color: isSelected ? '#00F0FF' : 'var(--text-muted)', fontWeight: 700, marginTop: 4 }}>{ex.equipment.toUpperCase()}</div>
+                    </div>
+                    {isSelected && (
+                      <div style={{ position: 'absolute', top: 8, right: 8, background: '#00F0FF', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
+                        <Check size={12} strokeWidth={4} />
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
