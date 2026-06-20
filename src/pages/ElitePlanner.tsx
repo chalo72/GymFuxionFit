@@ -32,7 +32,8 @@ export default function ElitePlanner() {
   const { members } = useGymData();
   const { catalogs } = useCatalogs();
   const [selectedMember, setSelectedMember] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'programming' | 'selection'>('programming');
+  const [activeTab, setActiveTab] = useState<'programming' | 'selection' | 'evidence'>('programming');
+  const [selectedSupplement, setSelectedSupplement] = useState('creatine');
   
   // State para Programación (Pilar 2)
   const [programming, setProgramming] = useState({
@@ -108,6 +109,12 @@ export default function ElitePlanner() {
               style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', cursor: 'pointer', background: activeTab === 'selection' ? '#00F0FF' : 'rgba(255,255,255,0.03)', color: activeTab === 'selection' ? '#000' : '#fff', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: '0.3s' }}
             >
               <Dumbbell size={20} /> 2. Selección de Ejercicios
+            </button>
+            <button 
+              onClick={() => setActiveTab('evidence')}
+              style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', cursor: 'pointer', background: activeTab === 'evidence' ? '#A78BFA' : 'rgba(255,255,255,0.03)', color: activeTab === 'evidence' ? '#000' : '#fff', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: '0.3s' }}
+            >
+              <Activity size={20} /> 3. Nutrición y Evidencia
             </button>
           </div>
 
@@ -240,6 +247,111 @@ export default function ElitePlanner() {
                     );
                   })}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'selection' && (
+            /* PILLAR 3: EXERCISE SELECTION */
+            <div className="glass-card" style={{ padding: 32, border: '1px solid rgba(0,240,255,0.1)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 style={{ fontSize: 22, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Layers color="#00F0FF" /> Selección Inteligente de Ejercicios
+                </h2>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{selectedExercises.length} seleccionados</div>
+              </div>
+
+              {selectedExercises.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 40, background: 'rgba(255,255,255,0.02)', borderRadius: 16 }}>
+                  <Dumbbell size={40} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
+                  <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Busca y selecciona ejercicios del catálogo de la derecha.</p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {selectedExercises.map((ex, idx) => (
+                    <div key={ex.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 100px 40px', gap: 12, padding: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 12, alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: 14 }}>{idx + 1}. {ex.name}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ex.muscleGroup} | {ex.equipment}</div>
+                      </div>
+                      <input className="input-field" value={ex.sets} onChange={(e) => updateEx(ex.id, 'sets', e.target.value)} style={{ padding: '6px 10px', textAlign: 'center' }} placeholder="Sets" />
+                      <input className="input-field" value={ex.reps} onChange={(e) => updateEx(ex.id, 'reps', e.target.value)} style={{ padding: '6px 10px', textAlign: 'center' }} placeholder="Reps" />
+                      <select className="input-field" value={ex.curve} onChange={(e) => updateEx(ex.id, 'curve', e.target.value)} style={{ padding: '6px 10px', fontSize: 11 }}>
+                        <option value="stretch">Estiramiento</option>
+                        <option value="mid">Medio</option>
+                        <option value="short">Acortado</option>
+                      </select>
+                      <button onClick={() => removeExercise(ex.id)} style={{ background: 'none', border: 'none', color: 'var(--danger-red)', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ marginTop: 24, padding: 20, background: 'rgba(0,240,255,0.03)', borderRadius: 16, border: '1px solid rgba(0,240,255,0.1)' }}>
+                <h3 style={{ fontSize: 13, fontWeight: 800, color: '#00F0FF', marginBottom: 12 }}>Análisis de Patrones de Movimiento</h3>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {PATTERNS.map(p => {
+                    const count = selectedExercises.filter(e => e.pattern === p.id).length;
+                    return (
+                      <div key={p.id} style={{ flex: 1, textAlign: 'center', padding: 10, borderRadius: 12, background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ fontSize: 18 }}>{p.icon}</div>
+                        <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', marginTop: 4 }}>{p.label.toUpperCase()}</div>
+                        <div style={{ fontSize: 14, fontWeight: 900, color: count > 0 ? '#00F0FF' : 'rgba(255,255,255,0.1)' }}>{count}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 'evidence' && (
+            <div className="glass-card" style={{ padding: 32, border: '1px solid rgba(167,139,250,0.1)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 style={{ fontSize: 22, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Activity color="#A78BFA" /> Documentación Científica de Suplementos
+                </h2>
+              </div>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>
+                Selecciona un compuesto para generar la documentación clínica (Grado de Evidencia) e incluirla en la ficha del atleta como justificación de la prescripción.
+              </p>
+              
+              <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+                {[
+                  { id: 'creatine', label: 'Creatina' },
+                  { id: 'caffeine', label: 'Cafeína' },
+                  { id: 'amino-acids', label: 'Aminoácidos (EAA/BCAA)' },
+                  { id: 'ashwagandha', label: 'Ashwagandha' }
+                ].map(sup => (
+                  <button 
+                    key={sup.id}
+                    onClick={() => setSelectedSupplement(sup.id)}
+                    style={{
+                      padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 700,
+                      background: selectedSupplement === sup.id ? '#A78BFA' : 'rgba(255,255,255,0.05)',
+                      color: selectedSupplement === sup.id ? '#000' : '#fff'
+                    }}
+                  >
+                    {sup.label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', padding: 20, minHeight: 400 }}>
+                {/* El Widget de CITED Health se inyectará aquí automáticamente usando el script global */}
+                <div 
+                  key={selectedSupplement} 
+                  data-citedhealth="evidence" 
+                  data-slug={selectedSupplement} 
+                  data-theme="light"
+                  style={{ width: '100%', height: '100%' }}
+                ></div>
+              </div>
+              
+              <div style={{ marginTop: 24, textAlign: 'right' }}>
+                <button style={{ padding: '12px 24px', background: 'var(--space-medium)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, cursor: 'pointer', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <Save size={16} /> Adjuntar Evidencia al Plan
+                </button>
               </div>
             </div>
           )}
