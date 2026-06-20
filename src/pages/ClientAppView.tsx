@@ -4,7 +4,7 @@ import {
   Check, ChevronRight, Zap, Flame, Target, Star,
   TrendingUp, Clock, Shield, Award, Activity, Heart,
   ZapOff, Lock, CreditCard, ChevronLeft, Calendar,
-  ShoppingBag, Filter, Info, ShoppingCart
+  ShoppingBag, Filter, Info, ShoppingCart, ScanLine
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
@@ -20,13 +20,14 @@ import { PanelStore } from '../components/ClientHUD/PanelStore';
 import { fetchTodaysWorkout } from '../services/exerciseService';
 import type { WorkoutExercise } from '../types/exercise';
 import { PostureCoach } from '../components/AI/PostureCoach';
+import { PanelAIScanner } from '../components/ClientHUD/PanelAIScanner';
 
 
 /* ══════════════════════════════════════════
    TIPOS Y CORE ARCHITECTURE
    Client Performance HUD V.2.6
 ══════════════════════════════════════════ */
-type Tab       = 'scan' | 'workout' | 'leaderboard' | 'nutrition' | 'store' | 'wallet' | 'profile' | 'aicoach';
+type Tab       = 'scan' | 'workout' | 'leaderboard' | 'nutrition' | 'store' | 'wallet' | 'profile' | 'aicoach' | 'aiscanner';
 type ScanPhase = 'scanning' | 'found' | 'verified' | 'error_distance' | 'error_gps';
 
 // Los ejercicios ahora se cargan dinámicamente desde el ExerciseService
@@ -187,6 +188,7 @@ export default function ClientAppView() {
            { id: 'scan', l: 'Acceso Gym', i: <ScanFace size={18} /> },
            { id: 'leaderboard', l: 'Ranking', i: <Trophy size={18} /> },
            { id: 'nutrition', l: 'Nutrición', i: <Apple size={18} /> },
+           { id: 'aiscanner', l: 'Escáner 3D', i: <ScanLine size={18} color="var(--neon-green)" /> },
            { id: 'store', l: 'Tienda', i: (
              <div style={{ position: 'relative' }}>
                <ShoppingBag size={18} />
@@ -344,6 +346,7 @@ export default function ClientAppView() {
          {tab === 'store' && <PanelStore onCartChange={setCartCount} injectTransaction={injectTransaction} updateMemberStatus={updateMemberStatus} athlete={athlete} />}
          {tab === 'wallet' && <PanelWallet user={athlete} />}
          {tab === 'profile' && <PanelProfile user={athlete} />}
+         {tab === 'aiscanner' && <PanelAIScanner />}
 
       </div>
     </div>
