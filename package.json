@@ -10,6 +10,9 @@
     "sync:prod": "node scripts/sync-prod-to-local.js"
   },
   "dependencies": {
+    "@mediapipe/camera_utils": "^0.3.1675466862",
+    "@mediapipe/drawing_utils": "^0.3.1675466124",
+    "@mediapipe/pose": "^0.5.1675469404",
     "@supabase/supabase-js": "^2.104.0",
     "appwrite": "^25.0.0",
     "firebase": "^12.12.1",
@@ -18,6 +21,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.0",
+    "react-webcam": "^7.2.0",
     "recharts": "^2.15.0"
   },
   "devDependencies": {

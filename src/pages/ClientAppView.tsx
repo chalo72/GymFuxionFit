@@ -19,13 +19,14 @@ import { PanelProfile } from '../components/ClientHUD/PanelProfile';
 import { PanelStore } from '../components/ClientHUD/PanelStore';
 import { fetchTodaysWorkout } from '../services/exerciseService';
 import type { WorkoutExercise } from '../types/exercise';
+import { PostureCoach } from '../components/AI/PostureCoach';
 
 
 /* ══════════════════════════════════════════
    TIPOS Y CORE ARCHITECTURE
    Client Performance HUD V.2.6
 ══════════════════════════════════════════ */
-type Tab       = 'scan' | 'workout' | 'leaderboard' | 'nutrition' | 'store' | 'wallet' | 'profile';
+type Tab       = 'scan' | 'workout' | 'leaderboard' | 'nutrition' | 'store' | 'wallet' | 'profile' | 'aicoach';
 type ScanPhase = 'scanning' | 'found' | 'verified' | 'error_distance' | 'error_gps';
 
 // Los ejercicios ahora se cargan dinámicamente desde el ExerciseService
@@ -186,25 +187,25 @@ export default function ClientAppView() {
            { id: 'scan', l: 'Acceso Gym', i: <ScanFace size={18} /> },
            { id: 'leaderboard', l: 'Ranking', i: <Trophy size={18} /> },
            { id: 'nutrition', l: 'Nutrición', i: <Apple size={18} /> },
-           { 
-             id: 'store', 
-             l: 'Tienda', 
-             i: (
-               <div style={{ position: 'relative' }}>
-                 <ShoppingBag size={18} />
-                 {cartCount > 0 && (
-                   <div style={{ 
-                     position: 'absolute', top: -5, right: -10, 
-                     background: 'var(--danger-red)', color: '#fff', 
-                     fontSize: 8, padding: '2px 5px', borderRadius: '50%',
-                     animation: 'pulse 1s infinite'
-                   }}>
-                     {cartCount}
-                   </div>
-                 )}
-               </div>
-             ) 
+           { id: 'store', l: 'Tienda', i: (
+             <div style={{ position: 'relative' }}>
+               <ShoppingBag size={18} />
+               {cartCount > 0 && (
+                 <div style={{ 
+                   position: 'absolute', top: -8, right: -8, 
+                   background: 'var(--neon-green)', color: '#000', 
+                   fontSize: 10, fontWeight: 'bold', 
+                   width: 16, height: 16, borderRadius: '50%',
+                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                   animation: 'pulse 1s infinite'
+                 }}>
+                   {cartCount}
+                 </div>
+               )}
+             </div>
+           ) 
            },
+           { id: 'aicoach', l: 'Coach IA', i: <Activity size={18} color="var(--neon-green)" /> },
            { id: 'wallet', l: 'Pagos', i: <CreditCard size={18} /> },
            { id: 'profile', l: 'Perfil', i: <User size={18} /> }
          ].map(t => (
@@ -250,6 +251,8 @@ export default function ClientAppView() {
               </div>
            </div>
          )}
+
+         {tab === 'aicoach' && <PostureCoach />}
 
          {tab === 'workout' && (
            <div style={{ height: '100%', display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, animation: 'slideIn 0.5s ease-out' }}>
