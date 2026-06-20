@@ -110,7 +110,14 @@ export const SUPPLEMENT_CATALOG = [
   { id: 's11', name: 'Electrolitos Complejos', type: 'Hidratación', benefits: 'Repone Sodio, Potasio y Magnesio perdidos por sudor intenso.', dosage: 'Durante el entreno (1000mg Sodio).', naturalLevel: 'Minerales' },
   { id: 's12', name: 'EAA (Aminoácidos Esenciales)', type: 'Intra-Entreno', benefits: 'Protege contra el catabolismo en sesiones muy largas o en ayunas.', dosage: '10g durante el entrenamiento.', naturalLevel: 'Aminoácidos Aislados' },
   { id: 's13', name: 'Glutamina', type: 'Salud Intestinal', benefits: 'Recuperación del tracto digestivo e inmunidad en atletas de alto impacto.', dosage: '5g post-entreno o ayunas.', naturalLevel: 'Aminoácido' },
-  { id: 's14', name: 'Melatonina', type: 'Sueño', benefits: 'Inductor del sueño para regular ciclo circadiano.', dosage: '1-3mg 30 mins antes de dormir.', naturalLevel: 'Hormona' }
+  { id: 's14', name: 'Melatonina', type: 'Sueño', benefits: 'Inductor del sueño para regular ciclo circadiano.', dosage: '1-3mg 30 mins antes de dormir.', naturalLevel: 'Hormona' },
+  
+  // FARMACOAPI / BOTÁNICA Y PLANTAS MEDICINALES
+  { id: 's15', name: 'Maca Peruana (Lepidium meyenii)', type: 'Hormonal / Energía', benefits: 'Adaptógeno natural que aumenta la libido, la energía y la resistencia al estrés.', dosage: '1.5g - 3g diarios.', naturalLevel: 'Raíz Botánica' },
+  { id: 's16', name: 'Ginseng Panax', type: 'Energía Mental', benefits: 'Mejora la cognición y reduce la fatiga mental y física prolongada.', dosage: '200-400mg estandarizado diario.', naturalLevel: 'Raíz Botánica' },
+  { id: 's17', name: 'Cúrcuma (Curcumina + Pimienta)', type: 'Salud', benefits: 'El antiinflamatorio natural más potente para proteger las articulaciones.', dosage: '500mg (con extracto de pimienta negra).', naturalLevel: 'Especia Botánica' },
+  { id: 's18', name: 'Rhodiola Rosea', type: 'Adaptógeno', benefits: 'Aumenta la resistencia física y previene el burnout del sistema nervioso central.', dosage: '300mg antes de actividad estresante.', naturalLevel: 'Extracto de Planta' },
+  { id: 's19', name: 'Tribulus Terrestris', type: 'Salud Masculina', benefits: 'Ayuda a mantener la vitalidad y libido. Potenciador herbal clásico.', dosage: '500mg diarios.', naturalLevel: 'Extracto de Planta' }
 ];
 
 export const NUTRITION_CATALOG = [
