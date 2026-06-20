@@ -4,7 +4,8 @@ import { Clock, ShoppingCart, ShoppingBag, ChevronRight, Info, Check } from 'luc
 export function PanelStore({ onCartChange, injectTransaction, updateMemberStatus, athlete }: { onCartChange: (n: number) => void, injectTransaction: any, updateMemberStatus: any, athlete: any }) {
   const [filter, setFilter] = useState<'all' | 'local' | 'supplier'>('all');
   const [cart, setCart] = useState<any[]>([]);
-  const [showCheckout, setShowCheckout] = useState(false);
+  const [checkoutPhase, setCheckoutPhase] = useState<'none' | 'method' | 'qr'>('none');
+  const [paymentMethod, setPaymentMethod] = useState<'Nequi' | 'Bancolombia'>('Nequi');
   const [orderSuccess, setOrderSuccess] = useState(false);
 
   const MOCK_PRODUCTS = [
@@ -30,7 +31,7 @@ export function PanelStore({ onCartChange, injectTransaction, updateMemberStatus
 
   const processOrder = async () => {
     try {
-      // 1. Registrar Transacción
+      // 1. Registrar Transacción Directa (Ya pagado por QR)
       await injectTransaction({
         date: new Date().toISOString().split('T')[0],
         time: new Date().toLocaleTimeString().slice(0, 5),
@@ -38,21 +39,18 @@ export function PanelStore({ onCartChange, injectTransaction, updateMemberStatus
         category: 'membership',
         type: 'income',
         amount: total,
-        method: 'DEUDA_INTERNA',
+        method: paymentMethod, // 'Nequi' o 'Bancolombia'
         client: athlete.name
       });
 
-      // 2. Cargar Deuda al Socio
-      await updateMemberStatus(athlete.id, {
-        debt: (athlete.debt || 0) + total
-      });
+      // Ya no se carga a la deuda, el pago fue instantáneo.
 
       setOrderSuccess(true);
       setCart([]);
-      setShowCheckout(false);
+      setCheckoutPhase('none');
       
-      // Reset success state after 3s
-      setTimeout(() => setOrderSuccess(false), 3000);
+      // Reset success state after 4s
+      setTimeout(() => setOrderSuccess(false), 4000);
     } catch (error) {
       console.error("Error procesando pedido:", error);
       alert("Error al procesar el pedido. Inténtalo de nuevo.");
@@ -174,10 +172,10 @@ export function PanelStore({ onCartChange, injectTransaction, updateMemberStatus
                 <span style={{ fontSize: 20, fontWeight: 950, color: '#fff' }}>${total.toLocaleString()}</span>
               </div>
               <button 
-                onClick={() => setShowCheckout(true)}
+                onClick={() => setCheckoutPhase('method')}
                 style={{ width: '100%', padding: 18, borderRadius: 16, background: 'var(--neon-green)', color: '#000', border: 'none', fontWeight: 950, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 10px 20px rgba(0,255,136,0.2)' }}
               >
-                COMPRAR AHORA <ChevronRight size={18} />
+                PAGAR AHORA <ChevronRight size={18} />
               </button>
             </div>
           )}
@@ -194,25 +192,66 @@ export function PanelStore({ onCartChange, injectTransaction, updateMemberStatus
         </div>
       </div>
 
-      {/* Modal Checkout Simplificado */}
-      {showCheckout && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      {/* Modal Checkout - Pasarela de Pago */}
+      {checkoutPhase !== 'none' && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div className="glass-card" style={{ maxWidth: 450, width: '100%', padding: 40, borderRadius: 40, textAlign: 'center', border: '1px solid var(--neon-green)' }}>
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(0,255,136,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-              <Check size={40} color="var(--neon-green)" />
-            </div>
-            <h3 style={{ fontSize: 24, fontWeight: 950, marginBottom: 12 }}>¿Confirmar Pedido?</h3>
-            <p style={{ color: 'var(--text-muted)', marginBottom: 30 }}>El total de <strong style={{ color: '#fff' }}>${total.toLocaleString()}</strong> se cargará a tu cuenta para pagar en recepción o mediante Nequi.</p>
             
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={() => setShowCheckout(false)} style={{ flex: 1, padding: 18, borderRadius: 16, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', fontWeight: 950, cursor: 'pointer' }}>CANCELAR</button>
-              <button 
-                onClick={processOrder}
-                style={{ flex: 1, padding: 18, borderRadius: 16, background: 'var(--neon-green)', color: '#000', border: 'none', fontWeight: 950, cursor: 'pointer' }}
-              >
-                CONFIRMAR
-              </button>
-            </div>
+            {checkoutPhase === 'method' && (
+              <>
+                <h3 style={{ fontSize: 24, fontWeight: 950, marginBottom: 8 }}>Total a Pagar</h3>
+                <div style={{ fontSize: 42, fontWeight: 950, color: 'var(--neon-green)', marginBottom: 30 }}>
+                  ${total.toLocaleString()}
+                </div>
+                
+                <p style={{ color: 'var(--text-muted)', marginBottom: 20, fontSize: 14 }}>Selecciona el método de pago:</p>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 30 }}>
+                  <button 
+                    onClick={() => { setPaymentMethod('Nequi'); setCheckoutPhase('qr'); }}
+                    style={{ padding: 20, borderRadius: 16, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', fontWeight: 950, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <span>Nequi</span> <ChevronRight size={18} />
+                  </button>
+                  <button 
+                    onClick={() => { setPaymentMethod('Bancolombia'); setCheckoutPhase('qr'); }}
+                    style={{ padding: 20, borderRadius: 16, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', fontWeight: 950, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <span>Bancolombia</span> <ChevronRight size={18} />
+                  </button>
+                </div>
+                
+                <button onClick={() => setCheckoutPhase('none')} style={{ width: '100%', padding: 18, borderRadius: 16, background: 'transparent', color: 'var(--danger-red)', border: 'none', fontWeight: 950, cursor: 'pointer' }}>CANCELAR</button>
+              </>
+            )}
+
+            {checkoutPhase === 'qr' && (
+              <>
+                <h3 style={{ fontSize: 20, fontWeight: 950, marginBottom: 8 }}>Escanea para Pagar</h3>
+                <p style={{ color: 'var(--text-muted)', marginBottom: 20, fontSize: 13 }}>Transfiere exacto <strong style={{ color: '#fff' }}>${total.toLocaleString()}</strong> a {paymentMethod}</p>
+                
+                {/* Mockup del QR */}
+                <div style={{ width: 220, height: 220, background: '#fff', margin: '0 auto 20px', borderRadius: 20, padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=pay-${paymentMethod}-${total}`} alt="QR Code" style={{ width: '100%', height: '100%', borderRadius: 10 }} />
+                </div>
+                
+                <div style={{ padding: 14, background: 'rgba(255,255,255,0.05)', borderRadius: 16, marginBottom: 30 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>Número de {paymentMethod}</div>
+                  <div style={{ fontSize: 18, fontWeight: 950, color: '#fff', letterSpacing: 2 }}>300 000 0000</div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button onClick={() => setCheckoutPhase('method')} style={{ flex: 1, padding: 18, borderRadius: 16, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', fontWeight: 950, cursor: 'pointer' }}>VOLVER</button>
+                  <button 
+                    onClick={processOrder}
+                    style={{ flex: 2, padding: 18, borderRadius: 16, background: 'var(--neon-green)', color: '#000', border: 'none', fontWeight: 950, cursor: 'pointer' }}
+                  >
+                    SIMULAR PAGO EXITOSO
+                  </button>
+                </div>
+              </>
+            )}
+
           </div>
         </div>
       )}
