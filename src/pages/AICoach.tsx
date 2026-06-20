@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PostureCoach } from '../components/AI/PostureCoach';
 import {
   Zap, Brain, Target, TrendingUp, Play, Clock, BarChart3,
   CheckCircle2, RefreshCw, Dumbbell, Heart, Activity, Award,
@@ -88,7 +89,7 @@ const aiSessions = [
 
 export default function AICoach() {
   const [selectedPlan, setSelectedPlan] = useState(workoutPlans[0]);
-  const [activeTab, setActiveTab] = useState<'plans' | 'performance' | 'sessions'>('plans');
+  const [activeTab, setActiveTab] = useState<'plans' | 'performance' | 'sessions' | 'scanner'>('plans');
 
   return (
     <div className="animate-fade-in">
@@ -144,13 +145,18 @@ export default function AICoach() {
 
       {/* ─── TABS ─── */}
       <div className="chart-tabs" style={{ marginBottom: 20, width: 'fit-content' }}>
-        {(['plans', 'performance', 'sessions'] as const).map((tab) => (
+        {[
+          { id: 'plans', label: 'Planes de Entreno' },
+          { id: 'performance', label: 'Rendimiento' },
+          { id: 'sessions', label: 'Sesiones en Vivo' },
+          { id: 'scanner', label: 'Escáner Postural (Cámara)' }
+        ].map((tab) => (
           <button
-            key={tab}
-            className={`chart-tab ${activeTab === tab ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab)}
+            key={tab.id}
+            className={`chart-tab ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id as any)}
           >
-            {tab === 'plans' ? 'Planes de Entreno' : tab === 'performance' ? 'Rendimiento' : 'Sesiones en Vivo'}
+            {tab.label}
           </button>
         ))}
       </div>
@@ -381,6 +387,12 @@ export default function AICoach() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {activeTab === 'scanner' && (
+        <div className="glass-card" style={{ padding: 0, height: '700px' }}>
+          <PostureCoach />
         </div>
       )}
     </div>
