@@ -339,7 +339,7 @@ export default function ClientAppView() {
            </div>
          )}
 
-         {tab === 'leaderboard' && <PanelLeaderboard />}
+         {tab === 'leaderboard' && <PanelLeaderboard members={members} athlete={athlete} />}
          {tab === 'nutrition' && <PanelNutrition />}
          {tab === 'store' && <PanelStore onCartChange={setCartCount} injectTransaction={injectTransaction} updateMemberStatus={updateMemberStatus} athlete={athlete} />}
          {tab === 'wallet' && <PanelWallet user={athlete} />}

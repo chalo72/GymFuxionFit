@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Plus, Loader2 } from 'lucide-react';
 import { searchFoodOFF, FoodProduct } from '../../services/nutritionService';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 export function PanelNutrition() {
   const [query, setQuery] = useState('');
@@ -31,6 +32,12 @@ export function PanelNutrition() {
     { name: 'CARB_RESOURCE', val: Math.round(totalCarbs), goal: 280, color: '#00FF88', pct: Math.min((totalCarbs / 280) * 100, 100) },
     { name: 'FAT_SUPPORT', val: Math.round(totalFats),  goal: 65,  color: '#FFD700', pct: Math.min((totalFats / 65) * 100, 100) },
   ];
+
+  const pieData = [
+    { name: 'Proteína', value: totalProtein, color: '#FF6B35' },
+    { name: 'Carbohidratos', value: totalCarbs, color: '#00FF88' },
+    { name: 'Grasas', value: totalFats, color: '#FFD700' },
+  ].filter(d => d.value > 0);
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, height: '100%' }}>
@@ -83,6 +90,33 @@ export function PanelNutrition() {
                 <div style={{ height: '100%', width: `${Math.min((totalKcal / 2200) * 100, 100)}%`, background: 'var(--neon-green)', borderRadius: 10, boxShadow: '0 0 10px var(--neon-green)', transition: 'width 0.5s ease-out' }} />
              </div>
           </div>
+
+          {pieData.length > 0 && (
+            <div style={{ height: 180, width: '100%', marginBottom: 20 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={70}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12, fontWeight: 700 }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
           
           <div style={{ display:'flex', flexDirection:'column', gap:14, marginBottom: 24 }}>
              {macros.map(m => (
