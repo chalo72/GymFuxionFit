@@ -610,6 +610,11 @@ function useGymDataInternal() {
     updatePlansConfig: (cfg: Record<string, number>) => {
       setPlansConfig(cfg);
       localStorage.setItem('fuxion_plans_config', JSON.stringify(cfg));
+      setPlans(prev => {
+        const updated = prev.map(p => cfg[p.id] !== undefined ? { ...p, price: cfg[p.id] } : p);
+        localStorage.setItem('fuxion_custom_plans', JSON.stringify(updated));
+        return updated;
+      });
     },
     injectTransaction, updateMemberStatus, clearMemberDebt,
     registerProductSale,

@@ -27,6 +27,7 @@ export default function Settings() {
     return {
       dia: String(p.dia || ''),
       semana: String(p.semana || ''),
+      mes_basico: String(p.mes_basico || ''),
       mes_pro: String(p.mes_pro || ''),
       mes_hyrox: String(p.mes_hyrox || '')
     };
@@ -37,6 +38,7 @@ export default function Settings() {
       ...plansConfig,
       dia: Number(localPlans.dia),
       semana: Number(localPlans.semana),
+      mes_basico: Number(localPlans.mes_basico),
       mes_pro: Number(localPlans.mes_pro),
       mes_hyrox: Number(localPlans.mes_hyrox)
     });
@@ -90,10 +92,14 @@ export default function Settings() {
                   <input className="input-field" type="number" value={localPlans.semana} onChange={(e) => setLocalPlans({...localPlans, semana: e.target.value})} />
                 </div>
                 <div className="input-group">
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MENSUALIDAD BÁSICA</label>
+                  <input className="input-field" type="number" value={localPlans.mes_basico} onChange={(e) => setLocalPlans({...localPlans, mes_basico: e.target.value})} />
+                </div>
+                <div className="input-group">
                   <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MENSUALIDAD PRO</label>
                   <input className="input-field" type="number" value={localPlans.mes_pro} onChange={(e) => setLocalPlans({...localPlans, mes_pro: e.target.value})} />
                 </div>
-                <div className="input-group">
+                <div className="input-group" style={{ gridColumn: '1 / -1' }}>
                   <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MENSUALIDAD HYROX</label>
                   <input className="input-field" type="number" value={localPlans.mes_hyrox} onChange={(e) => setLocalPlans({...localPlans, mes_hyrox: e.target.value})} />
                 </div>
