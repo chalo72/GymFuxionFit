@@ -27,15 +27,18 @@ export default function Accounting() {
     totalSimulatedExpenses,
     simulatedNet,
     priceDia,
-    priceMes
+    priceMes,
+    convertedInactives
   } = useMemo(() => {
     // 1. Conteo de Clientes
     const activeMembers = members ? members.filter(m => m.status === 'active' || m.status === 'expiring') : [];
     const totalActive = activeMembers.length;
     
-    // Heurística para separar visitas (diarios) de mensualidades
+    // Separar visitas (diarios) de mensualidades/quincenas y calcular ingresos reales esperados
     let dailyActive = 0;
     let monthlyActive = 0;
+    let actualPlansIncome = 0;
+    let validPlanCount = 0;
     
     activeMembers.forEach(m => {
       const planObj = plans ? plans.find((p: any) => p.id === m.plan) : null;
@@ -43,7 +46,11 @@ export default function Accounting() {
       if (pLow.includes('día') || pLow === 'dia' || pLow.includes('diario')) {
         dailyActive += 1;
       } else {
-        monthlyActive += 1; // Por defecto asumimos mes
+        monthlyActive += 1;
+        if (planObj && planObj.price) {
+          actualPlansIncome += Number(planObj.price);
+          validPlanCount += 1;
+        }
       }
     });
 
@@ -51,7 +58,6 @@ export default function Accounting() {
     
     // Simulación de conversión de inactivos
     const convertedInactives = Math.round(inactiveCount * (conversionRate / 100));
-    const adjMonthlyActive = monthlyActive + convertedInactives;
 
     // 2. Datos Reales
     const realIncome = transactions ? transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0) : 0;
@@ -64,9 +70,14 @@ export default function Accounting() {
 
     // 3. Datos Simulados
     const priceDia = plansConfig?.dia || 5000;
-    const priceMes = plansConfig?.mes_basico || plansConfig?.mes_pro || 45000;
+    // Si tenemos planes, sacamos el promedio real exacto. Si no, usamos el fallback.
+    const priceMes = validPlanCount > 0 
+      ? Math.round(actualPlansIncome / validPlanCount) 
+      : (plansConfig?.mes_basico || plansConfig?.mes_pro || 45000);
+
     const simulatedIncomeVisits = dailyActive * priceDia * workingDays;
-    const simulatedIncomePlans = adjMonthlyActive * priceMes;
+    // El ingreso simulado de planes es LA SUMA EXACTA de los planes activos + los inactivos convertidos multiplicados por el promedio
+    const simulatedIncomePlans = actualPlansIncome + (convertedInactives * priceMes);
     const totalSimulatedIncome = simulatedIncomeVisits + simulatedIncomePlans;
 
     const totalSimulatedExpenses = (simulatedPayroll ?? realPayroll) + (simulatedOtherExpenses ?? realObligations) + realExpenses;
@@ -88,7 +99,8 @@ export default function Accounting() {
       totalSimulatedExpenses,
       simulatedNet,
       priceDia,
-      priceMes
+      priceMes,
+      convertedInactives
     };
   }, [members, transactions, staff, obligations, plans, plansConfig, workingDays, conversionRate, simulatedPayroll, simulatedOtherExpenses]);
 
@@ -183,9 +195,9 @@ export default function Accounting() {
 
             {/* Simulación Mes */}
             <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '10px', borderRadius: '8px' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Simulación por MES (Planes)</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Simulación por PLANES (Mes/Quincena/Semana)</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span>{monthlyActive} clientes × ${priceMes.toLocaleString('es-CO')}</span>
+                <span>{monthlyActive} clientes {convertedInactives > 0 ? `+ ${convertedInactives} proy. ` : ''}(Suma exacta de sus planes)</span>
                 <span style={{ fontWeight: 600, color: '#00F0FF' }}>${simulatedIncomePlans.toLocaleString('es-CO')}</span>
               </div>
             </div>
