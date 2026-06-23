@@ -14,6 +14,7 @@ export default function Accounting() {
   const { 
     totalActive, 
     dailyActive, 
+    biweeklyActive,
     monthlyActive, 
     inactiveCount,
     realIncome,
@@ -22,11 +23,19 @@ export default function Accounting() {
     realObligations,
     realNet,
     simulatedIncomeVisits,
+    simulatedIncomeBiweekly,
     simulatedIncomePlans,
     totalSimulatedIncome,
+    simulatedIncomeQ1,
+    simulatedIncomeQ2,
+    simulatedExpensesQ1,
+    simulatedExpensesQ2,
+    simulatedNetQ1,
+    simulatedNetQ2,
     totalSimulatedExpenses,
     simulatedNet,
     priceDia,
+    priceQuincena,
     priceMes,
     convertedInactives
   } = useMemo(() => {
@@ -36,6 +45,7 @@ export default function Accounting() {
     
     // Separar visitas (diarios) de mensualidades/quincenas y calcular ingresos reales esperados
     let dailyActive = 0;
+    let biweeklyActive = 0;
     let monthlyActive = 0;
     let actualPlansIncome = 0;
     let validPlanCount = 0;
@@ -45,6 +55,8 @@ export default function Accounting() {
       const pLow = (planObj?.name || m.plan || '').toLowerCase();
       if (pLow.includes('día') || pLow === 'dia' || pLow.includes('diario')) {
         dailyActive += 1;
+      } else if (pLow.includes('quin') || pLow.includes('15')) {
+        biweeklyActive += 1;
       } else {
         monthlyActive += 1;
         if (planObj && planObj.price) {
@@ -70,23 +82,57 @@ export default function Accounting() {
 
     // 3. Datos Simulados
     const priceDia = plansConfig?.dia || 5000;
+    const priceQuincena = plansConfig?.quincena || 30000;
     
-    // El usuario quiere ver la multiplicación directa. Usaremos el plan mensual más básico o principal.
-    // Si mes_basico es igual a 45000 y mes_pro fue modificado, a lo mejor querían usar mes_pro.
-    // Pero como ya habilitamos mes_basico en Settings, leeremos mes_basico por defecto, y si no, mes_pro.
     let priceMes = plansConfig?.mes_basico;
     if (!priceMes) priceMes = plansConfig?.mes_pro || 45000;
 
     const simulatedIncomeVisits = dailyActive * priceDia * workingDays;
+    const simulatedIncomeBiweekly = biweeklyActive * priceQuincena * 2; // 2 quincenas en un mes
     const simulatedIncomePlans = (monthlyActive + convertedInactives) * priceMes;
-    const totalSimulatedIncome = simulatedIncomeVisits + simulatedIncomePlans;
+    const totalSimulatedIncome = simulatedIncomeVisits + simulatedIncomeBiweekly + simulatedIncomePlans;
 
-    const totalSimulatedExpenses = (simulatedPayroll ?? realPayroll) + (simulatedOtherExpenses ?? realObligations) + realExpenses;
-    const simulatedNet = totalSimulatedIncome - totalSimulatedExpenses;
+    // --- División por Quincenas (Q1 y Q2) ---
+    // Ingresos
+    const simulatedIncomeQ1 = (simulatedIncomeVisits / 2) + (simulatedIncomePlans / 2) + (biweeklyActive * priceQuincena);
+    const simulatedIncomeQ2 = (simulatedIncomeVisits / 2) + (simulatedIncomePlans / 2) + (biweeklyActive * priceQuincena);
+
+    // Gastos
+    const payrollQ1 = (simulatedPayroll ?? realPayroll) / 2;
+    const payrollQ2 = (simulatedPayroll ?? realPayroll) / 2;
+
+    const pendingObligations = obligations ? obligations.filter(o => o.status === 'pending' && o.category !== 'payroll') : [];
+    
+    let obQ1 = 0;
+    let obQ2 = 0;
+    pendingObligations.forEach(o => {
+      const dueDay = o.dueDate ? parseInt(o.dueDate.split('-')[2], 10) : 1; // Default to Q1 if no date
+      if (dueDay <= 15) {
+        obQ1 += o.amount;
+      } else {
+        obQ2 += o.amount;
+      }
+    });
+
+    const expensesOtherQ1 = simulatedOtherExpenses !== null ? (simulatedOtherExpenses / 2) : obQ1;
+    const expensesOtherQ2 = simulatedOtherExpenses !== null ? (simulatedOtherExpenses / 2) : obQ2;
+
+    const realExpQ1 = realExpenses / 2;
+    const realExpQ2 = realExpenses / 2;
+
+    const simulatedExpensesQ1 = payrollQ1 + expensesOtherQ1 + realExpQ1;
+    const simulatedExpensesQ2 = payrollQ2 + expensesOtherQ2 + realExpQ2;
+
+    const simulatedNetQ1 = simulatedIncomeQ1 - simulatedExpensesQ1;
+    const simulatedNetQ2 = simulatedIncomeQ2 - simulatedExpensesQ2;
+
+    const totalSimulatedExpenses = simulatedExpensesQ1 + simulatedExpensesQ2;
+    const simulatedNet = simulatedNetQ1 + simulatedNetQ2;
 
     return {
       totalActive,
       dailyActive,
+      biweeklyActive,
       monthlyActive,
       inactiveCount,
       realIncome,
@@ -95,11 +141,19 @@ export default function Accounting() {
       realObligations,
       realNet,
       simulatedIncomeVisits,
+      simulatedIncomeBiweekly,
       simulatedIncomePlans,
       totalSimulatedIncome,
+      simulatedIncomeQ1,
+      simulatedIncomeQ2,
+      simulatedExpensesQ1,
+      simulatedExpensesQ2,
+      simulatedNetQ1,
+      simulatedNetQ2,
       totalSimulatedExpenses,
       simulatedNet,
       priceDia,
+      priceQuincena,
       priceMes,
       convertedInactives
     };
@@ -179,45 +233,58 @@ export default function Accounting() {
         {/* 📍 MÓDULO SIMULADOR */}
         <div style={{ background: 'rgba(255,255,255,0.01)', border: '2px solid rgba(0, 240, 255, 0.2)', borderRadius: '12px', padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <Eye size={16} color="#00F0FF" />
+            <Eye size={20} color="#00F0FF" />
             <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: '#fff' }}>Módulo Simulador</h3>
             <span style={{ fontSize: 'var(--text-xs)', color: '#00F0FF', marginLeft: 'auto' }}>Proyecciones</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* Simulación Día */}
-            <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '10px', borderRadius: '8px' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Simulación por DÍA (Visitas)</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span>{dailyActive} clientes × ${priceDia.toLocaleString('es-CO')} × {workingDays}d</span>
-                <span style={{ fontWeight: 600, color: '#00F0FF' }}>${simulatedIncomeVisits.toLocaleString('es-CO')}</span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* 1ra Quincena */}
+            <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '16px', borderRadius: '8px' }}>
+              <div style={{ color: '#00F0FF', fontWeight: 700, marginBottom: 12, textAlign: 'center', borderBottom: '1px solid rgba(0, 240, 255, 0.1)', paddingBottom: 8 }}>1ra Quincena</div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>Ingresos simulados</span>
+                <span style={{ fontWeight: 600, color: '#00FF88', fontSize: 'var(--text-sm)' }}>${simulatedIncomeQ1.toLocaleString('es-CO')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>Gastos proyectados</span>
+                <span style={{ fontWeight: 600, color: '#FF4B4B', fontSize: 'var(--text-sm)' }}>-${simulatedExpensesQ1.toLocaleString('es-CO')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                <span style={{ fontWeight: 700, color: '#fff', fontSize: 'var(--text-sm)' }}>Balance 1ra Q</span>
+                <span style={{ fontWeight: 700, color: simulatedNetQ1 >= 0 ? '#00FF88' : '#FF4B4B', fontSize: 'var(--text-base)' }}>
+                  ${simulatedNetQ1.toLocaleString('es-CO')}
+                </span>
               </div>
             </div>
 
-            {/* Simulación Mes */}
-            <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '10px', borderRadius: '8px' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Simulación por MES (Planes)</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span>{monthlyActive} clientes {convertedInactives > 0 ? `+ ${convertedInactives} proy. ` : ''}× ${priceMes.toLocaleString('es-CO')}</span>
-                <span style={{ fontWeight: 600, color: '#00F0FF' }}>${simulatedIncomePlans.toLocaleString('es-CO')}</span>
+            {/* 2da Quincena */}
+            <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '16px', borderRadius: '8px' }}>
+              <div style={{ color: '#00F0FF', fontWeight: 700, marginBottom: 12, textAlign: 'center', borderBottom: '1px solid rgba(0, 240, 255, 0.1)', paddingBottom: 8 }}>2da Quincena</div>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>Ingresos simulados</span>
+                <span style={{ fontWeight: 600, color: '#00FF88', fontSize: 'var(--text-sm)' }}>${simulatedIncomeQ2.toLocaleString('es-CO')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>Gastos proyectados</span>
+                <span style={{ fontWeight: 600, color: '#FF4B4B', fontSize: 'var(--text-sm)' }}>-${simulatedExpensesQ2.toLocaleString('es-CO')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, paddingTop: 12, borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
+                <span style={{ fontWeight: 700, color: '#fff', fontSize: 'var(--text-sm)' }}>Balance 2da Q</span>
+                <span style={{ fontWeight: 700, color: simulatedNetQ2 >= 0 ? '#00FF88' : '#FF4B4B', fontSize: 'var(--text-base)' }}>
+                  ${simulatedNetQ2.toLocaleString('es-CO')}
+                </span>
               </div>
             </div>
+          </div>
 
-            {/* Totales Simulación */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Total ingresos simulados</span>
-              <span style={{ fontWeight: 600, color: '#00FF88' }}>${totalSimulatedIncome.toLocaleString('es-CO')}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Total gastos proyectados</span>
-              <span style={{ fontWeight: 600, color: '#FF4B4B' }}>-${totalSimulatedExpenses.toLocaleString('es-CO')}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', marginTop: 'auto' }}>
-              <span style={{ fontWeight: 700, color: '#fff' }}>Balance Simulado</span>
-              <span style={{ fontWeight: 700, color: simulatedNet >= 0 ? '#00FF88' : '#FF4B4B', fontSize: 'var(--text-lg)' }}>
-                ${simulatedNet.toLocaleString('es-CO')}
-              </span>
-            </div>
+          <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontWeight: 700, color: '#fff', fontSize: 'var(--text-lg)' }}>BALANCE TOTAL MES</span>
+            <span style={{ fontWeight: 800, color: simulatedNet >= 0 ? '#00FF88' : '#FF4B4B', fontSize: 'var(--text-xl)' }}>
+              ${simulatedNet.toLocaleString('es-CO')}
+            </span>
           </div>
         </div>
       </div>
