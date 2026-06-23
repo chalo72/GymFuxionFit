@@ -8,39 +8,75 @@ export function PanelAIScanner() {
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<any>(null);
 
-  const simulateAnalysis = () => {
+  const [heightCm, setHeightCm] = useState<number>(170);
+  const [isMale, setIsMale] = useState<boolean>(true);
+
+  const handleRealAnalysis = async () => {
     if (!frontImage || !sideImage) return;
     setAnalyzing(true);
     setProgress(0);
 
-    const steps = [
-      { p: 25, t: 800 },
-      { p: 60, t: 1500 },
-      { p: 85, t: 2200 },
-      { p: 100, t: 3000 }
-    ];
+    // Simulate progress while waiting for fetch
+    const interval = setInterval(() => {
+      setProgress(p => (p < 90 ? p + 5 : p));
+    }, 500);
 
-    steps.forEach(({ p, t }) => {
-      setTimeout(() => setProgress(p), t);
-    });
-
-    setTimeout(() => {
-      setAnalyzing(false);
-      setResults({
-        chest: 102.5,
-        waist: 84.0,
-        hips: 98.2,
-        shoulders: 115.0,
-        bodyFat: 14.5
+    try {
+      const response = await fetch('http://127.0.0.1:8000/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          front_image_b64: frontImage,
+          side_image_b64: sideImage,
+          height_cm: heightCm,
+          is_male: isMale
+        })
       });
-    }, 3200);
+
+      const json = await response.json();
+      clearInterval(interval);
+      setProgress(100);
+
+      if (json.status === 'success') {
+        const d = json.data;
+        setTimeout(() => {
+          setAnalyzing(false);
+          setResults({
+            chest: d.chest_cm,
+            waist: d.waist_cm,
+            hips: d.hip_cm,
+            shoulders: d.chest_cm * 1.1, // mocked shoulder based on chest
+            bodyFat: d.body_fat_percentage,
+            muscleMass: d.muscle_mass_percentage
+          });
+        }, 500);
+      } else {
+        alert("Error de la IA: " + (json.detail || "Error desconocido"));
+        setAnalyzing(false);
+      }
+    } catch (e) {
+      clearInterval(interval);
+      alert("No se pudo conectar con el servidor de Inteligencia Artificial.");
+      setAnalyzing(false);
+    }
   };
 
   const handleImageUpload = (type: 'front' | 'side') => {
-    // Simulamos que el usuario tomó una foto y la guardamos como un placeholder visual
-    const mockImage = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300' fill='%23111'%3E%3Crect width='200' height='300' rx='20' fill='%23000' stroke='%2300FF88' stroke-width='2'/%3E%3Cpath d='M100 50 c -20 0 -20 30 0 30 c 20 0 20 -30 0 -30 M70 100 q 30 20 60 0 l 20 100 h -20 l -10 -50 l -10 50 h -20 l 20 -100' stroke='%2300FF88' stroke-width='4' fill='none' opacity='0.5'/%3E%3C/svg%3E";
-    if (type === 'front') setFrontImage(mockImage);
-    else setSideImage(mockImage);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (type === 'front') setFrontImage(reader.result as string);
+          else setSideImage(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
   };
 
   return (
@@ -57,8 +93,22 @@ export function PanelAIScanner() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div className="glass-card" style={{ padding: 24, borderRadius: 24, border: '1px solid rgba(0,255,136,0.2)' }}>
             <h3 style={{ fontSize: 14, fontWeight: 950, marginBottom: 16 }}>Captura Biometría</h3>
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 20 }}>Asegúrate de vestir ropa ajustada y coloca el celular a la altura de la cintura a 2 metros de distancia.</p>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 20 }}>Toma una foto Frontal y una Lateral. Ingresa tu altura real.</p>
             
+            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+               <div style={{ flex: 1 }}>
+                 <label style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 800 }}>ESTATURA (CM)</label>
+                 <input type="number" value={heightCm} onChange={e => setHeightCm(Number(e.target.value))} style={{ width: '100%', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', marginTop: 4 }} />
+               </div>
+               <div style={{ flex: 1 }}>
+                 <label style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 800 }}>GÉNERO</label>
+                 <select value={isMale ? 'M' : 'F'} onChange={e => setIsMale(e.target.value === 'M')} style={{ width: '100%', padding: 12, borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', marginTop: 4 }}>
+                   <option value="M">Masculino</option>
+                   <option value="F">Femenino</option>
+                 </select>
+               </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               {/* Foto Frontal */}
               <div 
@@ -99,7 +149,7 @@ export function PanelAIScanner() {
           </div>
 
           <button 
-            onClick={simulateAnalysis}
+            onClick={handleRealAnalysis}
             disabled={!frontImage || !sideImage || analyzing}
             style={{ 
               padding: 24, borderRadius: 20, border: 'none', 
@@ -128,9 +178,9 @@ export function PanelAIScanner() {
             <div style={{ padding: 16, background: 'rgba(0,255,136,0.05)', borderRadius: 12, border: '1px solid rgba(0,255,136,0.1)' }}>
               <div style={{ fontSize: 11, color: 'var(--neon-green)', marginBottom: 8 }}>Log de Sistema:</div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                {progress > 10 && "> Extrayendo puntos clave MediaPipe... OK\n"}
-                {progress > 40 && "> Generando mapa de profundidad MiDaS... OK\n"}
-                {progress > 70 && "> Calculando circunferencias y escala... OK"}
+                {progress > 10 && "> Conectando con IA Server...\n"}
+                {progress > 40 && "> Analizando Postura con MediaPipe...\n"}
+                {progress > 70 && "> Calculando circunferencias y grasa corporal...\n"}
               </div>
             </div>
           )}

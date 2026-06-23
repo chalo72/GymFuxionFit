@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import {
   Watch, Heart, Moon, Activity, Wifi, WifiOff, Battery,
-  TrendingUp, TrendingDown, Zap, Thermometer,
+  TrendingUp, TrendingDown, Zap, Thermometer, AlertTriangle,
+  MessageSquare, Edit3, CheckCircle2, RefreshCw
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -9,11 +10,30 @@ import {
 } from 'recharts';
 
 const connectedDevices = [
-  { id: 1, name: 'Apple Watch Ultra', member: 'Alex Guerrero', model: 'Series 9', battery: 82, connected: true, lastSync: 'Hace 2 min' },
-  { id: 2, name: 'Garmin Forerunner', member: 'Valentina Torres', model: '965', battery: 67, connected: true, lastSync: 'Hace 5 min' },
-  { id: 3, name: 'WHOOP 4.0', member: 'Andrés Mejía', model: 'WHOOP', battery: 45, connected: true, lastSync: 'Hace 10 min' },
-  { id: 4, name: 'Polar Vantage V2', member: 'María López', model: 'V2', battery: 90, connected: false, lastSync: 'Hace 1h' },
-  { id: 5, name: 'Fitbit Sense 2', member: 'Carlos Rivas', model: 'Sense', battery: 23, connected: true, lastSync: 'Hace 3 min' },
+  { id: 1, name: 'Apple Watch Ultra', member: 'Alex Guerrero', initials: 'AG', model: 'Series 9', battery: 82, connected: true, lastSync: 'Hace 2 min', readiness: 95, status: 'Óptimo', color: 'var(--success-green)' },
+  { id: 2, name: 'Garmin Forerunner', member: 'Valentina Torres', initials: 'VT', model: '965', battery: 67, connected: true, lastSync: 'Hace 5 min', readiness: 88, status: 'Listo', color: 'var(--neon-green)' },
+  { id: 3, name: 'WHOOP 4.0', member: 'Andrés Mejía', initials: 'AM', model: 'WHOOP', battery: 45, connected: true, lastSync: 'Hace 10 min', readiness: 62, status: 'Moderado', color: 'var(--warning-yellow)' },
+  { id: 4, name: 'Polar Vantage V2', member: 'María López', initials: 'ML', model: 'V2', battery: 90, connected: false, lastSync: 'Hace 1h', readiness: 55, status: 'Descanso', color: 'var(--energy-orange)' },
+  { id: 5, name: 'Fitbit Sense 2', member: 'Carlos Rivas', initials: 'CR', model: 'Sense', battery: 23, connected: true, lastSync: 'Hace 3 min', readiness: 32, status: 'Recuperar', color: 'var(--danger-red)' },
+];
+
+const actionCenterAlerts = [
+  {
+    id: 1,
+    member: 'Carlos Rivas',
+    issue: 'Sueño crítico (3.2h) y HRV bajo (48ms). Riesgo alto de sobreentrenamiento.',
+    action1: 'Bajar intensidad hoy',
+    action2: 'Enviar protocolo de sueño',
+    color: 'var(--danger-red)'
+  },
+  {
+    id: 2,
+    member: 'María López',
+    issue: 'Fatiga acumulada detectada. Readiness en 55%.',
+    action1: 'Programar Descanso Activo',
+    action2: 'Contactar',
+    color: 'var(--energy-orange)'
+  }
 ];
 
 const hrvData = [
@@ -46,279 +66,309 @@ const heartRateZones = [
 export default function Wearables() {
   const [activeTab, setActiveTab] = useState<'devices' | 'hrv' | 'sleep' | 'zones'>('devices');
   const connectedCount = connectedDevices.filter(d => d.connected).length;
+  const [alerts, setAlerts] = useState(actionCenterAlerts);
+
+  const handleAction = (id: number, message: string) => {
+    alert(`Acción ejecutada: ${message}`);
+    setAlerts(prev => prev.filter(a => a.id !== id));
+  };
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in" style={{ paddingBottom: 40, display: 'flex', flexDirection: 'column', gap: 24 }}>
       {/* ─── HEADER ─── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700 }}>
-            Wearables <span style={{ color: 'var(--neon-green)', fontSize: '1rem', marginLeft: 8 }}>Biometría en Vivo</span>
+          <h2 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 12 }}>
+            Wearables <span style={{ color: 'var(--neon-green)', fontSize: '1rem', marginLeft: 8 }}>Hub de Biometría</span>
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', marginTop: 4 }}>
-            Dispositivos conectados · HRV · Sueño · Zonas de frecuencia cardíaca
+            Centro de Acción — Identifica fatiga, monitorea rendimiento y ajusta planes en tiempo real.
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
+            display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px',
             background: 'var(--green-10)', borderRadius: 'var(--radius-full)',
             border: '1px solid var(--green-20)',
           }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--neon-green)', animation: 'glow-pulse 2s infinite' }} />
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--neon-green)' }}>
-              {connectedCount} dispositivos live
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--neon-green)' }}>
+              {connectedCount} DISPOSITIVOS LIVE
             </span>
           </div>
+          <button className="btn btn-secondary" style={{ padding: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+             <RefreshCw size={16} />
+          </button>
         </div>
       </div>
 
-      {/* ─── KPIs ─── */}
-      <div className="kpi-row" style={{ marginBottom: 24 }}>
-        <div className="kpi-card cyan animate-fade-in animate-delay-1">
-          <div className="kpi-icon cyan"><Heart size={20} /></div>
-          <div className="kpi-label">FC Promedio Hoy</div>
-          <div className="kpi-value">72 bpm</div>
-          <div className="kpi-change positive"><TrendingDown size={12} /> -4 bpm vs ayer</div>
+      {/* ─── CENTRO DE ACCIÓN (NUEVO) ─── */}
+      {alerts.length > 0 && (
+        <div style={{ 
+          padding: 24, borderRadius: 16, 
+          background: 'rgba(20, 20, 25, 0.6)', 
+          border: '1px solid rgba(255, 61, 87, 0.2)',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+            <AlertTriangle size={20} color="var(--danger-red)" />
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--danger-red)' }}>Acciones Requeridas Hoy</h3>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>Basado en datos de Wearables nocturnos</span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {alerts.map(alertItem => (
+              <div key={alertItem.id} style={{ 
+                display: 'flex', alignItems: 'center', gap: 16, padding: 16, 
+                background: 'rgba(0,0,0,0.3)', borderRadius: 12, 
+                borderLeft: `4px solid ${alertItem.color}` 
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', marginBottom: 4 }}>{alertItem.member}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{alertItem.issue}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => handleAction(alertItem.id, alertItem.action1)} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.8rem', background: `${alertItem.color}20`, color: alertItem.color, border: `1px solid ${alertItem.color}40` }}>
+                    <Edit3 size={14} /> {alertItem.action1}
+                  </button>
+                  <button onClick={() => handleAction(alertItem.id, alertItem.action2)} className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <MessageSquare size={14} /> {alertItem.action2}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="kpi-card orange animate-fade-in animate-delay-2">
-          <div className="kpi-icon orange"><Activity size={20} /></div>
-          <div className="kpi-label">HRV Promedio</div>
-          <div className="kpi-value">7.4</div>
-          <div className="kpi-change positive"><TrendingUp size={12} /> +0.3 esta semana</div>
-        </div>
-        <div className="kpi-card green animate-fade-in animate-delay-3">
-          <div className="kpi-icon green"><Moon size={20} /></div>
-          <div className="kpi-label">Calidad de Sueño</div>
-          <div className="kpi-value">82%</div>
-          <div className="kpi-change positive"><TrendingUp size={12} /> Óptimo</div>
-        </div>
-        <div className="kpi-card animate-fade-in animate-delay-4">
-          <div className="kpi-icon cyan"><Zap size={20} /></div>
-          <div className="kpi-label">Recuperación</div>
-          <div className="kpi-value">78%</div>
-          <div className="kpi-change positive"><TrendingUp size={12} /> Listo para entrenar</div>
-        </div>
-      </div>
+      )}
 
       {/* ─── TABS ─── */}
-      <div className="chart-tabs" style={{ marginBottom: 20, width: 'fit-content' }}>
+      <div style={{ display: 'flex', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 16 }}>
         {(['devices', 'hrv', 'sleep', 'zones'] as const).map((tab) => (
           <button
             key={tab}
-            className={`chart-tab ${activeTab === tab ? 'active' : ''}`}
             onClick={() => setActiveTab(tab)}
+            style={{
+              padding: '10px 20px', borderRadius: 10, fontSize: '0.9rem', fontWeight: 700,
+              background: activeTab === tab ? 'var(--neon-green)' : 'rgba(255,255,255,0.03)',
+              color: activeTab === tab ? '#000' : 'var(--text-muted)',
+              border: activeTab === tab ? 'none' : '1px solid rgba(255,255,255,0.05)',
+              transition: 'all 0.2s', cursor: 'pointer'
+            }}
           >
-            {tab === 'devices' ? 'Dispositivos' : tab === 'hrv' ? 'HRV' : tab === 'sleep' ? 'Sueño' : 'Zonas FC'}
+            {tab === 'devices' ? 'Readiness & Dispositivos' : tab === 'hrv' ? 'Análisis HRV' : tab === 'sleep' ? 'Calidad de Sueño' : 'Zonas Cardíacas'}
           </button>
         ))}
       </div>
 
       {activeTab === 'devices' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 20 }}>
           {connectedDevices.map((device) => (
-            <div key={device.id} className="device-card" style={{ borderColor: device.connected ? 'rgba(0,255,136,0.2)' : 'rgba(255,255,255,0.05)' }}>
-              <div className="device-icon" style={{ background: device.connected ? 'var(--green-10)' : 'rgba(255,255,255,0.05)' }}>
-                <Watch size={22} style={{ color: device.connected ? 'var(--neon-green)' : 'var(--text-muted)' }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{device.name}</span>
-                  {device.connected
-                    ? <Wifi size={12} style={{ color: 'var(--neon-green)' }} />
-                    : <WifiOff size={12} style={{ color: 'var(--text-muted)' }} />
-                  }
+            <div key={device.id} style={{ 
+              background: 'rgba(20, 20, 25, 0.6)', borderRadius: 20, padding: 20, 
+              border: `1px solid ${device.color}30`, position: 'relative', overflow: 'hidden',
+              boxShadow: `0 8px 30px ${device.color}10`
+            }}>
+              {/* Resplandor superior */}
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: device.color, opacity: 0.8 }} />
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: `linear-gradient(135deg, ${device.color}, ${device.color}60)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: '1rem' }}>
+                    {device.initials}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#fff' }}>{device.member}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Watch size={12} /> {device.name}
+                    </div>
+                  </div>
                 </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{device.member}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: 2 }}>
-                  Últ. sync: {device.lastSync}
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '2rem', fontWeight: 900, color: device.color, lineHeight: 1 }}>{device.readiness}</div>
+                  <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 1, color: 'var(--text-muted)', marginTop: 4 }}>Readiness</div>
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginBottom: 4 }}>
-                  <Battery size={12} style={{ color: device.battery < 30 ? 'var(--danger-red)' : 'var(--neon-green)' }} />
-                  <span style={{
-                    fontSize: 'var(--text-xs)', fontWeight: 700,
-                    color: device.battery < 30 ? 'var(--danger-red)' : 'var(--text-secondary)',
-                  }}>
-                    {device.battery}%
+
+              <div style={{ background: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: device.color, boxShadow: `0 0 10px ${device.color}` }} />
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>{device.status}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Battery size={14} style={{ color: device.battery < 30 ? 'var(--danger-red)' : 'var(--neon-green)' }} /> {device.battery}%
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {device.connected ? <Wifi size={14} style={{ color: 'var(--neon-green)' }} /> : <WifiOff size={14} />} {device.connected ? 'On' : 'Off'}
                   </span>
                 </div>
-                <span className={`status-badge ${device.connected ? 'active' : 'inactive'}`}>
-                  {device.connected ? 'Conectado' : 'Offline'}
-                </span>
               </div>
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', padding: '10px', fontSize: '0.85rem', background: `${device.color}15`, border: `1px solid ${device.color}40`, color: device.color }}>
+                  <Edit3 size={16} /> Ajustar Plan
+                </button>
+                <button className="btn btn-secondary" style={{ flex: 1, justifyContent: 'center', padding: '10px', fontSize: '0.85rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <MessageSquare size={16} /> Contactar
+                </button>
+              </div>
+
             </div>
           ))}
         </div>
       )}
 
       {activeTab === 'hrv' && (
-        <div className="dashboard-grid">
-          <div className="glass-card">
-            <div className="glass-card-header">
-              <div>
-                <div className="glass-card-title">HRV Semanal — Variabilidad de FC</div>
-                <div className="glass-card-subtitle">Promedio del gym · Mayor = Mejor recuperación</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
+            <div style={{ padding: 24, borderRadius: 20, background: 'rgba(20, 20, 25, 0.6)', border: '1px solid rgba(0, 255, 136, 0.15)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>HRV Semanal (Comunidad)</h3>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>La variabilidad de la frecuencia cardíaca alta indica buena recuperación.</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--neon-green)', lineHeight: 1 }}>7.4</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Promedio General</div>
+                </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 'var(--text-3xl)', fontWeight: 700, color: 'var(--neon-green)' }}>7.4</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Promedio semanal</div>
+              <div style={{ height: 280 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={hrvData}>
+                    <defs>
+                      <linearGradient id="hrvGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#00FF88" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="#00FF88" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} domain={[60, 90]} />
+                    <Tooltip contentStyle={{ background: 'rgba(14,18,14,0.95)', border: '1px solid rgba(0,255,136,0.3)', borderRadius: 12 }} />
+                    <Area type="monotone" dataKey="hrv" name="HRV" stroke="#00FF88" strokeWidth={3} fill="url(#hrvGrad)" dot={{ r: 5, fill: '#00FF88', strokeWidth: 0 }} />
+                    <Line type="monotone" dataKey="rmssd" name="RMSSD" stroke="#FF6B35" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
-            <div className="chart-container" style={{ height: 280 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={hrvData}>
-                  <defs>
-                    <linearGradient id="hrvGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#00FF88" stopOpacity={0.25} />
-                      <stop offset="100%" stopColor="#00FF88" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 12 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 11 }} domain={[60, 90]} />
-                  <Tooltip
-                    contentStyle={{ background: 'rgba(14,18,14,0.95)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 12, fontSize: 12 }}
-                    formatter={(v: number, name: string) => [`${v} ms`, name === 'hrv' ? 'HRV' : 'RMSSD']}
-                  />
-                  <Area type="monotone" dataKey="hrv" name="hrv" stroke="#00FF88" strokeWidth={2.5} fill="url(#hrvGrad)" dot={{ r: 4, fill: '#00FF88', stroke: 'rgba(0,255,136,0.3)', strokeWidth: 5 }} />
-                  <Line type="monotone" dataKey="rmssd" name="rmssd" stroke="#FF6B35" strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
 
-          <div className="glass-card">
-            <div className="glass-card-title" style={{ marginBottom: 20 }}>Estado de Recuperación — Hoy</div>
-            {[
-              { name: 'Alex Guerrero', hrv: 82, status: 'Óptimo', color: 'var(--success-green)' },
-              { name: 'Valentina Torres', hrv: 76, status: 'Listo', color: 'var(--neon-green)' },
-              { name: 'Andrés Mejía', hrv: 65, status: 'Moderado', color: 'var(--warning-yellow)' },
-              { name: 'María López', hrv: 58, status: 'Descanso', color: 'var(--energy-orange)' },
-              { name: 'Carlos Rivas', hrv: 48, status: 'Recuperar', color: 'var(--danger-red)' },
-            ].map((m, i) => (
-              <div key={i} className="stat-row">
-                <div className="member-cell">
-                  <div className="member-avatar" style={{ width: 32, height: 32, fontSize: 'var(--text-xs)' }}>
-                    {m.name.split(' ').map(n => n[0]).join('')}
+            <div style={{ padding: 24, borderRadius: 20, background: 'rgba(20, 20, 25, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', marginBottom: 20 }}>Top Atletas Listos</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {[
+                  { name: 'Alex Guerrero', hrv: 82, status: 'Óptimo para Pico', color: 'var(--success-green)' },
+                  { name: 'Valentina Torres', hrv: 76, status: 'Entreno Normal', color: 'var(--neon-green)' },
+                  { name: 'Andrés Mejía', hrv: 65, status: 'Mantenimiento', color: 'var(--warning-yellow)' },
+                  { name: 'Carlos Rivas', hrv: 48, status: 'Sobrecarga', color: 'var(--danger-red)' },
+                ].map((m, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 12, background: 'rgba(0,0,0,0.2)', borderRadius: 12 }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>{m.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: m.color, fontWeight: 600, marginTop: 4 }}>{m.status}</div>
+                    </div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900 }}>{m.hrv}</div>
                   </div>
-                  <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{m.name}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>{m.hrv}</span>
-                  <span style={{
-                    fontSize: 'var(--text-xs)', fontWeight: 600,
-                    padding: '3px 8px', borderRadius: 'var(--radius-full)',
-                    background: `${m.color}15`, color: m.color,
-                  }}>
-                    {m.status}
-                  </span>
-                </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       )}
 
       {activeTab === 'sleep' && (
-        <div className="glass-card">
-          <div className="glass-card-header">
+        <div style={{ padding: 24, borderRadius: 20, background: 'rgba(20, 20, 25, 0.6)', border: '1px solid rgba(167, 139, 250, 0.2)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
             <div>
-              <div className="glass-card-title">Análisis de Sueño — Últimos 7 días</div>
-              <div className="glass-card-subtitle">Promedio del gym · Fases por horas</div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>Calidad de Sueño Consolidada</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>Un sueño profundo superior a 1.5h maximiza la hipertrofia.</p>
+            </div>
+            <div style={{ display: 'flex', gap: 16 }}>
+              {[
+                { label: 'Profundo (Recuperación Física)', color: '#A78BFA' },
+                { label: 'Ligero (Mantenimiento)', color: '#00FF88' },
+                { label: 'REM (Recuperación Mental)', color: '#FF6B35' },
+              ].map((l, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 4, background: l.color }} />
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{l.label}</span>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="chart-container" style={{ height: 320 }}>
+          <div style={{ height: 360 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={sleepData}>
                 <defs>
                   <linearGradient id="deepGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#A78BFA" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="#A78BFA" stopOpacity={0.05} />
+                    <stop offset="0%" stopColor="#A78BFA" stopOpacity={0.5} />
+                    <stop offset="100%" stopColor="#A78BFA" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="lightGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#00FF88" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#00FF88" stopOpacity={0.05} />
+                    <stop offset="0%" stopColor="#00FF88" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#00FF88" stopOpacity={0.1} />
                   </linearGradient>
                   <linearGradient id="remGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FF6B35" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#FF6B35" stopOpacity={0.05} />
+                    <stop offset="0%" stopColor="#FF6B35" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#FF6B35" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 11 }} tickFormatter={(v) => `${v}h`} />
-                <Tooltip
-                  contentStyle={{ background: 'rgba(14,18,14,0.95)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 12, fontSize: 12 }}
-                  formatter={(v: number, name: string) => {
-                    const labels: Record<string, string> = { deep: 'Sueño Profundo', light: 'Sueño Ligero', rem: 'REM', awake: 'Despierto' };
-                    return [`${v}h`, labels[name] || name];
-                  }}
-                />
-                <Area type="monotone" dataKey="deep" name="deep" stackId="1" stroke="#A78BFA" strokeWidth={0} fill="url(#deepGrad)" />
-                <Area type="monotone" dataKey="light" name="light" stackId="1" stroke="#00FF88" strokeWidth={0} fill="url(#lightGrad)" />
-                <Area type="monotone" dataKey="rem" name="rem" stackId="1" stroke="#FF6B35" strokeWidth={0} fill="url(#remGrad)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} tickFormatter={(v) => `${v}h`} />
+                <Tooltip contentStyle={{ background: 'rgba(14,18,14,0.95)', border: '1px solid rgba(167,139,250,0.3)', borderRadius: 12 }} />
+                <Area type="monotone" dataKey="deep" name="Profundo" stackId="1" stroke="#A78BFA" strokeWidth={2} fill="url(#deepGrad)" />
+                <Area type="monotone" dataKey="light" name="Ligero" stackId="1" stroke="#00FF88" strokeWidth={2} fill="url(#lightGrad)" />
+                <Area type="monotone" dataKey="rem" name="REM" stackId="1" stroke="#FF6B35" strokeWidth={2} fill="url(#remGrad)" />
               </AreaChart>
             </ResponsiveContainer>
-          </div>
-          <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
-            {[
-              { label: 'Sueño Profundo', color: '#A78BFA' },
-              { label: 'Sueño Ligero', color: '#00FF88' },
-              { label: 'REM', color: '#FF6B35' },
-            ].map((l, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ width: 10, height: 10, borderRadius: 3, background: l.color, display: 'inline-block' }} />
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>{l.label}</span>
-              </div>
-            ))}
           </div>
         </div>
       )}
 
       {activeTab === 'zones' && (
-        <div className="dashboard-grid">
-          <div className="glass-card">
-            <div className="glass-card-title" style={{ marginBottom: 20 }}>Distribución de Zonas FC</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div style={{ padding: 24, borderRadius: 20, background: 'rgba(20, 20, 25, 0.6)', border: '1px solid rgba(255, 107, 53, 0.2)' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginBottom: 24 }}>Distribución de Zonas FC (Hoy)</h3>
             {heartRateZones.map((zone, i) => (
-              <div key={i} style={{ marginBottom: 20 }}>
+              <div key={i} style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div>
-                    <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{zone.zone}</span>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginLeft: 8 }}>{zone.range}</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>{zone.zone}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: 8 }}>{zone.range}</span>
                   </div>
-                  <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: zone.color }}>{zone.percentage}%</span>
+                  <span style={{ fontWeight: 800, fontSize: '0.95rem', color: zone.color }}>{zone.percentage}%</span>
                 </div>
-                <div className="progress-bar" style={{ height: 8 }}>
-                  <div className="progress-bar-fill" style={{ width: `${zone.percentage}%`, background: zone.color }} />
+                <div style={{ height: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 5, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${zone.percentage}%`, background: zone.color, borderRadius: 5 }} />
                 </div>
               </div>
             ))}
+            <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', marginTop: 16, border: '1px solid rgba(255,255,255,0.1)' }}>
+              Analizar Zonas por Atleta
+            </button>
           </div>
 
-          <div className="glass-card">
-            <div className="glass-card-title" style={{ marginBottom: 20 }}>Temperatura & Métricas Avanzadas</div>
-            {[
-              { label: 'Temperatura Corporal', value: '36.8°C', icon: Thermometer, color: 'var(--energy-orange)', status: 'Normal' },
-              { label: 'SpO2 (Oxígeno)', value: '98%', icon: Activity, color: 'var(--neon-green)', status: 'Óptimo' },
-              { label: 'Estrés Promedio', value: '24/100', icon: Zap, color: 'var(--success-green)', status: 'Bajo' },
-              { label: 'Pasos Hoy', value: '8,420', icon: Activity, color: 'var(--neon-green)', status: '+12% meta' },
-              { label: 'Calorías Activas', value: '520 kcal', icon: Zap, color: 'var(--energy-orange)', status: '76% meta' },
-            ].map((item, i) => (
-              <div key={i} className="stat-row">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: `${item.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <item.icon size={16} style={{ color: item.color }} />
+          <div style={{ padding: 24, borderRadius: 20, background: 'rgba(20, 20, 25, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginBottom: 24 }}>Métricas Ambientales y Vitales</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {[
+                { label: 'Temperatura Corporal', value: '36.8°C', icon: Thermometer, color: 'var(--energy-orange)', status: 'Rango Normal' },
+                { label: 'SpO2 (Oxígeno en Sangre)', value: '98%', icon: Activity, color: 'var(--neon-green)', status: 'Óptima oxigenación' },
+                { label: 'Nivel de Estrés Acumulado', value: '24/100', icon: Zap, color: 'var(--success-green)', status: 'Bajo riesgo' },
+                { label: 'Volumen de Pasos', value: '8,420', icon: Activity, color: 'var(--neon-green)', status: '+12% sobre media' },
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: 'rgba(0,0,0,0.2)', borderRadius: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: `${item.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <item.icon size={20} style={{ color: item.color }} />
                   </div>
-                  <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>{item.label}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#fff' }}>{item.label}</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.status}</div>
+                  </div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 900, color: item.color }}>{item.value}</div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700, color: item.color }}>{item.value}</div>
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>{item.status}</div>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}

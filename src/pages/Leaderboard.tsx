@@ -40,6 +40,7 @@ const medalColor = (rank: number) => {
 export default function Leaderboard() {
   const [activeDivision, setActiveDivision] = useState('Elite');
   const [activeView, setActiveView] = useState<'ranking' | 'stations' | 'history'>('ranking');
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   const filtered = leaderboardData.filter(
     (m) => activeDivision === 'Todos' || m.division === activeDivision || activeDivision === 'Elite'
@@ -57,8 +58,40 @@ export default function Leaderboard() {
             Rankings en tiempo real · Temporada 2026 · Cinega de Oro
           </p>
         </div>
-        <button className="btn btn-secondary"><Filter size={16} /> Filtrar</button>
+        <button onClick={() => setShowFilterModal(true)}  className="btn btn-secondary"><Filter size={16} /> Filtrar</button>
       </div>
+
+      {/* MODAL FILTRAR */}
+      {showFilterModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="glass-card" style={{ maxWidth: 400, width: '100%', border: '1px solid var(--neon-green)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+               <h3 style={{ fontSize: 18, fontWeight: 950 }}>FILTRAR RANKING</h3>
+               <button onClick={() => setShowFilterModal(false)} style={{ color: '#fff', opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+               <div>
+                  <label style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>DIVISIÓN</label>
+                  <select 
+                    className="input-field"
+                    value={activeDivision}
+                    onChange={e => setActiveDivision(e.target.value)}
+                  >
+                    <option value="Todos">Todos</option>
+                    {divisions.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+               </div>
+               <button 
+                onClick={() => setShowFilterModal(false)}
+                className="btn btn-primary"
+                style={{ width: '100%', justifyContent: 'center' }}
+               >
+                 APLICAR FILTROS
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── TOP 3 PODIUM ─── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr', gap: 16, marginBottom: 24 }}>

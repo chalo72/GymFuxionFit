@@ -1,15 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Kanban, UserPlus, TrendingUp, Instagram, Facebook, MessageSquare, Phone, X, Save, Plus, Zap } from 'lucide-react';
 import { useGymData } from '../hooks/useGymData';
 
 export default function CRM() {
   const { members } = useGymData();
   const [showModal, setShowModal] = useState(false);
+  const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [leads, setLeads] = useState([
     { name: 'Carlos Mario', source: 'Instagram', date: 'Hoy, 10:30', status: 'leads' },
     { name: 'Diana Perez', source: 'Facebook', date: 'Ayer', status: 'leads' },
     { name: 'Luis Restrepo', source: 'TikTok', date: 'Hace 2 días', status: 'contacted' },
   ]);
+  
+  const [campaigns, setCampaigns] = useState<{name: string, progress: number, target: number}[]>(() => {
+    const saved = localStorage.getItem('gym_campaigns');
+    return saved ? JSON.parse(saved) : [{ name: 'Verano 2026', progress: 45, target: 100 }];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('gym_campaigns', JSON.stringify(campaigns));
+  }, [campaigns]);
 
   const [newLead, setNewLead] = useState({ name: '', source: 'Instagram', status: 'leads' });
 
@@ -72,6 +82,40 @@ export default function CRM() {
         </div>
       )}
 
+      {/* MODAL NUEVA CAMPAÑA */}
+      {showCampaignModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="glass-card" style={{ maxWidth: 400, width: '100%', border: '1px solid var(--neon-green)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+               <h3 style={{ fontSize: 18, fontWeight: 950 }}>NUEVA CAMPAÑA</h3>
+               <button onClick={() => setShowCampaignModal(false)} style={{ color: '#fff', opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}><X size={20}/></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+               <div>
+                  <label style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>NOMBRE DE CAMPAÑA</label>
+                  <input id="camp-name" className="input-field" placeholder="Ej: Black Friday" style={{ width: '100%' }} />
+               </div>
+               <div>
+                  <label style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>META DE LEADS</label>
+                  <input id="camp-target" type="number" className="input-field" placeholder="Ej: 50" style={{ width: '100%' }} defaultValue={50} />
+               </div>
+               <button 
+                onClick={() => {
+                  const name = (document.getElementById('camp-name') as HTMLInputElement).value;
+                  const target = parseInt((document.getElementById('camp-target') as HTMLInputElement).value) || 50;
+                  if (!name) return alert('El nombre es obligatorio');
+                  setCampaigns([...campaigns, { name, target, progress: 0 }]);
+                  setShowCampaignModal(false);
+                }}
+                style={{ width: '100%', padding: 16, borderRadius: 12, background: 'var(--neon-green)', color: '#000', fontWeight: 950, border: 'none', cursor: 'pointer', marginTop: 10 }}
+               >
+                 LANZAR CAMPAÑA
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="glass-card-header" style={{ marginBottom: 32 }}>
         <div>
           <h1 className="navbar-title">
@@ -81,9 +125,9 @@ export default function CRM() {
           <p className="glass-card-subtitle">Gestión de prospectos e integración con redes sociales</p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
-          <button className="btn btn-secondary">
-            <TrendingUp size={18} />
-            Metas
+          <button onClick={() => setShowCampaignModal(true)}  className="btn btn-secondary">
+            <Zap size={18} />
+            Crear Campaña
           </button>
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>
             <UserPlus size={18} />
@@ -110,6 +154,24 @@ export default function CRM() {
         </div>
       </div>
 
+      {/* CAMPAIGN METRICS */}
+      {campaigns.length > 0 && (
+        <div style={{ display: 'flex', gap: 16, marginBottom: 20, overflowX: 'auto', paddingBottom: 10 }}>
+          {campaigns.map((camp, i) => (
+             <div key={i} className="glass-card" style={{ minWidth: 200, padding: 16, border: '1px solid var(--neon-green)' }}>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', marginBottom: 8, color: '#fff' }}>🚀 {camp.name}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  <span>{camp.progress} leads</span>
+                  <span>Meta: {camp.target}</span>
+                </div>
+                <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, marginTop: 6, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${Math.min((camp.progress / camp.target)*100, 100)}%`, background: 'var(--neon-green)', borderRadius: 3 }} />
+                </div>
+             </div>
+          ))}
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20, marginTop: 12 }}>
         {columns.map((col) => (
           <div key={col.id} className="glass-card" style={{ padding: '16px 12px', background: 'rgba(255,255,255,0.02)', minHeight: 500 }}>
@@ -131,15 +193,15 @@ export default function CRM() {
                         {lead.source} • {lead.date}
                      </div>
                      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                        <button style={{ padding: 6, borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: 'var(--neon-green)' }}><MessageSquare size={14}/></button>
-                        <button style={{ padding: 6, borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: 'var(--neon-green)' }}><Phone size={14}/></button>
+                        <a href={`https://wa.me/573000000000?text=Hola%20${encodeURIComponent(lead.name)},%20te%20escribo%20de%20GymFuxionFit`} target="_blank" rel="noreferrer" style={{ padding: 6, borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: 'var(--neon-green)', textDecoration: 'none', display: 'flex' }}><MessageSquare size={14}/></a>
+                        <a href="tel:+573000000000" style={{ padding: 6, borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: 'var(--neon-green)', textDecoration: 'none', display: 'flex' }}><Phone size={14}/></a>
                      </div>
                   </div>
                 ))}
                 {col.id === 'leads' && (
                   <button 
                     onClick={() => setShowModal(true)}
-                    style={{ padding: '12px', borderRadius: 'var(--radius-md)', border: '1px dashed rgba(255,255,255,0.1)', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer' }}
+                    style={{ padding: '12px', borderRadius: 'var(--radius-md)', border: '1px dashed rgba(255,255,255,0.1)', color: 'var(--text-muted)', fontSize: 'var(--text-xs)', fontWeight: 600, cursor: 'pointer', width: '100%' }}
                   >
                     + AÑADIR PROSPECTO
                   </button>

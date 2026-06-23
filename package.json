@@ -1,12 +1,12 @@
 {
   "name": "gymfuxionfit",
-  "version": "5.7.1",
+  "version": "5.8.0",
   "type": "module",
   "description": "GymFuxionFit — Ecosistema Fitness de Nueva Generación",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --host",
     "sync:prod": "node scripts/sync-prod-to-local.js"
   },
   "dependencies": {
@@ -15,6 +15,7 @@
     "@mediapipe/pose": "^0.5.1675469404",
     "@supabase/supabase-js": "^2.104.0",
     "appwrite": "^25.0.0",
+    "citedhealth": "^0.4.0",
     "firebase": "^12.12.1",
     "framer-motion": "^11.15.0",
     "lucide-react": "^0.468.0",

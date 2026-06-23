@@ -618,6 +618,67 @@ function ClassDetailModal({ cls, onClose }: { cls: ClassBlock; onClose: () => vo
   );
 }
 
+function CreateClassModal({ onClose, onAdd }: { onClose: () => void, onAdd: (c: any) => void }) {
+  const [name, setName] = useState('');
+  const [type, setType] = useState('hyrox');
+  const [capacity, setCapacity] = useState(20);
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    onAdd({
+      time: '18:00',
+      name,
+      subtitulo: 'Nueva clase programada',
+      instructor: 'Por Asignar',
+      enrolled: 0,
+      capacity,
+      type,
+      color: type === 'hyrox' ? '#FF6B35' : type === 'yoga' ? '#A78BFA' : '#00F0FF',
+      duration: '60 min',
+      description: 'Clase recién creada. Configura las rutinas.',
+      image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400',
+      isActive: true,
+      nivel: 'Intermedio',
+      beneficios: [],
+      equipo: [],
+      rutinas: [],
+    });
+    onClose();
+  };
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div className="glass-card animate-slide-up" style={{ width: 400, padding: 30, borderRadius: 24, border: '1px solid var(--neon-green)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>Nueva Clase</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><X size={20}/></button>
+        </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 800 }}>NOMBRE DE LA CLASE</label>
+            <input value={name} onChange={e => setName(e.target.value)} required style={{ width: '100%', padding: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 12, marginTop: 4 }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 800 }}>TIPO</label>
+            <select value={type} onChange={e => setType(e.target.value)} style={{ width: '100%', padding: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 12, marginTop: 4 }}>
+              <option value="hyrox">Hyrox</option>
+              <option value="strength">Fuerza</option>
+              <option value="cardio">Cardio</option>
+              <option value="yoga">Yoga</option>
+              <option value="combat">Combate</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 800 }}>CAPACIDAD</label>
+            <input type="number" value={capacity} onChange={e => setCapacity(Number(e.target.value))} required style={{ width: '100%', padding: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 12, marginTop: 4 }} />
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: 16, marginTop: 10, justifyContent: 'center' }}>Añadir al Calendario</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════════════════
    COMPONENTE PRINCIPAL: Schedule
    ═══════════════════════════════════════════════════════════ */
@@ -627,6 +688,8 @@ export default function Schedule() {
   const [localSchedule, setLocalSchedule] = useState(schedule);
   const [activeTab, setActiveTab] = useState<Record<number, 'rutinas' | 'info'>>({});
   const [detailClass, setDetailClass] = useState<ClassBlock | null>(null);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [showCreate, setShowCreate] = useState(false);
 
   const dayClasses = localSchedule[selectedDay] || [];
 
@@ -652,10 +715,10 @@ export default function Schedule() {
         <div>
           <h2 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700 }}>Calendario Semanal</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', marginTop: 4 }}>
-            Semana del 14–20 de Abril 2026 · {Object.values(schedule).flat().length} clases programadas
+            Semana del {Number(dates[0]) + weekOffset * 7} al {Number(dates[6]) + weekOffset * 7} de Abril 2026 · {Object.values(localSchedule).flat().length} clases programadas
           </p>
         </div>
-        <button className="btn btn-primary"><Plus size={16} /> Nueva Clase</button>
+        <button onClick={() => setShowCreate(true)}  className="btn btn-primary"><Plus size={16} /> Nueva Clase</button>
       </div>
 
       {/* ─── KPIs ─── */}
@@ -678,7 +741,7 @@ export default function Schedule() {
 
       {/* ─── NAV DÍAS ─── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-        <button className="btn btn-ghost" style={{ padding: '8px 10px' }}><ChevronLeft size={16} /></button>
+        <button onClick={() => setWeekOffset(w => w - 1)}  className="btn btn-ghost" style={{ padding: '8px 10px' }}><ChevronLeft size={16} /></button>
         <div style={{ display: 'flex', gap: 6, flex: 1 }}>
           {days.map((day, i) => (
             <button
@@ -694,16 +757,16 @@ export default function Schedule() {
               }}
             >
               <div style={{ fontSize: 'var(--text-xs)', color: selectedDay === day ? 'var(--neon-green)' : 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{day}</div>
-              <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: i === today ? 'var(--neon-green)' : selectedDay === day ? 'var(--text-primary)' : 'var(--text-secondary)', marginTop: 2 }}>{dates[i]}</div>
+              <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: i === today ? 'var(--neon-green)' : selectedDay === day ? 'var(--text-primary)' : 'var(--text-secondary)', marginTop: 2 }}>{Number(dates[i]) + weekOffset * 7}</div>
               <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center', gap: 3 }}>
-                {(schedule[day] || []).slice(0, 3).map((_, ci) => (
+                {(localSchedule[day] || []).slice(0, 3).map((_, ci) => (
                   <span key={ci} style={{ width: 4, height: 4, borderRadius: '50%', background: selectedDay === day ? 'var(--neon-green)' : 'var(--text-muted)', display: 'inline-block' }} />
                 ))}
               </div>
             </button>
           ))}
         </div>
-        <button className="btn btn-ghost" style={{ padding: '8px 10px' }}><ChevronRight size={16} /></button>
+        <button onClick={() => setWeekOffset(w => w + 1)}  className="btn btn-ghost" style={{ padding: '8px 10px' }}><ChevronRight size={16} /></button>
       </div>
 
       {/* ─── CLASES DEL DÍA ─── */}
@@ -711,7 +774,7 @@ export default function Schedule() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <CalendarDays size={18} style={{ color: 'var(--neon-green)' }} />
           <h3 style={{ fontWeight: 700, fontSize: 'var(--text-lg)' }}>
-            {selectedDay} {dates[days.indexOf(selectedDay)]} de Abril
+            {selectedDay} {Number(dates[days.indexOf(selectedDay)]) + weekOffset * 7} de Abril
           </h3>
           <span style={{
             fontSize: 'var(--text-xs)', fontWeight: 600,
@@ -726,7 +789,7 @@ export default function Schedule() {
           <div className="glass-card" style={{ textAlign: 'center', padding: '60px 20px' }}>
             <CalendarDays size={40} style={{ color: 'var(--text-muted)', margin: '0 auto 16px' }} />
             <div style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Sin clases programadas este día</div>
-            <button className="btn btn-secondary" style={{ marginTop: 16 }}><Plus size={16} /> Añadir Clase</button>
+            <button onClick={() => setShowCreate(true)}  className="btn btn-secondary" style={{ marginTop: 16 }}><Plus size={16} /> Añadir Clase</button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1059,11 +1122,35 @@ export default function Schedule() {
                           >
                             🏋️ VER CLASE COMPLETA
                           </button>
-                          <button className="btn btn-secondary" style={{ width: '100%', fontSize: 12, padding: 12 }}>
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation();
+                              const newTime = prompt('Introduce el nuevo horario (ej. 10:00):', cls.time);
+                              if (newTime) {
+                                setLocalSchedule(prev => ({
+                                  ...prev,
+                                  [selectedDay]: prev[selectedDay].map((c, idx) => idx === i ? { ...c, time: newTime } : c).sort((a,b) => a.time.localeCompare(b.time))
+                                }));
+                              }
+                            }}  
+                            className="btn btn-secondary" style={{ width: '100%', fontSize: 12, padding: 12 }}
+                          >
                             ✏️ Editar Horario
                           </button>
-                          <button className="btn btn-ghost" style={{ width: '100%', fontSize: 12, padding: 12 }}>
-                            <Flame size={13} /> Ver Estadísticas
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation();
+                              const confirmDelete = window.confirm(`¿Estás seguro de cancelar y eliminar la clase de ${cls.name}?`);
+                              if (confirmDelete) {
+                                setLocalSchedule(prev => ({
+                                  ...prev,
+                                  [selectedDay]: prev[selectedDay].filter((_, idx) => idx !== i)
+                                }));
+                              }
+                            }}  
+                            className="btn btn-ghost" style={{ width: '100%', fontSize: 12, padding: 12, color: 'var(--danger-red)', border: '1px solid rgba(255,61,87,0.2)' }}
+                          >
+                            <XCircle size={13} style={{ marginRight: 6 }} /> Cancelar Clase
                           </button>
                         </div>
                       </div>
@@ -1079,6 +1166,14 @@ export default function Schedule() {
       {/* ══ MODAL DE DETALLE DE CLASE ══ */}
       {detailClass && (
         <ClassDetailModal cls={detailClass} onClose={() => setDetailClass(null)} />
+      )}
+      {showCreate && (
+        <CreateClassModal onClose={() => setShowCreate(false)} onAdd={(c) => {
+          setLocalSchedule(prev => ({
+            ...prev,
+            [selectedDay]: [...(prev[selectedDay] || []), c]
+          }));
+        }} />
       )}
     </div>
   );

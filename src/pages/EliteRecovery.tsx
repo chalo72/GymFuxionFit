@@ -19,6 +19,7 @@ import {
 export default function EliteRecovery() {
   const { members } = useGymData();
   const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [activeDiet, setActiveDiet] = useState<'deficit' | 'superavit' | null>(null);
 
   // State para Carga Alostática
   const [recovery, setRecovery] = useState({
@@ -114,8 +115,8 @@ export default function EliteRecovery() {
               <div style={{ padding: 20, background: 'rgba(167,139,250,0.05)', borderRadius: 16, border: '1px solid rgba(167,139,250,0.1)' }}>
                 <h3 style={{ fontSize: 14, fontWeight: 800, color: '#A78BFA', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Utensils size={16} /> Alimentación Sugerida</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <button style={{ padding: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', color: '#fff', fontSize: 12, fontWeight: 700 }}>Déficit Agresivo</button>
-                  <button style={{ padding: 12, borderRadius: 12, border: '1px solid var(--neon-green)', background: 'rgba(0,255,136,0.1)', color: 'var(--neon-green)', fontSize: 12, fontWeight: 700 }}>Superávit Controlado</button>
+                  <button onClick={() => setActiveDiet('deficit')}  style={{ padding: 12, borderRadius: 12, border: activeDiet === 'deficit' ? '1px solid #FF3D57' : '1px solid rgba(255,255,255,0.1)', background: activeDiet === 'deficit' ? 'rgba(255,61,87,0.1)' : 'rgba(255,255,255,0.03)', color: activeDiet === 'deficit' ? '#FF3D57' : '#fff', fontSize: 12, fontWeight: 700, transition: 'all 0.2s' }}>Déficit Agresivo</button>
+                  <button onClick={() => setActiveDiet('superavit')}  style={{ padding: 12, borderRadius: 12, border: activeDiet === 'superavit' ? '1px solid var(--neon-green)' : '1px solid rgba(255,255,255,0.1)', background: activeDiet === 'superavit' ? 'rgba(0,255,136,0.1)' : 'rgba(255,255,255,0.03)', color: activeDiet === 'superavit' ? 'var(--neon-green)' : '#fff', fontSize: 12, fontWeight: 700, transition: 'all 0.2s' }}>Superávit Controlado</button>
                 </div>
               </div>
             </div>
@@ -167,7 +168,7 @@ export default function EliteRecovery() {
             </div>
           </div>
 
-          <button className="btn btn-primary" style={{ padding: 16, borderRadius: 16, width: '100%', gap: 10 }}>
+          <button onClick={() => alert('🚀 Función en desarrollo o requiere backend...')}  className="btn btn-primary" style={{ padding: 16, borderRadius: 16, width: '100%', gap: 10 }}>
             <Save size={20} /> Actualizar Perfil de Recuperación
           </button>
         </div>

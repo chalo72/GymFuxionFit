@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Apple, Flame, Beef, Droplets, Zap, TrendingUp, Plus, Search } from 'lucide-react';
+import { Apple, Flame, Beef, Droplets, Zap, TrendingUp, Plus, Search, X, Activity, Check } from 'lucide-react';
+import { useGymData } from '../hooks/useGymData';
 import {
   AreaChart,
   Area,
@@ -45,12 +46,106 @@ const topMembers = [
 ];
 
 export default function Nutrition() {
+  const { members, updateMemberStatus } = useGymData();
   const [activeTab, setActiveTab] = useState<'today' | 'week' | 'members'>('today');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  
+  // Modal Form State
+  const [selectedMemberId, setSelectedMemberId] = useState('');
+  const [mealName, setMealName] = useState('');
+  const [mealCals, setMealCals] = useState('');
+
   const todayTotal = meals.reduce((acc, m) => acc + m.calories, 0);
   const goalCalories = 2200;
 
+  const handleRegisterMeal = async () => {
+    if (!selectedMemberId || !mealName || !mealCals) return alert('Completa todos los campos');
+    setIsProcessing(true);
+    
+    // Simular latencia de cálculo de macros IA
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    try {
+      const member = members.find(m => m.id === selectedMemberId);
+      const currentMeals = member?.todaysMeals || [];
+      const newMeal = {
+        name: mealName,
+        calories: Number(mealCals),
+        time: new Date().toLocaleTimeString().slice(0,5),
+        date: new Date().toISOString()
+      };
+      
+      await updateMemberStatus(selectedMemberId, {
+        todaysMeals: [...currentMeals, newMeal]
+      });
+      
+      setIsProcessing(false);
+      setSuccessMsg('Comida Registrada con Éxito');
+      setTimeout(() => {
+        setSuccessMsg('');
+        setIsModalOpen(false);
+        setMealName('');
+        setMealCals('');
+      }, 2000);
+    } catch (e) {
+      console.error(e);
+      alert('Error registrando comida');
+      setIsProcessing(false);
+    }
+  };
+
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in" style={{ position: 'relative' }}>
+      
+      {/* ─── MODAL REGISTRAR COMIDA ─── */}
+      {isModalOpen && (
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)' }}>
+          <div style={{ background: 'var(--space-dark)', padding: 32, borderRadius: 24, width: 400, border: '1px solid rgba(0,255,136,0.2)', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h3 style={{ margin: 0, color: '#fff', fontSize: '1.2rem', fontWeight: 800 }}>Registrar Comida</h3>
+              <button onClick={() => !isProcessing && setIsModalOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>Cliente</label>
+                <select value={selectedMemberId} onChange={e => setSelectedMemberId(e.target.value)} className="input-field" style={{ width: '100%', color: '#000' }}>
+                  <option value="" style={{ color: '#000' }}>Seleccionar Cliente...</option>
+                  {members.map(m => <option key={m.id} value={m.id} style={{ color: '#000' }}>{m.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>Alimento / Comida</label>
+                <input value={mealName} onChange={e => setMealName(e.target.value)} type="text" className="input-field" placeholder="Ej. Pollo con Arroz" style={{ width: '100%' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>Calorías (Aprox)</label>
+                <input value={mealCals} onChange={e => setMealCals(e.target.value)} type="number" className="input-field" placeholder="Ej. 450" style={{ width: '100%' }} />
+              </div>
+              
+              <button 
+                onClick={handleRegisterMeal}
+                disabled={isProcessing || !!successMsg}
+                className="btn btn-primary" 
+                style={{ 
+                  marginTop: 10, padding: 14, 
+                  background: successMsg ? 'var(--neon-green)' : undefined, 
+                  color: successMsg ? '#000' : undefined 
+                }}>
+                {isProcessing ? (
+                  <><Activity size={18} style={{ animation: 'spin 1s linear infinite' }} /> Calculando Macros...</>
+                ) : successMsg ? (
+                  <><Check size={18} /> {successMsg}</>
+                ) : (
+                  'Registrar e Inyectar'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ─── HEADER ─── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
@@ -62,11 +157,11 @@ export default function Nutrition() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary">
+          <button onClick={() => alert('Función de búsqueda global estará disponible pronto.')}  className="btn btn-secondary">
             <Search size={16} />
             Buscar Alimento
           </button>
-          <button className="btn btn-primary">
+          <button onClick={() => setIsModalOpen(true)}  className="btn btn-primary">
             <Plus size={16} />
             Registrar Comida
           </button>

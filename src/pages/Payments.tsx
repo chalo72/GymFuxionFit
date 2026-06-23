@@ -43,7 +43,7 @@ const mapCategoryToPlan = (category: string) => {
 };
 
 export default function Payments() {
-  const { transactions, updateTransaction, deleteTransaction, members } = useGymData();
+  const { transactions, updateTransaction, deleteTransaction, members, injectTransaction } = useGymData();
   const [activeTab, setActiveTab] = useState<'transactions' | 'revenue' | 'plans'>('transactions');
   const [filterStatus, setFilterStatus] = useState('all');
   
@@ -70,8 +70,87 @@ export default function Payments() {
     }
   };
 
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [newPayment, setNewPayment] = useState({ client: '', amount: 0, category: 'membership', method: 'Efectivo', description: '' });
+
+  const handleRegisterPayment = () => {
+    if (!newPayment.client || newPayment.amount <= 0) return;
+    injectTransaction({
+      type: 'income',
+      amount: newPayment.amount,
+      client: newPayment.client,
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      category: newPayment.category as any,
+      description: newPayment.description || 'Pago manual',
+      method: newPayment.method as any
+    });
+    setShowPaymentModal(false);
+    setNewPayment({ client: '', amount: 0, category: 'membership', method: 'Efectivo', description: '' });
+  };
+
+  const handleExportCSV = () => {
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + "Fecha,Descripción,Categoría,Monto\n"
+      + filtered.map(t => `${t.date},"${t.description}",${mapCategoryToPlan(t.category)},${t.amount}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `pagos_fuxionfit_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="animate-fade-in">
+      {/* MODAL REGISTRAR PAGO */}
+      {showPaymentModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div className="glass-card" style={{ maxWidth: 400, width: '100%', border: '1px solid var(--neon-green)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+               <h3 style={{ fontSize: 18, fontWeight: 950 }}>REGISTRAR PAGO</h3>
+               <button onClick={() => setShowPaymentModal(false)} style={{ color: '#fff', opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+               <div>
+                  <label style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>CLIENTE</label>
+                  <input className="input-field" value={newPayment.client} onChange={e => setNewPayment({...newPayment, client: e.target.value})} placeholder="Ej. Juan Perez" />
+               </div>
+               <div>
+                  <label style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MONTO ($)</label>
+                  <input type="number" className="input-field" value={newPayment.amount} onChange={e => setNewPayment({...newPayment, amount: Number(e.target.value)})} />
+               </div>
+               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                 <div>
+                    <label style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>CATEGORÍA</label>
+                    <select className="input-field" value={newPayment.category} onChange={e => setNewPayment({...newPayment, category: e.target.value})}>
+                      <option value="membership">Mensualidad</option>
+                      <option value="daypass">Día / Pase</option>
+                      <option value="product">Producto</option>
+                    </select>
+                 </div>
+                 <div>
+                    <label style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MÉTODO</label>
+                    <select className="input-field" value={newPayment.method} onChange={e => setNewPayment({...newPayment, method: e.target.value})}>
+                      <option value="Efectivo">Efectivo</option>
+                      <option value="Nequi">Nequi</option>
+                      <option value="Stripe">Tarjeta (Stripe)</option>
+                    </select>
+                 </div>
+               </div>
+               <div>
+                  <label style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>DESCRIPCIÓN</label>
+                  <input className="input-field" value={newPayment.description} onChange={e => setNewPayment({...newPayment, description: e.target.value})} placeholder="Ej. Mes de Mayo" />
+               </div>
+               <button onClick={handleRegisterPayment} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 10 }}>
+                 PROCESAR PAGO
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── HEADER ─── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
@@ -83,10 +162,10 @@ export default function Payments() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary">
+          <button onClick={handleExportCSV} className="btn btn-secondary">
             <Download size={16} /> Exportar
           </button>
-          <button className="btn btn-primary">
+          <button onClick={() => setShowPaymentModal(true)}  className="btn btn-primary">
             <Plus size={16} /> Registrar Pago
           </button>
         </div>

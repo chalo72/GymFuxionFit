@@ -1,435 +1,381 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useGymData } from '../hooks/useGymData';
 import { useCatalogs } from '../hooks/useCatalogs';
 import { 
   Zap, TrendingUp, Target, BarChart3, ChevronRight, 
   Dumbbell, Repeat, Layers, Info, Save, Plus, Trash2, 
-  Search, Filter, Activity, Flame, Check
+  Search, Filter, Activity, Flame, Check, AlertTriangle, Play, GripVertical
 } from 'lucide-react';
 
 /* ══════════════════════════════════════════
-   ELITE PLANNER v1.0
-   Pilar 2: Programación de Carga (Periodización)
-   Pilar 3: Selección Inteligente de Ejercicios
-   SK-ELITE-PLANNER-001 | 2026-05-04
+   ELITE PLANNER v2.0 - HUD TÁCTICO
+   Pilar 2: Programación y Fatiga
+   Pilar 3: Selección de Ejercicios
 ══════════════════════════════════════════ */
 
 const PATTERNS = [
-  { id: 'push', label: 'Empuje', icon: '⬆️', desc: 'Pecho, Hombro, Tríceps' },
-  { id: 'pull', label: 'Tracción', icon: '⬇️', desc: 'Espalda, Bíceps' },
-  { id: 'hinge', label: 'Bisagra de Cadera', icon: '🍑', desc: 'Isquios, Glúteo, Lumbar' },
-  { id: 'squat', label: 'Dominante de Rodilla', icon: '🦵', desc: 'Cuádriceps, Glúteo' },
-  { id: 'carry', label: 'Transporte / Core', icon: '🧱', desc: 'Estabilidad, Farmer Walk' },
+  { id: 'push', label: 'Empuje', icon: '⬆️' },
+  { id: 'pull', label: 'Tracción', icon: '⬇️' },
+  { id: 'hinge', label: 'Bisagra', icon: '🍑' },
+  { id: 'squat', label: 'Rodilla', icon: '🦵' },
+  { id: 'carry', label: 'Core', icon: '🧱' },
 ];
 
-const CURVES = [
-  { id: 'stretch', label: 'Estiramiento', desc: 'Máxima tensión en rango elongado' },
-  { id: 'short', label: 'Acortamiento', desc: 'Máxima tensión en contracción' },
-  { id: 'mid', label: 'Rango Medio', desc: 'Tensión uniforme' },
-];
+type BlockId = 'warmup' | 'main' | 'accessory';
+
+interface SelectedExercise {
+  id: string; // Unique ID for the instance in the block
+  exId: string; // ID from catalog
+  name: string;
+  muscleGroup: string;
+  equipment: string;
+  pattern: string;
+  sets: number;
+  reps: string;
+  rpe: number;
+  curve: string;
+  block: BlockId;
+}
 
 export default function ElitePlanner() {
-  const { members } = useGymData();
+  const { members, updateMemberStatus } = useGymData();
   const { catalogs } = useCatalogs();
   const [selectedMember, setSelectedMember] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'programming' | 'selection' | 'evidence'>('programming');
-  const [selectedSupplement, setSelectedSupplement] = useState('creatine');
+  const [activeTab, setActiveTab] = useState<'programming' | 'selection' | 'evidence'>('selection');
   
-  // State para Programación (Pilar 2)
+  // Real UI States
+  const [isInjecting, setIsInjecting] = useState(false);
+  const [injectSuccess, setInjectSuccess] = useState(false);
+  
+  // Programming State
   const [programming, setProgramming] = useState({
-    volume: 12, // Series por músculo/semana
-    objective: 'Hipertrofia Metabólica',
+    objective: 'Hipertrofia',
     mesocycleWeeks: 6,
-    microcycle: 1,
     division: 'Push/Pull/Legs',
-    totalSets: 18,
-    rpeTarget: 8,
-    intensityType: 'RPE', // RPE o RIR
-    intensityValue: 8,
-    frequency: 2,
-    deloadWeek: 6,
   });
 
-  // State para Selección (Pilar 3)
-  const [selectedExercises, setSelectedExercises] = useState<any[]>([]);
+  // Exercises State
+  const [exercises, setExercises] = useState<SelectedExercise[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterMuscle, setFilterMuscle] = useState('Todos');
 
-  const filteredExercises = catalogs.exercises.filter((ex: any) => {
+  const filteredCatalog = catalogs.exercises.filter((ex: any) => {
     const matchesSearch = (ex.name || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchesMuscle = filterMuscle === 'Todos' || ex.muscleGroup === filterMuscle;
     return matchesSearch && matchesMuscle;
   });
 
-  const addExercise = (ex: any) => {
-    if (!selectedExercises.find(e => e.id === ex.id)) {
-      setSelectedExercises([...selectedExercises, { ...ex, sets: 3, reps: '8-12', rpe: 8, curve: 'mid' }]);
-    }
+  const addExercise = (ex: any, block: BlockId) => {
+    const newEx: SelectedExercise = {
+      id: `${ex.id}-${Date.now()}`,
+      exId: ex.id,
+      name: ex.name,
+      muscleGroup: ex.muscleGroup,
+      equipment: ex.equipment,
+      pattern: ex.pattern || 'push',
+      sets: 3,
+      reps: '10',
+      rpe: 8,
+      curve: 'mid',
+      block
+    };
+    setExercises([...exercises, newEx]);
   };
 
   const removeExercise = (id: string) => {
-    setSelectedExercises(selectedExercises.filter(e => e.id !== id));
+    setExercises(exercises.filter(e => e.id !== id));
   };
 
-  const updateEx = (id: string, field: string, value: any) => {
-    setSelectedExercises(selectedExercises.map(e => e.id === id ? { ...e, [field]: value } : e));
+  const updateEx = (id: string, field: keyof SelectedExercise, value: any) => {
+    setExercises(exercises.map(e => e.id === id ? { ...e, [field]: value } : e));
+  };
+
+  // ─── LÓGICA DE FATIGA MUSCULAR ───
+  const fatigueData = useMemo(() => {
+    const muscleVolume: Record<string, number> = {};
+    exercises.forEach(ex => {
+      const vol = Number(ex.sets) || 0;
+      muscleVolume[ex.muscleGroup] = (muscleVolume[ex.muscleGroup] || 0) + vol;
+    });
+
+    // Validar si hay músculos en "Peligro" (> 12 series en una sola sesión)
+    const warnings = Object.entries(muscleVolume)
+      .filter(([_, vol]) => vol > 12)
+      .map(([m]) => m);
+
+    return { muscleVolume, warnings };
+  }, [exercises]);
+
+  const renderBlock = (blockId: BlockId, title: string, color: string) => {
+    const blockExercises = exercises.filter(e => e.block === blockId);
+    
+    return (
+      <div style={{ marginBottom: 32, background: 'rgba(255,255,255,0.02)', borderRadius: 20, border: `1px solid ${color}30`, overflow: 'hidden' }}>
+        <div style={{ padding: '16px 20px', background: `${color}15`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: color, textTransform: 'uppercase', letterSpacing: 1 }}>{title}</h3>
+          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,0.3)', padding: '4px 10px', borderRadius: 20 }}>
+            {blockExercises.length} EJERCICIOS
+          </span>
+        </div>
+        
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12, minHeight: 120 }}>
+          {blockExercises.length === 0 ? (
+            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.9rem', border: '2px dashed rgba(255,255,255,0.1)', borderRadius: 12, padding: 20 }}>
+              Arrastra o asigna ejercicios a este bloque
+            </div>
+          ) : (
+            blockExercises.map((ex, i) => (
+              <div key={ex.id} style={{ display: 'flex', gap: 16, background: 'rgba(0,0,0,0.4)', borderRadius: 16, padding: '12px 16px', alignItems: 'center', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+                <GripVertical size={20} color="var(--text-muted)" style={{ cursor: 'grab' }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontWeight: 800, color: '#fff', fontSize: '1.05rem' }}>{i + 1}. {ex.name}</span>
+                    <span style={{ fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(255,255,255,0.1)', borderRadius: 4, color: 'var(--text-muted)' }}>{ex.muscleGroup.toUpperCase()}</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <label style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>SERIES</label>
+                    <input type="number" value={ex.sets} onChange={(e) => updateEx(ex.id, 'sets', Number(e.target.value))} className="input-field" style={{ width: 60, padding: '8px', textAlign: 'center', fontWeight: 800, fontSize: '1.1rem', background: 'rgba(255,255,255,0.05)' }} />
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <label style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>REPS</label>
+                    <input value={ex.reps} onChange={(e) => updateEx(ex.id, 'reps', e.target.value)} className="input-field" style={{ width: 80, padding: '8px', textAlign: 'center', fontWeight: 800, fontSize: '1.1rem', background: 'rgba(255,255,255,0.05)' }} />
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <label style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>CURVA</label>
+                    <select value={ex.curve} onChange={(e) => updateEx(ex.id, 'curve', e.target.value)} className="input-field" style={{ width: 110, padding: '8px', fontSize: '0.8rem', background: 'rgba(255,255,255,0.05)' }}>
+                      <option value="stretch">Estiramiento</option>
+                      <option value="mid">Rango Medio</option>
+                      <option value="short">Acortamiento</option>
+                    </select>
+                  </div>
+                  <button onClick={() => removeExercise(ex.id)} style={{ background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', color: 'var(--danger-red)', padding: 10, borderRadius: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: 8 }}>
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // ─── LÓGICA DE INYECCIÓN REAL ───
+  const handleInjectRoutine = async () => {
+    if (!selectedMember) return alert('Debes seleccionar un atleta primero.');
+    if (exercises.length === 0) return alert('No hay ejercicios en la pizarra para inyectar.');
+
+    setIsInjecting(true);
+    
+    // Simulate slight network delay for premium feel even though local is fast
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    try {
+      const activeProgram = {
+        updatedAt: new Date().toISOString(),
+        exercises: exercises
+      };
+      await updateMemberStatus(selectedMember.id, { activeProgram });
+      
+      setIsInjecting(false);
+      setInjectSuccess(true);
+      setExercises([]); // Clear the board
+      
+      setTimeout(() => setInjectSuccess(false), 3000);
+    } catch (e) {
+      console.error(e);
+      alert('Error al inyectar la rutina.');
+      setIsInjecting(false);
+    }
   };
 
   return (
-    <div style={{ padding: 24, minHeight: '100vh', background: 'var(--space-dark)' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--navbar-height) - 56px)', minHeight: 600 }}>
+      {/* ─── HEADER ELITE ─── */}
+      <div style={{ padding: '20px 32px', borderBottom: '1px solid rgba(0,255,136,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--space-dark)', flexShrink: 0 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 4 }}>Plan de Entrenamiento Élite</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Diseño de rutinas basadas en la estructura de cada persona.</p>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Zap color="var(--neon-green)" /> Elite Planner <span style={{ fontSize: '1rem', color: 'var(--neon-green)', fontWeight: 600 }}>HUD Táctico</span>
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: 4 }}>Diseño de rutinas con análisis predictivo de fatiga y curvas de resistencia.</p>
         </div>
-        <select 
-          style={{ padding: '10px 20px', borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-          onChange={(e) => setSelectedMember(members.find((m:any) => m.id === e.target.value))}
-        >
-          <option value="">Seleccionar Atleta...</option>
-          {members.map((m:any) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <select 
+            value={selectedMember?.id || ''}
+            onChange={(e) => setSelectedMember(members.find(m => m.id === e.target.value))}
+            style={{ padding: '12px 24px', borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '1rem', fontWeight: 700 }}
+          >
+            <option value="" style={{ color: '#000' }}>Seleccionar Atleta...</option>
+            {members.map(m => <option key={m.id} value={m.id} style={{ color: '#000' }}>{m.name} - {m.plan}</option>)}
+          </select>
+          <button 
+            onClick={handleInjectRoutine} 
+            disabled={isInjecting || injectSuccess}
+            className="btn btn-primary" 
+            style={{ 
+              padding: '12px 24px', fontSize: '1rem', boxShadow: injectSuccess ? '0 0 20px rgba(0,255,136,0.6)' : '0 0 20px rgba(0,255,136,0.2)',
+              background: injectSuccess ? 'var(--neon-green)' : undefined, color: injectSuccess ? '#000' : undefined,
+              transition: 'all 0.3s'
+            }}>
+            {isInjecting ? (
+              <><Activity size={18} style={{ marginRight: 8, animation: 'spin 1s linear infinite' }} /> Sincronizando...</>
+            ) : injectSuccess ? (
+              <><Check size={18} style={{ marginRight: 8 }} /> ¡Rutina Inyectada!</>
+            ) : (
+              <><Save size={18} style={{ marginRight: 8 }} /> Inyectar Rutina</>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: 24 }}>
+      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         
-        {/* Lado Izquierdo: Editor de Plan */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          
-          {/* Tabs */}
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button 
-              onClick={() => setActiveTab('programming')}
-              style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', cursor: 'pointer', background: activeTab === 'programming' ? 'var(--neon-green)' : 'rgba(255,255,255,0.03)', color: activeTab === 'programming' ? '#000' : '#fff', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: '0.3s' }}
-            >
-              <TrendingUp size={20} /> 1. Cuántas series y esfuerzo
-            </button>
-            <button 
-              onClick={() => setActiveTab('selection')}
-              style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', cursor: 'pointer', background: activeTab === 'selection' ? '#00F0FF' : 'rgba(255,255,255,0.03)', color: activeTab === 'selection' ? '#000' : '#fff', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: '0.3s' }}
-            >
-              <Dumbbell size={20} /> 2. Selección de Ejercicios
-            </button>
-            <button 
-              onClick={() => setActiveTab('evidence')}
-              style={{ flex: 1, padding: 16, borderRadius: 16, border: 'none', cursor: 'pointer', background: activeTab === 'evidence' ? '#A78BFA' : 'rgba(255,255,255,0.03)', color: activeTab === 'evidence' ? '#000' : '#fff', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, transition: '0.3s' }}
-            >
-              <Activity size={20} /> 3. Nutrición y Evidencia
-            </button>
-          </div>
-
-          {activeTab === 'programming' ? (
-            /* PILLAR 2: PROGRAMMING */
-            <div className="glass-card" style={{ padding: 32, border: '1px solid rgba(0,255,136,0.1)' }}>
-              <h2 style={{ fontSize: 22, fontWeight: 900, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <Zap color="var(--neon-green)" /> Variables de Periodización
-              </h2>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
-                {/* Volumen */}
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 12 }}>Volumen Semanal (Series Efectivas)</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <input type="range" min="6" max="25" value={programming.volume} onChange={(e) => setProgramming({...programming, volume: Number(e.target.value)})} style={{ flex: 1, accentColor: 'var(--neon-green)' }} />
-                    <span style={{ fontSize: 24, fontWeight: 900, color: 'var(--neon-green)', width: 40 }}>{programming.volume}</span>
-                  </div>
-                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>Recomendado: 10-20 series para hipertrofia.</p>
-                </div>
-
-                {/* Intensidad */}
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 12 }}>Intensidad de Esfuerzo ({programming.intensityType})</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <button onClick={() => setProgramming({...programming, intensityType: 'RPE'})} style={{ flex: 1, padding: 8, borderRadius: 8, border: 'none', background: programming.intensityType === 'RPE' ? 'rgba(0,255,136,0.1)' : 'transparent', color: programming.intensityType === 'RPE' ? 'var(--neon-green)' : 'var(--text-muted)', fontWeight: 700, cursor: 'pointer' }}>RPE</button>
-                    <button onClick={() => setProgramming({...programming, intensityType: 'RIR'})} style={{ flex: 1, padding: 8, borderRadius: 8, border: 'none', background: programming.intensityType === 'RIR' ? 'rgba(0,255,136,0.1)' : 'transparent', color: programming.intensityType === 'RIR' ? 'var(--neon-green)' : 'var(--text-muted)', fontWeight: 700, cursor: 'pointer' }}>RIR</button>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <input type="range" min={programming.intensityType === 'RPE' ? 5 : 0} max={programming.intensityType === 'RPE' ? 10 : 4} step="0.5" value={programming.intensityValue} onChange={(e) => setProgramming({...programming, intensityValue: Number(e.target.value)})} style={{ flex: 1, accentColor: 'var(--neon-green)' }} />
-                    <span style={{ fontSize: 24, fontWeight: 900, color: 'var(--neon-green)', width: 40 }}>{programming.intensityValue}</span>
-                  </div>
-                </div>
-
-                {/* Frecuencia */}
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 12 }}>Frecuencia Semanal por Músculo</label>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    {[1, 2, 3].map(f => (
-                      <button key={f} onClick={() => setProgramming({...programming, frequency: f})} style={{ flex: 1, padding: 12, borderRadius: 12, border: `1px solid ${programming.frequency === f ? 'var(--neon-green)' : 'rgba(255,255,255,0.1)'}`, background: programming.frequency === f ? 'rgba(0,255,136,0.05)' : 'transparent', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Frecuencia {f}</button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Nuevos campos de configuración */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>OBJETIVO DEL CICLO</label>
-                    <select className="input-field" value={programming.objective} onChange={e => setProgramming({...programming, objective: e.target.value})} style={{width: '100%'}}>
-                      <option value="Hipertrofia Metabólica">Hipertrofia Metabólica</option>
-                      <option value="Fuerza Máxima">Fuerza Máxima</option>
-                      <option value="Recomposición">Recomposición Corporal</option>
-                      <option value="Peaking">Peaking / Competición</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>DURACIÓN MESOCICLO (Semanas)</label>
-                    <input type="number" className="input-field" value={programming.mesocycleWeeks} onChange={e => setProgramming({...programming, mesocycleWeeks: Number(e.target.value)})} style={{width: '100%'}} />
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>DIVISIÓN DE RUTINA</label>
-                  <input className="input-field" value={programming.division} onChange={e => setProgramming({...programming, division: e.target.value})} placeholder="Ej: Torso/Pierna" style={{width: '100%'}} />
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>SEMANA DE DELOAD</label>
-                  <input type="number" className="input-field" value={programming.deloadWeek} onChange={e => setProgramming({...programming, deloadWeek: Number(e.target.value)})} style={{width: '100%'}} />
-                </div>
-              </div>
-
-              <div style={{ marginTop: 32, padding: 20, background: 'rgba(0,255,136,0.03)', borderRadius: 16, border: '1px solid rgba(0,255,136,0.1)' }}>
-                <h3 style={{ fontSize: 14, fontWeight: 800, color: 'var(--neon-green)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}><Info size={16} /> Resumen Científico</h3>
-                <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  Estás programando un volumen de <strong style={{color:'#fff'}}>{programming.volume} series</strong> con una intensidad <strong style={{color:'#fff'}}>{programming.intensityType} {programming.intensityValue}</strong>. 
-                  Esto genera un estímulo óptimo para la hipertrofia miofibrilar sin comprometer la recuperación del sistema nervioso central (SNC).
-                </p>
-              </div>
-            </div>
-          ) : (
-            /* PILLAR 3: EXERCISE SELECTION */
-            <div className="glass-card" style={{ padding: 32, border: '1px solid rgba(0,240,255,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Layers color="#00F0FF" /> Selección Inteligente de Ejercicios
-                </h2>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{selectedExercises.length} seleccionados</div>
-              </div>
-
-              {/* Ejercicios Seleccionados Table */}
-              {selectedExercises.length === 0 ? (
-                <div style={{ padding: 60, textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 20, border: '2px dashed rgba(255,255,255,0.05)' }}>
-                  <Dumbbell size={40} color="var(--text-muted)" style={{ marginBottom: 16 }} />
-                  <p style={{ color: 'var(--text-muted)' }}>No has seleccionado ejercicios aún. Busca en el panel de la derecha.</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {selectedExercises.map((ex, idx) => (
-                    <div key={ex.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 100px 40px', gap: 12, alignItems: 'center', padding: '16px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)' }}>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: 14 }}>{idx + 1}. {ex.name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ex.muscleGroup} | {ex.equipment}</div>
-                      </div>
-                      <input className="input-field" value={ex.sets} onChange={(e) => updateEx(ex.id, 'sets', e.target.value)} style={{ padding: '6px 10px', textAlign: 'center' }} placeholder="Sets" />
-                      <input className="input-field" value={ex.reps} onChange={(e) => updateEx(ex.id, 'reps', e.target.value)} style={{ padding: '6px 10px', textAlign: 'center' }} placeholder="Reps" />
-                      <select className="input-field" value={ex.curve} onChange={(e) => updateEx(ex.id, 'curve', e.target.value)} style={{ padding: '6px 10px', fontSize: 11 }}>
-                        <option value="stretch">Estiramiento</option>
-                        <option value="mid">Medio</option>
-                        <option value="short">Acortado</option>
-                      </select>
-                      <button onClick={() => removeExercise(ex.id)} style={{ background: 'none', border: 'none', color: 'var(--danger-red)', cursor: 'pointer' }}><Trash2 size={18} /></button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ marginTop: 24, padding: 20, background: 'rgba(0,240,255,0.03)', borderRadius: 16, border: '1px solid rgba(0,240,255,0.1)' }}>
-                <h3 style={{ fontSize: 13, fontWeight: 800, color: '#00F0FF', marginBottom: 12 }}>Análisis de Patrones de Movimiento</h3>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  {PATTERNS.map(p => {
-                    const count = selectedExercises.filter(e => e.pattern === p.id).length;
-                    return (
-                      <div key={p.id} style={{ flex: 1, textAlign: 'center', padding: 10, borderRadius: 12, background: 'rgba(0,0,0,0.2)' }}>
-                        <div style={{ fontSize: 18 }}>{p.icon}</div>
-                        <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', marginTop: 4 }}>{p.label.toUpperCase()}</div>
-                        <div style={{ fontSize: 14, fontWeight: 900, color: count > 0 ? '#00F0FF' : 'rgba(255,255,255,0.1)' }}>{count}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'selection' && (
-            /* PILLAR 3: EXERCISE SELECTION */
-            <div className="glass-card" style={{ padding: 32, border: '1px solid rgba(0,240,255,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Layers color="#00F0FF" /> Selección Inteligente de Ejercicios
-                </h2>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{selectedExercises.length} seleccionados</div>
-              </div>
-
-              {selectedExercises.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, background: 'rgba(255,255,255,0.02)', borderRadius: 16 }}>
-                  <Dumbbell size={40} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-                  <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>Busca y selecciona ejercicios del catálogo de la derecha.</p>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {selectedExercises.map((ex, idx) => (
-                    <div key={ex.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 80px 100px 40px', gap: 12, padding: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 12, alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: 14 }}>{idx + 1}. {ex.name}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{ex.muscleGroup} | {ex.equipment}</div>
-                      </div>
-                      <input className="input-field" value={ex.sets} onChange={(e) => updateEx(ex.id, 'sets', e.target.value)} style={{ padding: '6px 10px', textAlign: 'center' }} placeholder="Sets" />
-                      <input className="input-field" value={ex.reps} onChange={(e) => updateEx(ex.id, 'reps', e.target.value)} style={{ padding: '6px 10px', textAlign: 'center' }} placeholder="Reps" />
-                      <select className="input-field" value={ex.curve} onChange={(e) => updateEx(ex.id, 'curve', e.target.value)} style={{ padding: '6px 10px', fontSize: 11 }}>
-                        <option value="stretch">Estiramiento</option>
-                        <option value="mid">Medio</option>
-                        <option value="short">Acortado</option>
-                      </select>
-                      <button onClick={() => removeExercise(ex.id)} style={{ background: 'none', border: 'none', color: 'var(--danger-red)', cursor: 'pointer' }}><Trash2 size={18} /></button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ marginTop: 24, padding: 20, background: 'rgba(0,240,255,0.03)', borderRadius: 16, border: '1px solid rgba(0,240,255,0.1)' }}>
-                <h3 style={{ fontSize: 13, fontWeight: 800, color: '#00F0FF', marginBottom: 12 }}>Análisis de Patrones de Movimiento</h3>
-                <div style={{ display: 'flex', gap: 10 }}>
-                  {PATTERNS.map(p => {
-                    const count = selectedExercises.filter(e => e.pattern === p.id).length;
-                    return (
-                      <div key={p.id} style={{ flex: 1, textAlign: 'center', padding: 10, borderRadius: 12, background: 'rgba(0,0,0,0.2)' }}>
-                        <div style={{ fontSize: 18 }}>{p.icon}</div>
-                        <div style={{ fontSize: 9, fontWeight: 800, color: 'var(--text-muted)', marginTop: 4 }}>{p.label.toUpperCase()}</div>
-                        <div style={{ fontSize: 14, fontWeight: 900, color: count > 0 ? '#00F0FF' : 'rgba(255,255,255,0.1)' }}>{count}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'evidence' && (
-            <div className="glass-card" style={{ padding: 32, border: '1px solid rgba(167,139,250,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 900, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Activity color="#A78BFA" /> Documentación Científica de Suplementos
-                </h2>
-              </div>
-              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>
-                Selecciona un compuesto para generar la documentación clínica (Grado de Evidencia) e incluirla en la ficha del atleta como justificación de la prescripción.
-              </p>
-              
-              <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
-                {[
-                  { id: 'creatine', label: 'Creatina' },
-                  { id: 'caffeine', label: 'Cafeína' },
-                  { id: 'amino-acids', label: 'Aminoácidos (EAA/BCAA)' },
-                  { id: 'ashwagandha', label: 'Ashwagandha' }
-                ].map(sup => (
-                  <button 
-                    key={sup.id}
-                    onClick={() => setSelectedSupplement(sup.id)}
-                    style={{
-                      padding: '10px 20px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 700,
-                      background: selectedSupplement === sup.id ? '#A78BFA' : 'rgba(255,255,255,0.05)',
-                      color: selectedSupplement === sup.id ? '#000' : '#fff'
-                    }}
-                  >
-                    {sup.label}
-                  </button>
-                ))}
-              </div>
-
-              <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', padding: 20, minHeight: 400 }}>
-                {/* El Widget de CITED Health se inyectará aquí automáticamente usando el script global */}
-                <div 
-                  key={selectedSupplement} 
-                  data-citedhealth="evidence" 
-                  data-slug={selectedSupplement} 
-                  data-theme="light"
-                  style={{ width: '100%', height: '100%' }}
-                ></div>
-              </div>
-              
-              <div style={{ marginTop: 24, textAlign: 'right' }}>
-                <button style={{ padding: '12px 24px', background: 'var(--space-medium)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, cursor: 'pointer', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <Save size={16} /> Adjuntar Evidencia al Plan
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Lado Derecho: Buscador de Ejercicios */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div className="glass-card" style={{ padding: 20, height: 'calc(100vh - 150px)', overflowY: 'auto' }}>
-            <div style={{ position: 'sticky', top: 0, background: 'var(--space-dark)', zIndex: 10, paddingBottom: 16 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Search size={18} /> Catálogo de Atletas</h3>
-              <div style={{ position: 'relative' }}>
-                <input 
-                  type="text" 
-                  placeholder="Buscar ejercicio..." 
-                  className="input-field" 
-                  style={{ width: '100%', paddingLeft: 40 }}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: 14 }} />
-              </div>
-
-              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 10, marginTop: 16, scrollbarWidth: 'none' }}>
-                {['Todos', 'Pecho', 'Espalda', 'Pierna', 'Hombro', 'Brazos', 'Abdomen', 'Cuerpo Completo'].map(m => (
-                  <button 
-                    key={m} 
-                    onClick={() => setFilterMuscle(m)}
-                    style={{ 
-                      padding: '6px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
-                      background: filterMuscle === m ? 'var(--nexus-primary)' : 'rgba(255,255,255,0.05)',
-                      color: filterMuscle === m ? '#000' : 'var(--text-primary)', border: 'none', cursor: 'pointer', transition: 'all 0.2s'
-                    }}
-                  >{m}</button>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12 }}>
-              {filteredExercises.map((ex: any) => {
-                const isSelected = selectedExercises.find(e => e.id === ex.id);
+        {/* ══════════ PIZARRA TÁCTICA (IZQUIERDA) ══════════ */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--space-medium)' }}>
+          {/* MEDIDOR DE FATIGA */}
+          <div style={{ padding: '20px 32px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ fontSize: '0.8rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: 12, letterSpacing: 1 }}>SISTEMA DE MONITOREO DE CARGA (SERIES TOTALES)</h3>
+            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
+              {Object.keys(fatigueData.muscleVolume).length === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No hay datos de carga. Añade ejercicios.</span>}
+              {Object.entries(fatigueData.muscleVolume).map(([muscle, vol]) => {
+                const isDanger = vol > 12;
                 return (
-                  <div 
-                    key={ex.id} 
-                    onClick={() => isSelected ? removeExercise(ex.id) : addExercise(ex)}
-                    style={{ 
-                      position: 'relative', borderRadius: 16, overflow: 'hidden', cursor: 'pointer',
-                      border: isSelected ? '2px solid #00F0FF' : '2px solid transparent',
-                      background: 'rgba(255,255,255,0.03)', height: 150, transition: 'all 0.2s',
-                      boxShadow: isSelected ? '0 0 15px rgba(0,240,255,0.2)' : 'none'
-                    }}
-                  >
-                    {ex.imageUrl ? (
-                      <img src={ex.imageUrl} alt={ex.name} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: isSelected ? 0.8 : 0.4 }} />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Dumbbell size={30} opacity={0.2} />
-                      </div>
-                    )}
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 60%, transparent 100%)', padding: '30px 10px 10px' }}>
-                      <div style={{ fontSize: 11, fontWeight: 800, color: '#FFF', lineHeight: 1.2 }}>{ex.name}</div>
-                      <div style={{ fontSize: 9, color: isSelected ? '#00F0FF' : 'var(--text-muted)', fontWeight: 700, marginTop: 4 }}>{ex.equipment.toUpperCase()}</div>
-                    </div>
-                    {isSelected && (
-                      <div style={{ position: 'absolute', top: 8, right: 8, background: '#00F0FF', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
-                        <Check size={12} strokeWidth={4} />
-                      </div>
-                    )}
+                  <div key={muscle} style={{ 
+                    padding: '8px 16px', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 10,
+                    background: isDanger ? 'rgba(255,61,87,0.15)' : 'rgba(255,255,255,0.05)',
+                    border: isDanger ? '1px solid var(--danger-red)' : '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: isDanger ? '0 0 15px rgba(255,61,87,0.3)' : 'none'
+                  }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: isDanger ? 'var(--danger-red)' : '#fff' }}>{muscle.toUpperCase()}</span>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 900, color: isDanger ? 'var(--danger-red)' : 'var(--neon-green)' }}>{vol}</span>
                   </div>
                 );
               })}
             </div>
+            {fatigueData.warnings.length > 0 && (
+              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger-red)' }}>
+                <AlertTriangle size={16} />
+                <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>¡PELIGRO DE SOBREENTRENAMIENTO! Estás programando más de 12 series para: {fatigueData.warnings.join(', ')}.</span>
+              </div>
+            )}
           </div>
 
-          <button className="btn btn-primary" style={{ width: '100%', padding: 16, borderRadius: 16, gap: 10, boxShadow: '0 0 20px rgba(0,255,136,0.3)' }}>
-            <Save size={20} /> Guardar Plan Élite
-          </button>
+          {/* LIENZO DE BLOQUES */}
+          <div style={{ flex: 1, overflowY: 'auto', padding: 32 }}>
+            {!selectedMember ? (
+              <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', opacity: 0.5 }}>
+                <Target size={60} style={{ marginBottom: 20 }} />
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Lienzo Desactivado</h2>
+                <p>Selecciona un atleta en el panel superior para comenzar a armar su bloque táctico.</p>
+              </div>
+            ) : (
+              <>
+                <div 
+                  onDragOver={(e) => e.preventDefault()} 
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const exData = e.dataTransfer.getData('application/json');
+                    if (exData) addExercise(JSON.parse(exData), 'warmup');
+                  }}
+                >
+                  {renderBlock('warmup', 'Fase 1: Activación & Calentamiento', '#FFD600')}
+                </div>
+                <div 
+                  onDragOver={(e) => e.preventDefault()} 
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const exData = e.dataTransfer.getData('application/json');
+                    if (exData) addExercise(JSON.parse(exData), 'main');
+                  }}
+                >
+                  {renderBlock('main', 'Fase 2: Bloque de Fuerza Principal', '#00FF88')}
+                </div>
+                <div 
+                  onDragOver={(e) => e.preventDefault()} 
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const exData = e.dataTransfer.getData('application/json');
+                    if (exData) addExercise(JSON.parse(exData), 'accessory');
+                  }}
+                >
+                  {renderBlock('accessory', 'Fase 3: Hipertrofia Accesoria', '#A78BFA')}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ══════════ CATÁLOGO INTERACTIVO (DERECHA) ══════════ */}
+        <div style={{ width: 380, flexShrink: 0, background: 'rgba(20, 20, 25, 0.95)', borderLeft: '1px solid rgba(0,255,136,0.1)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: 24, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', marginBottom: 16 }}>Arsenal de Ejercicios</h3>
+            <div style={{ position: 'relative', marginBottom: 16 }}>
+              <input 
+                type="text" 
+                placeholder="Buscar ejercicio o músculo..." 
+                className="input-field" 
+                style={{ width: '100%', paddingLeft: 40, background: 'rgba(255,255,255,0.05)' }}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: 14, top: 14 }} />
+            </div>
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+              {['Todos', 'Pecho', 'Espalda', 'Pierna', 'Hombro', 'Brazos', 'Abdomen'].map(m => (
+                <button 
+                  key={m} 
+                  onClick={() => setFilterMuscle(m)}
+                  style={{ 
+                    padding: '6px 16px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 800, whiteSpace: 'nowrap',
+                    background: filterMuscle === m ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)',
+                    color: filterMuscle === m ? '#000' : 'var(--text-primary)', border: 'none', cursor: 'pointer', transition: 'all 0.2s'
+                  }}
+                >{m}</button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {filteredCatalog.length === 0 && (
+              <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: 20 }}>
+                No hay ejercicios. (Si está vacío, revisa la configuración).
+              </div>
+            )}
+            {filteredCatalog.map((ex: any) => (
+              <div 
+                key={ex.id} 
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('application/json', JSON.stringify(ex));
+                  e.dataTransfer.effectAllowed = 'copy';
+                }}
+                style={{ 
+                  background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)', 
+                  overflow: 'hidden', transition: 'all 0.2s', cursor: 'grab'
+                }}
+              >
+                <div style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <GripVertical size={20} color="var(--text-muted)" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff' }}>{ex.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                      <span style={{ color: '#A78BFA' }}>{ex.muscleGroup}</span> • {ex.equipment}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <button onClick={() => addExercise(ex, 'warmup')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'rgba(255,214,0,0.1)', color: '#FFD600', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }}>+ ACT</button>
+                  <button onClick={() => addExercise(ex, 'main')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'rgba(0,255,136,0.1)', borderLeft: '1px solid rgba(0,0,0,0.2)', borderRight: '1px solid rgba(0,0,0,0.2)', color: 'var(--neon-green)', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }}>+ FUERZA</button>
+                  <button onClick={() => addExercise(ex, 'accessory')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'rgba(167,139,250,0.1)', color: '#A78BFA', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }}>+ ACCES.</button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
       </div>

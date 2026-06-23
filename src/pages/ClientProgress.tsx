@@ -53,7 +53,7 @@ export default function ClientProgress() {
             Miembro desde {clientData.memberSince} • Meta: {clientData.currentGoal}
           </p>
         </div>
-        <button style={{
+        <button onClick={() => alert('🚀 Función en desarrollo o requiere backend...')}  style={{
           padding: '10px 16px', borderRadius: 8, background: 'var(--neon-green)',
           color: '#000', fontWeight: 700, cursor: 'pointer', display: 'flex',
           alignItems: 'center', gap: 8, border: 'none'

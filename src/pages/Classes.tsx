@@ -232,8 +232,68 @@ function ClassDetailModal({ cls, onClose }: { cls: ClassBlock; onClose: () => vo
   );
 }
 
+function CreateClassModal({ onClose, onAdd }: { onClose: () => void, onAdd: (c: any) => void }) {
+  const [name, setName] = useState('');
+  const [type, setType] = useState('hyrox');
+  const [capacity, setCapacity] = useState(20);
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    onAdd({
+      id: Math.random().toString(),
+      name,
+      type,
+      enrolled: 0,
+      capacity,
+      subtitulo: 'Nueva clase programada',
+      time: '18:00',
+      duration: '60 min',
+      instructor: 'Por Asignar',
+      intensity: 'Alta',
+      color: type === 'hyrox' ? '#FF3D57' : '#00FF88',
+      image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400',
+      description: 'Clase recién creada.'
+    });
+    onClose();
+  };
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div className="glass-card animate-slide-up" style={{ width: 400, padding: 30, borderRadius: 24, border: '1px solid var(--neon-green)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h3 style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>Nueva Clase</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}><X size={20}/></button>
+        </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 800 }}>NOMBRE DE LA CLASE</label>
+            <input value={name} onChange={e => setName(e.target.value)} required style={{ width: '100%', padding: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 12, marginTop: 4 }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 800 }}>TIPO</label>
+            <select value={type} onChange={e => setType(e.target.value)} style={{ width: '100%', padding: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 12, marginTop: 4 }}>
+              <option value="hyrox">Hyrox</option>
+              <option value="strength">Fuerza</option>
+              <option value="cardio">Cardio</option>
+              <option value="yoga">Yoga</option>
+              <option value="combat">Combate</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 800 }}>CAPACIDAD (ALUMNOS)</label>
+            <input type="number" value={capacity} onChange={e => setCapacity(Number(e.target.value))} required style={{ width: '100%', padding: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', borderRadius: 12, marginTop: 4 }} />
+          </div>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: 16, marginTop: 10, justifyContent: 'center' }}>Crear Clase</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function Classes() {
   const [detailClass, setDetailClass] = useState<ClassBlock | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [localClasses, setLocalClasses] = useState(classesData);
 
   return (
     <div className="animate-fade-in">
@@ -242,16 +302,16 @@ export default function Classes() {
           <h2 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700 }}>Clases de Hoy</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', marginTop: 4 }}>Entrenamiento Inteligente y Personalizado por Nivel</p>
         </div>
-        <button className="btn btn-primary" style={{ gap: 8 }}><Plus size={16} /> Nueva Clase</button>
+        <button onClick={() => setShowCreate(true)} className="btn btn-primary" style={{ gap: 8 }}><Plus size={16} /> Nueva Clase</button>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 24 }}>
-        {classesData.map((cls) => (
+        {localClasses.map((cls) => (
           <div key={cls.id} onClick={() => setDetailClass(cls)} className="glass-card" style={{ padding: 0, overflow: 'hidden', cursor: 'pointer', transition: 'all 0.3s', border: `1px solid rgba(255,255,255,0.05)`, background: 'rgba(15,20,15,0.6)' }} onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px)'; e.currentTarget.style.borderColor = cls.color + '70'; }} onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; }}>
             <div style={{ height: 160, position: 'relative' }}>
               <img src={cls.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               <div style={{ position: 'absolute', bottom: 16, left: 16 }}>
-                 <div style={{ fontSize: 10, fontWeight: 900, color: cls.color, textTransform: 'uppercase', letterSpacing: 2 }}>{typeLabels[cls.type]}</div>
+                 <div style={{ fontSize: 10, fontWeight: 900, color: cls.color, textTransform: 'uppercase', letterSpacing: 2 }}>{typeLabels[cls.type as keyof typeof typeLabels] || 'OTRO'}</div>
                  <h3 style={{ fontSize: 22, fontWeight: 900 }}>{cls.name}</h3>
               </div>
             </div>
@@ -270,6 +330,7 @@ export default function Classes() {
       </div>
 
       {detailClass && <ClassDetailModal cls={detailClass} onClose={() => setDetailClass(null)} />}
+      {showCreate && <CreateClassModal onClose={() => setShowCreate(false)} onAdd={(c) => setLocalClasses([...localClasses, c])} />}
     </div>
   );
 }
