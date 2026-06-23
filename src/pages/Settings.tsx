@@ -22,14 +22,24 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('general');
 
   const { plansConfig, updatePlansConfig } = useGymData();
-  const [localPlans, setLocalPlans] = useState(plansConfig || { dia: 5000, semana: 25000, mes_basico: 45000, mes_pro: 75000, mes_hyrox: 120000 });
-
-  useEffect(() => {
-    if (plansConfig) setLocalPlans(plansConfig);
-  }, [plansConfig]);
+  const [localPlans, setLocalPlans] = useState(() => {
+    const p = plansConfig || { dia: 5000, semana: 25000, mes_basico: 45000, mes_pro: 75000, mes_hyrox: 120000 };
+    return {
+      dia: String(p.dia || ''),
+      semana: String(p.semana || ''),
+      mes_pro: String(p.mes_pro || ''),
+      mes_hyrox: String(p.mes_hyrox || '')
+    };
+  });
 
   const handleSave = () => {
-    updatePlansConfig(localPlans);
+    updatePlansConfig({
+      ...plansConfig,
+      dia: Number(localPlans.dia),
+      semana: Number(localPlans.semana),
+      mes_pro: Number(localPlans.mes_pro),
+      mes_hyrox: Number(localPlans.mes_hyrox)
+    });
     alert("Configuración guardada exitosamente");
   };
 
@@ -73,19 +83,19 @@ export default function Settings() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <div className="input-group">
                   <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>VALOR DÍA</label>
-                  <input className="input-field" type="number" value={localPlans.dia === 0 ? '' : localPlans.dia} onChange={(e) => setLocalPlans({...localPlans, dia: e.target.value === '' ? '' : Number(e.target.value)})} />
+                  <input className="input-field" type="number" value={localPlans.dia} onChange={(e) => setLocalPlans({...localPlans, dia: e.target.value})} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>VALOR SEMANA</label>
-                  <input className="input-field" type="number" value={localPlans.semana === 0 ? '' : localPlans.semana} onChange={(e) => setLocalPlans({...localPlans, semana: e.target.value === '' ? '' : Number(e.target.value)})} />
+                  <input className="input-field" type="number" value={localPlans.semana} onChange={(e) => setLocalPlans({...localPlans, semana: e.target.value})} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MENSUALIDAD PRO</label>
-                  <input className="input-field" type="number" value={localPlans.mes_pro === 0 ? '' : localPlans.mes_pro} onChange={(e) => setLocalPlans({...localPlans, mes_pro: e.target.value === '' ? '' : Number(e.target.value)})} />
+                  <input className="input-field" type="number" value={localPlans.mes_pro} onChange={(e) => setLocalPlans({...localPlans, mes_pro: e.target.value})} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MENSUALIDAD HYROX</label>
-                  <input className="input-field" type="number" value={localPlans.mes_hyrox === 0 ? '' : localPlans.mes_hyrox} onChange={(e) => setLocalPlans({...localPlans, mes_hyrox: e.target.value === '' ? '' : Number(e.target.value)})} />
+                  <input className="input-field" type="number" value={localPlans.mes_hyrox} onChange={(e) => setLocalPlans({...localPlans, mes_hyrox: e.target.value})} />
                 </div>
               </div>
             </div>
