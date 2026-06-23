@@ -43,26 +43,35 @@ export default function Accounting() {
     const activeMembers = members ? members.filter(m => m.status === 'active' || m.status === 'expiring') : [];
     const totalActive = activeMembers.length;
     
+    // 3. Datos Simulados (Precios base/fallback)
+    const priceDia = plansConfig?.dia || 5000;
+    const priceQuincena = plansConfig?.quincena || 30000;
+    let priceMes = plansConfig?.mes_basico;
+    if (!priceMes) priceMes = plansConfig?.mes_pro || 45000;
+
     // Separar visitas (diarios) de mensualidades/quincenas y calcular ingresos reales esperados
     let dailyActive = 0;
     let biweeklyActive = 0;
     let monthlyActive = 0;
-    let actualPlansIncome = 0;
-    let validPlanCount = 0;
+    
+    let biweeklyIncomeExpected = 0;
+    let monthlyIncomeExpected = 0;
     
     activeMembers.forEach(m => {
       const planObj = plans ? plans.find((p: any) => p.id === m.plan) : null;
-      const pLow = (planObj?.name || m.plan || '').toLowerCase();
-      if (pLow.includes('día') || pLow === 'dia' || pLow.includes('diario')) {
+      const pLow = (planObj?.label || planObj?.name || m.plan || '').toLowerCase();
+      const pDuration = (planObj?.duration || '').toLowerCase();
+
+      if (pLow.includes('día') || pLow === 'dia' || pLow.includes('diario') || pDuration === 'dia') {
         dailyActive += 1;
-      } else if (pLow.includes('quin') || pLow.includes('15')) {
+      } else if (pLow.includes('quin') || pLow.includes('15') || pDuration === 'quincena') {
         biweeklyActive += 1;
+        const pPrice = planObj?.price ? Number(planObj.price) : priceQuincena;
+        biweeklyIncomeExpected += (pPrice * 2); // 2 quincenas en el mes
       } else {
         monthlyActive += 1;
-        if (planObj && planObj.price) {
-          actualPlansIncome += Number(planObj.price);
-          validPlanCount += 1;
-        }
+        const pPrice = planObj?.price ? Number(planObj.price) : priceMes;
+        monthlyIncomeExpected += pPrice;
       }
     });
 
@@ -80,22 +89,15 @@ export default function Accounting() {
     
     const realNet = realIncome - realExpenses - realPayroll - realObligations;
 
-    // 3. Datos Simulados
-    const priceDia = plansConfig?.dia || 5000;
-    const priceQuincena = plansConfig?.quincena || 30000;
-    
-    let priceMes = plansConfig?.mes_basico;
-    if (!priceMes) priceMes = plansConfig?.mes_pro || 45000;
-
     const simulatedIncomeVisits = dailyActive * priceDia * workingDays;
-    const simulatedIncomeBiweekly = biweeklyActive * priceQuincena * 2; // 2 quincenas en un mes
-    const simulatedIncomePlans = (monthlyActive + convertedInactives) * priceMes;
+    const simulatedIncomeBiweekly = biweeklyIncomeExpected;
+    const simulatedIncomePlans = monthlyIncomeExpected + (convertedInactives * priceMes);
     const totalSimulatedIncome = simulatedIncomeVisits + simulatedIncomeBiweekly + simulatedIncomePlans;
 
     // --- División por Quincenas (Q1 y Q2) ---
     // Ingresos
-    const simulatedIncomeQ1 = (simulatedIncomeVisits / 2) + (simulatedIncomePlans / 2) + (biweeklyActive * priceQuincena);
-    const simulatedIncomeQ2 = (simulatedIncomeVisits / 2) + (simulatedIncomePlans / 2) + (biweeklyActive * priceQuincena);
+    const simulatedIncomeQ1 = (simulatedIncomeVisits / 2) + (simulatedIncomePlans / 2) + (simulatedIncomeBiweekly / 2);
+    const simulatedIncomeQ2 = (simulatedIncomeVisits / 2) + (simulatedIncomePlans / 2) + (simulatedIncomeBiweekly / 2);
 
     // Gastos
     const payrollQ1 = (simulatedPayroll ?? realPayroll) / 2;
