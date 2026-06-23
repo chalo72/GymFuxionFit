@@ -25,7 +25,9 @@ export default function Accounting() {
     simulatedIncomePlans,
     totalSimulatedIncome,
     totalSimulatedExpenses,
-    simulatedNet
+    simulatedNet,
+    priceDia,
+    priceMes
   } = useMemo(() => {
     // 1. Conteo de Clientes
     const activeMembers = members ? members.filter(m => m.status === 'active' || m.status === 'expiring') : [];
