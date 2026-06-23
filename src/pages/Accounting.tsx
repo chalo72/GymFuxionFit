@@ -3,7 +3,7 @@ import { useGymData } from '../hooks/useGymData';
 import { TrendingUp, TrendingDown, Activity, Target, Shield, Eye, Settings, Calculator } from 'lucide-react';
 
 export default function Accounting() {
-  const { transactions, members, obligations, staff, plans } = useGymData();
+  const { transactions, members, obligations, staff, plans, plansConfig } = useGymData();
 
   // Estados para simulación
   const [workingDays, setWorkingDays] = useState(20);
@@ -61,8 +61,10 @@ export default function Accounting() {
     const realNet = realIncome - realExpenses - realPayroll - realObligations;
 
     // 3. Datos Simulados
-    const simulatedIncomeVisits = dailyActive * 3000 * workingDays;
-    const simulatedIncomePlans = adjMonthlyActive * 45000; // Asumimos precio promedio 45k
+    const priceDia = plansConfig?.dia || 5000;
+    const priceMes = plansConfig?.mes_basico || plansConfig?.mes_pro || 45000;
+    const simulatedIncomeVisits = dailyActive * priceDia * workingDays;
+    const simulatedIncomePlans = adjMonthlyActive * priceMes;
     const totalSimulatedIncome = simulatedIncomeVisits + simulatedIncomePlans;
 
     const totalSimulatedExpenses = (simulatedPayroll ?? realPayroll) + (simulatedOtherExpenses ?? realObligations) + realExpenses;
@@ -82,9 +84,11 @@ export default function Accounting() {
       simulatedIncomePlans,
       totalSimulatedIncome,
       totalSimulatedExpenses,
-      simulatedNet
+      simulatedNet,
+      priceDia,
+      priceMes
     };
-  }, [members, transactions, staff, obligations, plans, workingDays, conversionRate, simulatedPayroll, simulatedOtherExpenses]);
+  }, [members, transactions, staff, obligations, plans, plansConfig, workingDays, conversionRate, simulatedPayroll, simulatedOtherExpenses]);
 
   return (
     <div style={{ color: 'var(--text-main)' }}>
@@ -170,7 +174,7 @@ export default function Accounting() {
             <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '10px', borderRadius: '8px' }}>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Simulación por DÍA (Visitas)</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span>{dailyActive} clientes × $3.000 × {workingDays}d</span>
+                <span>{dailyActive} clientes × ${priceDia.toLocaleString('es-CO')} × {workingDays}d</span>
                 <span style={{ fontWeight: 600, color: '#00F0FF' }}>${simulatedIncomeVisits.toLocaleString('es-CO')}</span>
               </div>
             </div>
@@ -179,7 +183,7 @@ export default function Accounting() {
             <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '10px', borderRadius: '8px' }}>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Simulación por MES (Planes)</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span>{monthlyActive} clientes × $45.000</span>
+                <span>{monthlyActive} clientes × ${priceMes.toLocaleString('es-CO')}</span>
                 <span style={{ fontWeight: 600, color: '#00F0FF' }}>${simulatedIncomePlans.toLocaleString('es-CO')}</span>
               </div>
             </div>
