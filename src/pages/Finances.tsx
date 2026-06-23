@@ -84,7 +84,8 @@ export default function Finances() {
     staffLoans, addStaffAdvance, addStaffLoan, deleteStaffLoan,
     waterConfig, updateWaterConfig, withdrawFromGoal,
     plans, plansConfig,
-    updateMemberStatus, clearMemberDebt
+    updateMemberStatus, clearMemberDebt,
+    updateTransaction, deleteTransaction
   } = useGymData();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expense' | 'payroll' | 'goals' | 'agua'>('dashboard');
   
@@ -94,6 +95,8 @@ export default function Finances() {
   const [editingOb, setEditingOb] = useState<any | null>(null);
   const [showStaffModal, setShowStaffModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState<any | null>(null);
+  const [editingTx, setEditingTx] = useState<any | null>(null);
+  const [txForm, setTxForm] = useState({ description: '', amount: 0 });
   
   const [goalForm, setGoalForm] = useState({ name: '', target: 0, category: 'savings' as any });
   const [obForm, setObForm] = useState({ name:'', amount:0, dueDate:'', category:'utilities' as any });
@@ -122,6 +125,18 @@ export default function Finances() {
       });
       localStorage.setItem('fuxion_obligations_history', JSON.stringify(history));
       deleteObligation(ob.id);
+    }
+  };
+
+  const handleUpdateTx = async () => {
+    if (!editingTx) return;
+    await updateTransaction(editingTx.id, { description: txForm.description, amount: Number(txForm.amount) });
+    setEditingTx(null);
+  };
+
+  const handleDeleteTransaction = async (id: string | number) => {
+    if (window.confirm('⚠️ ATENCIÓN: ¿Seguro que deseas eliminar este registro del historial? Esto afectará los cálculos de caja y reportes de forma permanente.')) {
+      await deleteTransaction(id);
     }
   };
   const [staffForm, setStaffForm] = useState({ name:'', role:'', salary:0, phone:'', email:'', tempPassword:'', status:'active' as any, payPeriod: 'complete' as 'complete' | 'q1' | 'q2' });
@@ -589,9 +604,13 @@ export default function Finances() {
                       <div key={t.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'10px 12px', background:'rgba(0,255,136,0.03)', borderRadius:12, marginBottom:8 }}>
                          <div>
                            <div style={{ fontSize:13, fontWeight:800 }}>{t.client}</div>
-                           <div style={{ fontSize:11, color:'var(--text-muted)' }}>{t.date} · {t.method}</div>
+                           <div style={{ fontSize:11, color:'var(--text-muted)' }}>{t.description || `${t.date} · ${t.method}`}</div>
                          </div>
-                         <div style={{ color:'var(--neon-green)', fontWeight:950, fontSize:14 }}>+${t.amount?.toLocaleString()}</div>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                           <div style={{ color:'var(--neon-green)', fontWeight:950, fontSize:14 }}>+${t.amount?.toLocaleString()}</div>
+                           <button onClick={() => { setEditingTx(t); setTxForm({ description: t.description || t.client || '', amount: t.amount }); }} style={{ color:'var(--text-muted)', background:'none', border:'none', cursor:'pointer' }} title="Editar"><PenTool size={13}/></button>
+                           <button onClick={() => handleDeleteTransaction(t.id)} style={{ color:'#ff4d4d', opacity:0.6, background:'none', border:'none', cursor:'pointer' }} title="Eliminar"><X size={13}/></button>
+                         </div>
                       </div>
                   ))}
                </div>
@@ -674,7 +693,11 @@ export default function Finances() {
                           <div style={{ fontSize:11, fontWeight:800 }}>{t.description}</div>
                           <div style={{ fontSize:9, color:'var(--text-muted)' }}>{t.date}</div>
                        </div>
-                       <div style={{ color:'#ff4d4d', fontWeight:950 }}>-${t.amount.toLocaleString()}</div>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                          <div style={{ color:'#ff4d4d', fontWeight:950 }}>-${t.amount.toLocaleString()}</div>
+                          <button onClick={() => { setEditingTx(t); setTxForm({ description: t.description || '', amount: t.amount }); }} style={{ color:'var(--text-muted)', background:'none', border:'none', cursor:'pointer' }} title="Editar"><PenTool size={13}/></button>
+                          <button onClick={() => handleDeleteTransaction(t.id)} style={{ color:'#ff4d4d', opacity:0.6, background:'none', border:'none', cursor:'pointer' }} title="Eliminar"><X size={13}/></button>
+                       </div>
                     </div>
                 ))}
               </div>
@@ -1188,6 +1211,29 @@ export default function Finances() {
                         setShowStaffModal(true);
                         setShowStaffModal(false);
                     }} style={{ flex:1, padding:16, borderRadius:12, background:'var(--neon-green)', border:'none', color:'#000', fontWeight:950, fontSize:14, cursor:'pointer' }}>GUARDAR STAFF</button>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* ══ MODAL EDITAR TRANSACCION ══ */}
+      {editingTx && (
+        <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center', padding:16 }}>
+           <div className="glass-card" style={{ width:'100%', maxWidth:400, padding:32, border:'1px solid var(--neon-green)30' }}>
+              <h3 style={{ fontSize:22, fontWeight:950, marginBottom:24 }}>EDITAR EGRESO</h3>
+              <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+                 <div>
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Descripción / Concepto</label>
+                    <input className="input-field" value={txForm.description} onChange={e => setTxForm({...txForm, description: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:15 }} />
+                 </div>
+                 <div>
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Monto ($)</label>
+                    <input type="number" className="input-field" value={txForm.amount} onChange={e => setTxForm({...txForm, amount: Number(e.target.value)})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,77,77,0.3)', color:'#ff4d4d', fontWeight:950, fontSize:16 }} />
+                 </div>
+                 <div style={{ display:'flex', gap:10, marginTop:10 }}>
+                    <button onClick={() => setEditingTx(null)} style={{ flex:1, padding:16, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer' }}>CANCELAR</button>
+                    <button onClick={handleUpdateTx} style={{ flex:1, padding:16, borderRadius:12, background:'var(--neon-green)', border:'none', color:'#000', fontWeight:950, fontSize:14, cursor:'pointer' }}>GUARDAR CAMBIOS</button>
                  </div>
               </div>
            </div>
