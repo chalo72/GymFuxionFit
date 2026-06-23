@@ -70,14 +70,15 @@ export default function Accounting() {
 
     // 3. Datos Simulados
     const priceDia = plansConfig?.dia || 5000;
-    // Si tenemos planes, sacamos el promedio real exacto. Si no, usamos el fallback.
-    const priceMes = validPlanCount > 0 
-      ? Math.round(actualPlansIncome / validPlanCount) 
-      : (plansConfig?.mes_basico || plansConfig?.mes_pro || 45000);
+    
+    // El usuario quiere ver la multiplicación directa. Usaremos el plan mensual más básico o principal.
+    // Si mes_basico es igual a 45000 y mes_pro fue modificado, a lo mejor querían usar mes_pro.
+    // Pero como ya habilitamos mes_basico en Settings, leeremos mes_basico por defecto, y si no, mes_pro.
+    let priceMes = plansConfig?.mes_basico;
+    if (!priceMes) priceMes = plansConfig?.mes_pro || 45000;
 
     const simulatedIncomeVisits = dailyActive * priceDia * workingDays;
-    // El ingreso simulado de planes es LA SUMA EXACTA de los planes activos + los inactivos convertidos multiplicados por el promedio
-    const simulatedIncomePlans = actualPlansIncome + (convertedInactives * priceMes);
+    const simulatedIncomePlans = (monthlyActive + convertedInactives) * priceMes;
     const totalSimulatedIncome = simulatedIncomeVisits + simulatedIncomePlans;
 
     const totalSimulatedExpenses = (simulatedPayroll ?? realPayroll) + (simulatedOtherExpenses ?? realObligations) + realExpenses;
@@ -195,9 +196,9 @@ export default function Accounting() {
 
             {/* Simulación Mes */}
             <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '10px', borderRadius: '8px' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Simulación por PLANES (Mes/Quincena/Semana)</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Simulación por MES (Planes)</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span>{monthlyActive} clientes {convertedInactives > 0 ? `+ ${convertedInactives} proy. ` : ''}(Suma exacta de sus planes)</span>
+                <span>{monthlyActive} clientes {convertedInactives > 0 ? `+ ${convertedInactives} proy. ` : ''}× ${priceMes.toLocaleString('es-CO')}</span>
                 <span style={{ fontWeight: 600, color: '#00F0FF' }}>${simulatedIncomePlans.toLocaleString('es-CO')}</span>
               </div>
             </div>
