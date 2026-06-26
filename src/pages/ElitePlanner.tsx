@@ -354,7 +354,7 @@ export default function ElitePlanner() {
                 }}
                 style={{ 
                   background: 'rgba(255,255,255,0.02)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.05)', 
-                  overflow: 'hidden', transition: 'all 0.2s', cursor: 'grab'
+                  overflow: 'hidden', transition: 'all 0.2s', cursor: 'grab', flexShrink: 0
                 }}
               >
                 <div style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
