@@ -357,14 +357,33 @@ export default function ElitePlanner() {
                   overflow: 'hidden', transition: 'all 0.2s', cursor: 'grab'
                 }}
               >
-                <div style={{ padding: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <GripVertical size={20} color="var(--text-muted)" />
+                <div style={{ padding: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ 
+                    width: 64, height: 64, borderRadius: 12, background: 'rgba(255,255,255,0.05)', 
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0
+                  }}>
+                    {ex.imageUrl ? (
+                      <img src={ex.imageUrl} alt={ex.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                    ) : (
+                      <GripVertical size={20} color="var(--text-muted)" />
+                    )}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff' }}>{ex.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                      <span style={{ color: '#A78BFA' }}>{ex.muscleGroup}</span> • {ex.equipment}
+                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff', lineHeight: 1.2, marginBottom: 4 }}>{ex.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div><span style={{ color: '#A78BFA', fontWeight: 600 }}>{ex.muscleGroup}</span> • {ex.equipment}</div>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        {ex.difficulty && (
+                          <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4, fontSize: '0.65rem' }}>
+                            {ex.difficulty}
+                          </span>
+                        )}
+                        {ex.pattern && (
+                          <span style={{ background: 'rgba(0,255,136,0.1)', color: 'var(--neon-green)', padding: '2px 6px', borderRadius: 4, fontSize: '0.65rem' }}>
+                            {ex.pattern.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
