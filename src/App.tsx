@@ -1,14 +1,19 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
+import RequireAuth from './components/layout/RequireAuth';
+import MaintenanceWatcher from './components/enjambre/MaintenanceWatcher';
+import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Members from './pages/Members';
 import TrainerDashboard from './pages/TrainerDashboard';
 import TrainingDashboard2 from './pages/TrainingDashboard2';
 import ClientProgress from './pages/ClientProgress';
+import Nutrition from './pages/Nutrition';
 import NutritionProfile from './pages/NutritionProfile';
 import ReportsIntegrated from './pages/ReportsIntegrated';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import Mantenimiento from './pages/Mantenimiento';
 import Operations from './pages/Operations';
 import GenesisScan from './pages/GenesisScan';
 import CRM from './pages/CRM';
@@ -22,29 +27,37 @@ import AICoach from './pages/AICoach';
 import Wearables from './pages/Wearables';
 import Leaderboard from './pages/Leaderboard';
 import Analytics from './pages/Analytics';
-import Accounting from './pages/Accounting';
 import GerencialKPIs from './pages/GerencialKPIs';
-import Finances from './pages/Finances';
+import MoneyHub from './pages/MoneyHub';
 import Inventory from './pages/Inventory';
-import Payments from './pages/Payments';
 import Reception from './pages/Reception';
 import ClientAppView from './pages/ClientAppView';
+import Avisos from './pages/Avisos';
+import PisoHub from './pages/PisoHub';
+import PisoScan from './pages/PisoScan';
+import SalaCliente from './pages/SalaCliente';
 
 function App() {
   return (
-    <Routes>
+    <>
+      <MaintenanceWatcher />
+      <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/sala" element={<SalaCliente />} />
+      <Route path="/piso/:tipo/:id" element={<PisoScan />} />
 
+      <Route element={<RequireAuth />}>
       <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to="/members" />} />
+        <Route path="/" element={<Home />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/members" element={<Members />} />
         <Route path="/trainer" element={<TrainerDashboard />} />
-        <Route path="/training" element={<TrainingDashboard2 />} />
+        <Route path="/training" element={<TrainerDashboard />} />
         <Route path="/progress" element={<ClientProgress />} />
-        <Route path="/nutrition" element={<NutritionProfile />} />
+        <Route path="/nutrition" element={<Nutrition />} />
         <Route path="/reports" element={<ReportsIntegrated />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/mantenimiento" element={<Mantenimiento />} />
         <Route path="/operations" element={<Operations />} />
         <Route path="/genesis-scan" element={<GenesisScan />} />
         <Route path="/crm" element={<CRM />} />
@@ -58,22 +71,26 @@ function App() {
         <Route path="/wearables" element={<Wearables />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/analytics" element={<Analytics />} />
-        <Route path="/accounting" element={<Accounting />} />
         <Route path="/kpis" element={<GerencialKPIs />} />
-        <Route path="/finances" element={<Finances />} />
+        <Route path="/finances" element={<MoneyHub />} />
+        <Route path="/payments" element={<Navigate to="/finances?tab=cobros" replace />} />
+        <Route path="/accounting" element={<Navigate to="/finances?tab=libros" replace />} />
         <Route path="/inventory" element={<Inventory />} />
-        <Route path="/payments" element={<Payments />} />
         <Route path="/reception" element={<Reception />} />
+        <Route path="/avisos" element={<Avisos />} />
+        <Route path="/piso-qr" element={<PisoHub />} />
         <Route path="/client-app" element={<ClientAppView />} />
         {/* Rutas dashboards cliente */}
         <Route path="/client/progress" element={<ClientProgress />} />
         <Route path="/client/nutrition" element={<NutritionProfile />} />
         <Route path="/client/training" element={<TrainingDashboard2 />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
       </Route>
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/members" />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </>
   );
 }
 

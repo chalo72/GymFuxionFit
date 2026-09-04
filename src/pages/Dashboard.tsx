@@ -27,12 +27,13 @@ export default function Dashboard() {
     /* Tasa de retención */
     const retentionRate = Math.round((activeCount / totalCount) * 100);
 
+    const withPlan = members.filter((m) => m.activeProgram || (m.plans && m.plans.length)).length;
     return [
       {
         icon: DollarSign,
         label: 'Ingresos del Mes',
         value: `$${monthlyIncome.toLocaleString('es-CO')}`,
-        change: monthlyIncome > 0 ? 'Mes actual' : 'Sin datos',
+        change: monthlyIncome > 0 ? 'Mes actual' : 'Sin ingresos este mes',
         positive: monthlyIncome > 0,
         accent: 'cyan' as const,
       },
@@ -46,18 +47,18 @@ export default function Dashboard() {
       },
       {
         icon: TrendingUp,
-        label: 'Tasa de Retención',
+        label: 'Tasa de Activos',
         value: `${retentionRate}%`,
-        change: retentionRate >= 80 ? 'Excelente' : retentionRate >= 60 ? 'Regular' : 'Atención',
+        change: retentionRate >= 80 ? 'Alta' : retentionRate >= 60 ? 'Media' : 'Baja',
         positive: retentionRate >= 60,
         accent: 'green' as const,
       },
       {
         icon: Activity,
-        label: 'Sesiones IA',
-        value: '—',
-        change: 'En desarrollo',
-        positive: true,
+        label: 'Con plan asignado',
+        value: String(withPlan),
+        change: 'Desde fichas de miembros',
+        positive: withPlan > 0,
         accent: 'cyan' as const,
       },
     ];

@@ -44,10 +44,10 @@ export default function Accounting() {
     const totalActive = activeMembers.length;
     
     // 3. Datos Simulados (Precios base/fallback)
-    const priceDia = plansConfig?.dia || 5000;
-    const priceQuincena = plansConfig?.quincena || 30000;
+    const priceDia = plansConfig?.dia || 0;
+    const priceQuincena = plansConfig?.quincena || 0;
     let priceMes = plansConfig?.mes_basico;
-    if (!priceMes) priceMes = plansConfig?.mes_pro || 45000;
+    if (!priceMes) priceMes = plansConfig?.mes_pro || 0;
 
     // Separar visitas (diarios) de mensualidades/quincenas y calcular ingresos reales esperados
     let dailyActive = 0;

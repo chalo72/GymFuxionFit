@@ -1,12 +1,12 @@
 {
-  "version": "7.0.14",
-  "build": "20260619.001",
-  "status": "UX_UI_CLEANUP",
+  "version": "7.0.28",
+  "build": "20260904.1548",
+  "status": "PRODUCTO_REAL",
   "author": "Antigravity Nexus",
   "features": [
-    "✨ PREMIUM_UX: Rediseño completo del Menú Lateral en 5 bloques lógicos",
-    "🧹 DASHBOARD_CLEANUP: Reemplazo del panel técnico Nexus por Alertas Rápidas",
-    "🚀 OMNI_STABILITY: Blindaje masivo contra errores de nulidad",
-    "🔄 CACHE_PURGE: Incremento de versión para forzar actualización visual en clientes"
+    "Sala socio pública /sala y QR de piso /piso/maquina|zona|disciplina",
+    "Piso QR imprimible, avisos WhatsApp en menú",
+    "Guía IA por rol; nutrición y finanzas intactas",
+    "Acceso directo socio socio@gym.local"
   ]
 }

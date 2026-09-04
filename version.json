@@ -1,12 +1,12 @@
 {
-  "version": "7.0.13",
-  "build": "20260616.001",
-  "status": "ULTRA_STABLE_V7",
+  "version": "7.0.28",
+  "build": "20260904.1548",
+  "status": "PRODUCTO_REAL",
   "author": "Antigravity Nexus",
   "features": [
-    "📱 MOBILE_FIX: Sidebar abre completo (85vw) con scroll en móvil",
-    "📐 VIEWPORT_FIX: Interfaz se adapta al ancho del celular sin desbordamiento",
-    "🧹 NAVBAR_MOBILE: Breadcrumb y búsqueda ocultos en pantallas pequeñas",
-    "🔧 MEDIA_QUERY_FIX: Eliminado conflicto entre media queries 768px y 1100px"
+    "Sala socio pública /sala y QR de piso /piso/maquina|zona|disciplina",
+    "Piso QR imprimible, avisos WhatsApp en menú",
+    "Guía IA por rol; nutrición y finanzas intactas",
+    "Acceso directo socio socio@gym.local"
   ]
 }

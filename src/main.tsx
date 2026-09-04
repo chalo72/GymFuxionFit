@@ -6,6 +6,7 @@ import './index.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { GymConfigProvider } from './contexts/GymConfigContext';
 import { GymDataProvider } from './hooks/useGymData';
+import { reportUiCrash } from './lib/maintenanceAgent';
 
 // 🧪 Tests internos disponibles en consola: window.__runSyncTests()
 import('./lib/syncTests').catch(console.error);
@@ -21,6 +22,9 @@ class ErrorBoundary extends React.Component<
   static getDerivedStateFromError(error: Error) {
     return { hasError: true, error };
   }
+  componentDidCatch(error: Error) {
+    reportUiCrash(error, window.location.pathname);
+  }
   render() {
     if (this.state.hasError) {
       return (
@@ -30,27 +34,28 @@ class ErrorBoundary extends React.Component<
           gap: 20, padding: 40, fontFamily: 'monospace'
         }}>
           <div style={{ fontSize: 40 }}>⚠️</div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: '#ff3d57' }}>ERROR DEL SISTEMA</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#ff3d57' }}>PARTE DEL AGENTE DE MANTENIMIENTO</div>
           <div style={{
             background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.3)',
-            borderRadius: 12, padding: 20, maxWidth: 600, width: '100%'
+            borderRadius: 12, padding: 20, maxWidth: 640, width: '100%', color: '#ddd', fontSize: 13, lineHeight: 1.5
           }}>
-            <div style={{ color: '#ff3d57', fontSize: 12, marginBottom: 8, fontWeight: 700 }}>
-              {this.state.error?.name}: {this.state.error?.message}
-            </div>
-            <pre style={{ color: '#888', fontSize: 10, overflow: 'auto', maxHeight: 200 }}>
-              {this.state.error?.stack?.split('\n').slice(1, 6).join('\n')}
+            <p><strong>Qué:</strong> {this.state.error?.name}: {this.state.error?.message}</p>
+            <p><strong>Dónde:</strong> {typeof window !== 'undefined' ? window.location.pathname : '?'}</p>
+            <p><strong>Por qué no lo viste en Mantenimiento:</strong> este crash apagó toda la interfaz, incluido el informe.</p>
+            <p><strong>Para qué:</strong> ya se guardó el parte. Al recargar, ábrelo en Sistema → Mantenimiento.</p>
+            <pre style={{ color: '#888', fontSize: 10, overflow: 'auto', maxHeight: 160, marginTop: 12 }}>
+              {this.state.error?.stack?.split('\n').slice(0, 6).join('\n')}
             </pre>
           </div>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => window.location.assign('/mantenimiento')}
             style={{
               padding: '12px 32px', background: '#00ff88', color: '#000',
               border: 'none', borderRadius: 12, fontWeight: 900, fontSize: 14,
               cursor: 'pointer'
             }}
           >
-            REINICIAR APP
+            VER INFORME / MANTENIMIENTO
           </button>
         </div>
       );

@@ -1,9 +1,12 @@
-import { Save, Bell, Shield, Palette, Globe, Database, Wifi, DollarSign } from 'lucide-react';
+import { Save, Bell, Shield, Palette, Globe, Database, Wifi, DollarSign, KeyRound } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useGymData } from '../hooks/useGymData';
+import { useAuth } from '../contexts/AuthContext';
+import { loadUsers, type UserRole } from '../lib/localUsers';
 
 const sections = [
   { id: 'general', icon: Globe, title: 'General', description: 'Nombre del gimnasio, zona horaria y preferencias regionales' },
+  { id: 'accesos', icon: KeyRound, title: 'Accesos', description: 'Claves de gerencia, entrenador y recepción' },
   { id: 'security', icon: Shield, title: 'Seguridad', description: 'Autenticación biométrica, anti-tailgating y control de acceso' },
   { id: 'notifications', icon: Bell, title: 'Notificaciones', description: 'Alertas por email, push y WhatsApp' },
   { id: 'appearance', icon: Palette, title: 'Apariencia', description: 'Tema, colores y personalización de la interfaz' },
@@ -11,6 +14,68 @@ const sections = [
   { id: 'database', icon: Database, title: 'Base de Datos', description: 'PostgreSQL, TimescaleDB y Redis' },
   { id: 'pricing', icon: DollarSign, title: 'Precios y Planes', description: 'Configurar costos de membresías y daypasses' },
 ];
+
+function AccesosPanel() {
+  const { upsertAccount, user } = useAuth();
+  const [accounts, setAccounts] = useState(() => loadUsers());
+  const [name, setName] = useState('Recepción');
+  const [email, setEmail] = useState('recepcion@gymfuxionfit.local');
+  const [role, setRole] = useState<UserRole>('receptionist');
+  const [password, setPassword] = useState('');
+  const [msg, setMsg] = useState('');
+
+  const save = async () => {
+    setMsg('');
+    const err = await upsertAccount({ name, email, role, password });
+    if (err) { setMsg(err); return; }
+    setAccounts(loadUsers());
+    setPassword('');
+    setMsg('Cuenta guardada. Esa clave queda en este navegador (no se puede leer después; solo cambiarla).');
+  };
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Accesos del gym</h3>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+        La clave de gerencia es la que creaste al abrir la primera cuenta. No está guardada en texto: no la puedo adivinar.
+        Aquí creas o cambias gerencia, entrenador y recepción.
+      </p>
+      <p style={{ fontSize: 13, marginBottom: 16 }}>
+        Sesión actual: <strong>{user?.email}</strong> ({user?.role})
+      </p>
+      <div style={{ marginBottom: 20 }}>
+        {accounts.length === 0 && <p style={{ color: 'var(--text-muted)' }}>Aún no hay cuentas en este navegador.</p>}
+        {accounts.map((a) => (
+          <div key={a.id} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', fontSize: 13 }}>
+            <strong>{a.role}</strong> · {a.name} · {a.email}
+          </div>
+        ))}
+      </div>
+      <div className="input-group" style={{ marginBottom: 10 }}>
+        <label className="input-label">Rol</label>
+        <select className="input-field" value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
+          <option value="admin">Gerencia (admin)</option>
+          <option value="trainer">Entrenador</option>
+          <option value="receptionist">Recepcionista</option>
+        </select>
+      </div>
+      <div className="input-group" style={{ marginBottom: 10 }}>
+        <label className="input-label">Nombre</label>
+        <input className="input-field" value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
+      <div className="input-group" style={{ marginBottom: 10 }}>
+        <label className="input-label">Correo</label>
+        <input className="input-field" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+      </div>
+      <div className="input-group" style={{ marginBottom: 10 }}>
+        <label className="input-label">Nueva contraseña (mín. 6)</label>
+        <input className="input-field" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      </div>
+      {msg && <p style={{ fontSize: 13, marginBottom: 10 }}>{msg}</p>}
+      <button type="button" className="btn btn-primary" onClick={save}>Guardar acceso</button>
+    </div>
+  );
+}
 
 export default function Settings() {
   const [gymName, setGymName] = useState('GymFuxionFit Montería');
@@ -23,10 +88,11 @@ export default function Settings() {
 
   const { plansConfig, updatePlansConfig } = useGymData();
   const [localPlans, setLocalPlans] = useState(() => {
-    const p = plansConfig || { dia: 5000, semana: 25000, mes_basico: 45000, mes_pro: 75000, mes_hyrox: 120000 };
+    const p = plansConfig || { dia: 5000, semana: 25000, quincena: 30000, mes_basico: 45000, mes_pro: 75000, mes_hyrox: 120000 };
     return {
       dia: String(p.dia || ''),
       semana: String(p.semana || ''),
+      quincena: String(p.quincena || ''),
       mes_basico: String(p.mes_basico || ''),
       mes_pro: String(p.mes_pro || ''),
       mes_hyrox: String(p.mes_hyrox || '')
@@ -38,6 +104,7 @@ export default function Settings() {
       ...plansConfig,
       dia: Number(localPlans.dia),
       semana: Number(localPlans.semana),
+      quincena: Number(localPlans.quincena),
       mes_basico: Number(localPlans.mes_basico),
       mes_pro: Number(localPlans.mes_pro),
       mes_hyrox: Number(localPlans.mes_hyrox)
@@ -77,6 +144,7 @@ export default function Settings() {
         </div>
 
         <div className="glass-card" style={{ padding: 24 }}>
+          {activeTab === 'accesos' && <AccesosPanel />}
           {activeTab === 'pricing' && (
             <div>
               <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -90,6 +158,10 @@ export default function Settings() {
                 <div className="input-group">
                   <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>VALOR SEMANA</label>
                   <input className="input-field" type="number" value={localPlans.semana} onChange={(e) => setLocalPlans({...localPlans, semana: e.target.value})} />
+                </div>
+                <div className="input-group">
+                  <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>VALOR QUINCENA</label>
+                  <input className="input-field" type="number" value={localPlans.quincena || ''} onChange={(e) => setLocalPlans({...localPlans, quincena: e.target.value})} />
                 </div>
                 <div className="input-group">
                   <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MENSUALIDAD BÁSICA</label>
@@ -106,7 +178,7 @@ export default function Settings() {
               </div>
             </div>
           )}
-          {activeTab !== 'pricing' && <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 40 }}>Sección {activeTab} en desarrollo</div>}
+          {activeTab !== 'pricing' && activeTab !== 'accesos' && <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 40 }}>Sección {activeTab} en desarrollo</div>}
         </div>
       </div>
     </div>

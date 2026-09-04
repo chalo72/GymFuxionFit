@@ -10,7 +10,10 @@ import {
   ResponsiveContainer, LineChart, Line,
 } from 'recharts';
 import { useGymData, Member } from '../hooks/useGymData';
+import { firstName, initials } from '../lib/safeText';
 import FlashProgramBuilder from '../components/trainer/FlashProgramBuilder';
+import { AiAssist } from '../components/AiAssist';
+import { Link } from 'react-router-dom';
 
 /* ══════════════════════════════════════
    DATOS MOCK (Progreso & IA)
@@ -183,6 +186,13 @@ export default function TrainerDashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--navbar-height) - 56px)', minHeight: 600 }}>
+      <div style={{ padding: '12px 24px 0', flexShrink: 0 }}>
+        <AiAssist
+          rol="entrenador"
+          texto="Hoy: 1) atiende al que está en el piso, no al celular. 2) Imprime Piso QR y pega en banca, prensa, sled y rig. 3) Si el socio no sabe pecho alto vs bajo, mándalo a escanear la zona Pecho. Hierro, WOD e HYROX no se mezclan a lo loco: elige una disciplina por sesión."
+        />
+        <Link to="/piso-qr" style={{ fontSize: 13, color: 'var(--neon-green)', fontWeight: 700 }}>Abrir códigos QR del piso →</Link>
+      </div>
       
       {/* ─── QUICK SWITCH: BARRA SUPERIOR DE SESIONES LIVE ─── */}
       {sessionCount > 0 && (
@@ -216,7 +226,7 @@ export default function TrainerDashboard() {
                     boxShadow: isSelected ? '0 0 15px rgba(0, 255, 136, 0.2)' : 'none'
                   }}
                 >
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{m.name.split(' ')[0]}</div>
+                  <div style={{ fontWeight: 700, fontSize: 13 }}>{firstName(m.name)}</div>
                   <div style={{ fontSize: 13, fontFamily: 'monospace', color: 'var(--neon-green)', fontWeight: 800 }}>{formatTime(time)}</div>
                 </button>
               );
@@ -268,7 +278,7 @@ export default function TrainerDashboard() {
               if (!member) return null;
               const isSelected = selectedClient?.id === member.id;
               const inSession = activeSessions[member.id] !== undefined;
-              const color = member.plan.toLowerCase().includes('hyrox') ? '#FF6B35' : '#00FF88';
+              const color = String(member.plan || '').toLowerCase().includes('hyrox') ? '#FF6B35' : '#00FF88';
               
               return (
                 <button
@@ -294,7 +304,7 @@ export default function TrainerDashboard() {
                     border: inSession ? `2px solid ${color}` : 'none',
                     boxShadow: inSession ? `0 0 10px ${color}` : 'none'
                   }}>
-                    {member.name.slice(0, 2).toUpperCase()}
+                    {initials(member.name)}
                   </div>
                   {inSession && (
                     <div style={{ position: 'absolute', top: 6, left: 38, width: 10, height: 10, background: 'var(--danger-red)', borderRadius: '50%', border: '2px solid var(--space-dark)' }} />
@@ -355,7 +365,7 @@ export default function TrainerDashboard() {
                   fontWeight: 800, fontSize: 'var(--text-xl)', color: '#000',
                   boxShadow: activeSessions[selectedClient.id] !== undefined ? `0 0 30px rgba(0,255,136,0.5)` : `0 0 20px rgba(0,255,136,0.2)`,
                 }}>
-                  {selectedClient.name.slice(0, 2).toUpperCase()}
+                  {initials(selectedClient.name)}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
@@ -365,7 +375,7 @@ export default function TrainerDashboard() {
                       background: selectedClient.status === 'active' ? 'rgba(0,230,118,0.1)' : 'rgba(255,61,87,0.1)',
                       color: selectedClient.status === 'active' ? 'var(--success-green)' : 'var(--danger-red)',
                     }}>
-                      {selectedClient.status.toUpperCase()}
+                      {String(selectedClient.status || 'sin estado').toUpperCase()}
                     </span>
                     {activeSessions[selectedClient.id] !== undefined && (
                       <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, background: 'var(--danger-red)', color: '#fff', fontWeight: 800, animation: 'glow-pulse 2s infinite' }}>EN SESIÓN</span>
@@ -483,13 +493,13 @@ export default function TrainerDashboard() {
                         {formatTime(activeSessions[selectedClient.id])}
                       </div>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', maxWidth: 400, margin: '16px auto 0' }}>
-                        Puedes ir a ver a otros clientes o agregar ejercicios a otra persona. El tiempo de {selectedClient.name.split(' ')[0]} no se detendrá hasta que pulses "Finalizar".
+                        Puedes ir a ver a otros clientes o agregar ejercicios a otra persona. El tiempo de {firstName(selectedClient.name)} no se detendrá hasta que pulses "Finalizar".
                       </p>
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: 40, background: 'rgba(255,255,255,0.02)', borderRadius: 20 }}>
                       <Dumbbell size={40} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-                      <div style={{ fontWeight: 700, color: '#fff' }}>No hay sesión activa para {selectedClient.name.split(' ')[0]}</div>
+                      <div style={{ fontWeight: 700, color: '#fff' }}>No hay sesión activa para {firstName(selectedClient.name)}</div>
                       <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 8 }}>Presiona "Iniciar Entrenamiento" en la parte superior para comenzar el reloj.</p>
                     </div>
                   )}

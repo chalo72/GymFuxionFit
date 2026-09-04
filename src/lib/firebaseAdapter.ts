@@ -36,7 +36,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
       'members': 'Members',
       'transactions': 'transactions'
     };
-    return map[name.toLowerCase()] || name;
+    return map[String(name || '').toLowerCase()] || name;
   }
 
   async getCollection<T>(name: string): Promise<T[]> {

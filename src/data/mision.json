@@ -1,0 +1,16 @@
+{
+  "objetivo": "Mejorar el contexto del socio y de todo el gym: ficha, dinero, nutrición, entrenamiento y gerencia, sin borrar lo que ya funcionaba.",
+  "dosSistemas": {
+    "appGym": "Operación del gym (socio, caja, puerta, nutrición, entrenamiento).",
+    "cursorChat": "Dejar la plataforma lista + mantenimiento. No sustituir módulos vivos."
+  },
+  "metaCursor": "Mejorar el producto alrededor del socio. Restaurar datos Omni. No destruir dashboards.",
+  "ahora": "Sala del socio, QR de piso, avisos WhatsApp y guía IA por rol. Nutrición y finanzas se mejoran, no se quitan.",
+  "hecho": [
+    "useGymData Omni + persistencia segura de socios",
+    "Finanzas y cobros restaurados",
+    "Supervisión: dashboard, KPIs, nutrición, entrenamiento"
+  ],
+  "siguiente": "Pegar QR en Montería y Ciénaga de Oro. Verificar recepción, entrenador y /sala.",
+  "enjambre": "APP = socio y gym. CURSOR = mejorar sin borrar."
+}

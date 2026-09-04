@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Apple, Flame, Beef, Droplets, Zap, TrendingUp, Plus, Search, X, Activity, Check } from 'lucide-react';
 import { useGymData } from '../hooks/useGymData';
+import { AiAssist } from '../components/AiAssist';
+import { initials } from '../lib/safeText';
 import {
   AreaChart,
   Area,
@@ -98,6 +100,10 @@ export default function Nutrition() {
 
   return (
     <div className="animate-fade-in" style={{ position: 'relative' }}>
+      <AiAssist
+        rol="nutrición"
+        texto="Costa Caribe: hidratación primero. Proteína en cada comida si el objetivo es composición. No inventes déficits agresivos en el calor. Registra lo que el socio realmente come, no el plan perfecto."
+      />
       
       {/* ─── MODAL REGISTRAR COMIDA ─── */}
       {isModalOpen && (
@@ -408,7 +414,7 @@ export default function Nutrition() {
                   <td>
                     <div className="member-cell">
                       <div className="member-avatar">
-                        {m.name.split(' ').map(n => n[0]).join('')}
+                        {initials(m.name, 2)}
                       </div>
                       <div style={{ fontWeight: 600 }}>{m.name}</div>
                     </div>

@@ -3,90 +3,82 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, Users, CalendarDays, BarChart3, Settings,
-  Dumbbell, Zap, Scan, Kanban, Apple, Brain, Trophy, CreditCard, Wallet,
-  Watch, CalendarRange, UserCheck, LogOut, ShieldCheck, Radio, Smartphone,
-  TrendingUp, Package, X, ChevronLeft, ChevronRight, BookOpen, ClipboardList, PieChart, Shield, HeartPulse, BrainCircuit, ChevronDown
+  Dumbbell, Zap, Kanban, Apple, Brain,
+  CalendarRange, UserCheck, LogOut, ShieldCheck, Smartphone,
+  TrendingUp, Package, X, ChevronLeft, ChevronRight, ClipboardList, BrainCircuit, ChevronDown, Wrench, QrCode, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 /* ── Elementos de navegación por rol ── */
 const adminNav = [
-  { section: 'Recepción & Control', items: [
-    { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/operations',  icon: Radio,           label: 'Operaciones Live', badge: '●' },
+  { section: 'Inicio', items: [
+    { to: '/',            icon: LayoutDashboard, label: 'Hoy' },
+    { to: '/reception',   icon: UserCheck,       label: 'Recepción' },
     { to: '/members',     icon: Users,           label: 'Miembros' },
     { to: '/schedule',    icon: CalendarRange,   label: 'Calendario' },
     { to: '/classes',     icon: CalendarDays,    label: 'Clases' },
   ]},
-  { section: 'Área Técnica', items: [
-    { to: '/trainer',     icon: Zap,             label: 'Rendimiento Élite', badge: 'VIBE' },
-    { to: '/evaluacion',  icon: ClipboardList,   label: 'Entrevista Inicial' },
-    { to: '/genesis-scan',icon: Scan,            label: 'Genesis Scan' },
-    { to: '/elite-plan',  icon: BrainCircuit,    label: 'Plan de Entrenamiento', badge: 'PRO' },
-    { to: '/elite-rec',   icon: HeartPulse,      label: 'Descanso y Energía' },
-    { to: '/catalogs',    icon: BookOpen,        label: 'Catálogos Expertos' },
+  { section: 'Supervisión', items: [
+    { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard gerente' },
+    { to: '/kpis',        icon: BarChart3,       label: 'KPIs gerenciales' },
+    { to: '/nutrition',   icon: Apple,           label: 'Nutrición' },
+    { to: '/trainer',     icon: Zap,             label: 'Entrenamiento' },
+    { to: '/piso-qr',     icon: QrCode,          label: 'Piso QR' },
   ]},
-  { section: 'Inteligencia', items: [
-    { to: '/ai-coach',   icon: Brain,   label: 'AI Coach' },
-    { to: '/nutrition',  icon: Apple,   label: 'Nutrición' },
-    { to: '/wearables',  icon: Watch,   label: 'Wearables' },
-    { to: '/leaderboard',icon: Trophy,  label: 'Leaderboard' },
+  { section: 'Entrenar', items: [
+    { to: '/evaluacion',  icon: ClipboardList,   label: 'Entrevista' },
+    { to: '/elite-plan',  icon: BrainCircuit,    label: 'Plan' },
+    { to: '/ai-coach',    icon: Brain,           label: 'AI Coach' },
   ]},
-  { section: 'Finanzas & Negocio', items: [
-    { to: '/crm',         icon: Kanban,          label: 'CRM Ventas' },
-    { to: '/finances',  icon: TrendingUp, label: 'Finanzas' },
-    { to: '/payments',  icon: CreditCard, label: 'Pagos' },
-    { to: '/accounting', icon: Wallet,    label: 'Contabilidad' },
-    { to: '/kpis',      icon: PieChart,   label: 'KPIs Gerenciales', badge: 'NEW' },
-    { to: '/analytics', icon: BarChart3,  label: 'Analíticas' },
-    { to: '/reports',         icon: BarChart3,  label: 'Reportes Globales' },
-    { to: '/inventory', icon: Package,    label: 'Inventario' },
+  { section: 'Negocio', items: [
+    { to: '/finances',    icon: TrendingUp,      label: 'Dinero' },
+    { to: '/avisos',      icon: MessageCircle,   label: 'Avisos WhatsApp' },
+    { to: '/crm',         icon: Kanban,          label: 'CRM' },
+    { to: '/inventory',   icon: Package,        label: 'Inventario' },
+    { to: '/analytics',   icon: BarChart3,      label: 'Analíticas' },
   ]},
   { section: 'Sistema', items: [
-    { to: '/client-app', icon: Smartphone, label: 'App Cliente' },
-    { to: '/settings',   icon: Settings,   label: 'Configuración' },
+    { to: '/client-app',  icon: Smartphone,     label: 'App cliente' },
+    { to: '/mantenimiento', icon: Wrench,       label: 'Mantenimiento' },
+    { to: '/settings',    icon: Settings,       label: 'Configuración' },
   ]}
 ];
 
 const trainerNav = [
-  { section: 'Mi Espacio', items: [
-    { to: '/trainer', icon: LayoutDashboard, label: 'Mis Clientes' },
-    { to: '/evaluacion', icon: ClipboardList,   label: 'Entrevista Inicial', badge: 'NUEVO' },
-    { to: '/elite-plan', icon: BrainCircuit,    label: 'Plan de Entrenamiento', badge: 'PRO' },
-    { to: '/elite-rec',  icon: HeartPulse,      label: 'Descanso y Energía', badge: 'VITAL' },
-    { to: '/schedule', icon: CalendarRange,  label: 'Mi Agenda' },
-    { to: '/classes',  icon: CalendarDays,   label: 'Clases' },
+  { section: 'Mi espacio', items: [
+    { to: '/', icon: LayoutDashboard, label: 'Hoy' },
+    { to: '/trainer', icon: Zap, label: 'Mis atletas' },
+    { to: '/evaluacion', icon: ClipboardList, label: 'Entrevista' },
+    { to: '/elite-plan', icon: BrainCircuit, label: 'Plan' },
+    { to: '/schedule', icon: CalendarRange, label: 'Agenda' },
+    { to: '/classes', icon: CalendarDays, label: 'Clases' },
   ]},
-  { section: 'Herramientas IA', items: [
-    { to: '/ai-coach',  icon: Brain,  label: 'AI Coach' },
-    { to: '/nutrition', icon: Apple,  label: 'Nutrición' },
-    { to: '/wearables', icon: Watch,  label: 'Wearables' },
-  ]},
-  { section: 'Competencia', items: [
-    { to: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
+  { section: 'Herramientas', items: [
+    { to: '/ai-coach', icon: Brain, label: 'AI Coach' },
+    { to: '/nutrition', icon: Apple, label: 'Nutrición' },
+    { to: '/piso-qr', icon: QrCode, label: 'Piso QR' },
   ]},
 ];
 
 const receptionNav = [
-  { section: 'Control Gym', items: [
-    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { to: '/reception', icon: UserCheck,      label: 'Recepción Live' },
-    { to: '/members',   icon: Users,          label: 'Miembros' },
-    { to: '/schedule',  icon: CalendarRange,  label: 'Horarios' },
-    { to: '/classes',   icon: CalendarDays,   label: 'Clases' },
+  { section: 'Operación', items: [
+    { to: '/', icon: LayoutDashboard, label: 'Hoy' },
+    { to: '/reception', icon: UserCheck, label: 'Recepción' },
+    { to: '/avisos', icon: MessageCircle, label: 'Avisos WhatsApp' },
+    { to: '/members', icon: Users, label: 'Miembros' },
+    { to: '/schedule', icon: CalendarRange, label: 'Horarios' },
+    { to: '/classes', icon: CalendarDays, label: 'Clases' },
   ]},
-  { section: 'Negocio', items: [
-    { to: '/analytics', icon: BarChart3,  label: 'Analíticas' },
-    { to: '/accounting', icon: Wallet,    label: 'Contabilidad' },
-    { to: '/finances',  icon: TrendingUp, label: 'Finanzas' },
-    { to: '/inventory', icon: Package,    label: 'Inventario' },
-    { to: '/crm',       icon: Kanban,     label: 'CRM Ventas' },
-    { to: '/payments',  icon: CreditCard, label: 'Pagos' },
+  { section: 'Caja', items: [
+    { to: '/finances', icon: TrendingUp, label: 'Dinero' },
+    { to: '/inventory', icon: Package, label: 'Inventario' },
+    { to: '/crm', icon: Kanban, label: 'CRM' },
   ]},
 ];
 
 const clientNav = [
   { section: 'Mi Área Personal', items: [
+    { to: '/sala', icon: QrCode, label: 'Sala y QR' },
     { to: '/client/progress', icon: TrendingUp, label: 'Mi Progreso' },
     { to: '/client/nutrition',icon: Apple,      label: 'Nutrición' },
     { to: '/client/training', icon: Dumbbell,   label: 'Entrenamiento' },
@@ -133,15 +125,25 @@ export default function Sidebar({
   const navigate   = useNavigate();
   const { user, logout } = useAuth();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    'Recepción & Control': true,
-    'Control Gym': true,
-    'Mi Espacio': true,
+    'Inicio': true,
+    'Supervisión': true,
+    'Operación': true,
+    'Mi espacio': true,
     'Mi Área Personal': true
   });
 
   const role      = user?.role ?? 'admin';
   const navGroups = roleNavMap[role] ?? adminNav;
   const roleColor = roleColors[role] ?? '#00FF88';
+
+  useEffect(() => {
+    const activeSection = navGroups.find((g: any) =>
+      g.items.some((item: any) => location.pathname === item.to)
+    )?.section;
+    if (activeSection) {
+      setOpenSections((prev) => ({ ...prev, [activeSection]: true }));
+    }
+  }, [location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -181,14 +183,6 @@ export default function Sidebar({
       <nav className="sidebar-nav">
         {navGroups.map((group: any) => {
           const isOpen = openSections[group.section] || false;
-          const isActiveGroup = group.items.some((item: any) => location.pathname === item.to);
-          
-          // Auto-open if active inside and wasn't manually closed
-          useEffect(() => {
-            if (isActiveGroup && !openSections[group.section]) {
-               setOpenSections(prev => ({...prev, [group.section]: true}));
-            }
-          }, [isActiveGroup, group.section]);
 
           return (
             <div key={group.section} style={{ marginBottom: '16px', padding: '0 8px' }}>
@@ -264,23 +258,9 @@ export default function Sidebar({
             <div className="sidebar-user-role">{roleLabels[role]}</div>
           </div>
           <button
-            onClick={async () => {
-              const { useGymData } = await import('../../hooks/useGymData');
-              // Llamamos a un evento custom o disparamos la alerta
-              alert("Iniciando escaneo de datos locales...");
-              window.dispatchEvent(new CustomEvent('FORCE_NEXUS_SYNC'));
-            }}
-            title="Forzar Sincronización a la Nube"
-            style={{ color: '#00F0FF', cursor: 'pointer', background: 'none', padding: 4, marginLeft: '8px', borderRadius: 'var(--radius-sm)' }}
-          >
-            <Zap size={16} />
-          </button>
-          <button
             onClick={handleLogout}
             title="Cerrar sesión"
-            style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'none', padding: 4, marginLeft: 'auto', borderRadius: 'var(--radius-sm)', transition: 'color var(--transition-fast)' }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--danger-red)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'; }}
+            style={{ color: 'var(--text-muted)', cursor: 'pointer', background: 'none', padding: 4, marginLeft: 'auto', borderRadius: 'var(--radius-sm)' }}
           >
             <LogOut size={16} />
           </button>

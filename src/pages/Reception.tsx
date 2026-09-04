@@ -11,7 +11,11 @@ import {
   Contact, Star, Target, Clock, History, Edit2, UserX, Check, UserPlus
 } from 'lucide-react';
 import { useGymData, Member, roundPrice } from '../hooks/useGymData';
+import { initials } from '../lib/safeText';
+import { canEnterGym, memberFromQr, memberQrPayload } from '../lib/accessGate';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
+import { AiAssist } from '../components/AiAssist';
+import { Link } from 'react-router-dom';
 import QuickRegisterModal from '../components/reception/QuickRegisterModal';
 import { PosCart } from '../components/reception/PosCart';
 import { MembersList } from '../components/reception/MembersList';
@@ -67,6 +71,7 @@ export default function Reception() {
   const [logs, setLogs] = useState<any[]>([]);
   const [tick, setTick] = useState(0);
   const [search, setSearch] = useState('');
+  const [qrCode, setQrCode] = useState('');
   const [suggestions, setSuggestions] = useState<Member[]>([]);
   const [activeTab, setActiveTab] = useState<CheckInMethod>('manual');
   const [status, setStatus] = useState<'idle' | 'scanning' | 'complete' | 'error'>('idle');
@@ -130,37 +135,9 @@ export default function Reception() {
   const startScanning = async (type: CheckInMethod) => {
     setActiveTab(type);
     if (type === 'manual') return;
-    setStatus('scanning');
+    setStatus('idle');
     setProgress(0);
-    if (type === 'qr' || type === 'facial') {
-      if (members.length === 0) { setStatus('error'); return; }
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
-        setCameraStream(stream);
-        if (videoRef.current) videoRef.current.srcObject = stream;
-        let p = 0;
-        if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
-        scanIntervalRef.current = setInterval(() => {
-          p += 5; setProgress(p);
-          if (p >= 100) {
-            if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
-            const randomMember = members[Math.floor(Math.random() * members.length)];
-            if (randomMember) handleSuccess(randomMember.name, type);
-          }
-        }, 100);
-      } catch (err) { setStatus('error'); }
-    } else if (type === 'geo') {
-      if (members.length === 0) { setStatus('error'); return; }
-      let p = 0;
-      if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = setInterval(() => {
-        p += 10; setProgress(p);
-        if (p >= 100) {
-          if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
-          if (members[0]) handleSuccess(members[0].name, 'geo');
-        }
-      }, 150);
-    }
+    stopCamera();
   };
 
   const stopCamera = () => {
@@ -186,11 +163,12 @@ export default function Reception() {
     if (masterMember) {
       setCart([]);
       setSelectedMember(masterMember);
-      if (masterMember.debt > 0 || masterMember.status === 'expired' || masterMember.status === 'expiring') {
+      const gate = canEnterGym(masterMember);
+      if (!gate.ok) {
          setAlertMember(masterMember);
          setStatus('complete');
          setTimeout(() => { setStatus('idle'); stopCamera(); }, 1000);
-         return; 
+         return;
       }
     }
 
@@ -205,7 +183,7 @@ export default function Reception() {
       const newM: ActiveMember = {
          id: masterMember ? String(masterMember.id) : String(Date.now()),
          name: nameToUse,
-         initials: nameToUse.slice(0,2).toUpperCase(),
+         initials: initials(nameToUse),
          plan: masterMember ? masterMember.plan : 'Invitado',
          checkedInAt: Date.now(),
          membershipStatus: masterMember ? masterMember.status : 'active',
@@ -316,6 +294,11 @@ export default function Reception() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24, padding: '10px' }}>
+      <AiAssist
+        rol="recepción"
+        texto="Orden: identificar → si hay mora o vencido, no deja pasar (el QR de socio no es teatro). Cobra o agenda aviso WhatsApp. El QR de máquina es para el socio en el piso, no para esta puerta."
+      />
+      <Link to="/avisos" style={{ fontSize: 13, color: 'var(--neon-green)', fontWeight: 700, marginTop: -12 }}>Lista de avisos WhatsApp (mora / por vencer) →</Link>
 
       {/* ── TOAST GLOBAL ── */}
       {toast && (
@@ -334,7 +317,7 @@ export default function Reception() {
                       <AlertTriangle size={32} />
                    </div>
                    <div>
-                      <h3 style={{ fontSize: 10, fontWeight: 950, letterSpacing: 2.5, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bloqueo de Acceso</h3>
+                      <h3 style={{ fontSize: 10, fontWeight: 950, letterSpacing: 2.5, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Entrada denegada</h3>
                       <div style={{ fontSize: 24, fontWeight: 950, color: '#fff', marginTop: 4 }}>{alertMember.name}</div>
                    </div>
                 </div>
@@ -353,7 +336,7 @@ export default function Reception() {
              </div>
 
              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                 <button onClick={() => setAlertMember(null)} style={{ padding:'18px', borderRadius:16, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.02)', color:'var(--text-secondary)', fontWeight:950, fontSize:12, cursor:'pointer', transition: '0.3s' }}>IGNORAR</button>
+                 <button onClick={() => setAlertMember(null)} style={{ padding:'18px', borderRadius:16, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.02)', color:'var(--text-secondary)', fontWeight:950, fontSize:12, cursor:'pointer', transition: '0.3s' }}>CERRAR (NO ENTRA)</button>
                  <button onClick={() => handleClearDebt()} style={{ padding:'18px', borderRadius:16, background:'var(--neon-green)', color:'#000', border:'none', fontWeight:950, fontSize:12, cursor:'pointer', boxShadow: '0 8px 20px rgba(0,255,136,0.3)' }}>PAGAR DEUDA</button>
              </div>
              <button onClick={() => { setShowProfile(true); setAlertMember(null); }} style={{ width:'100%', padding:'18px', borderRadius:16, background:'rgba(255,255,255,0.05)', color:'#fff', border:'1px solid rgba(255,255,255,0.1)', fontWeight:950, fontSize:12, cursor:'pointer' }}>VER EXPEDIENTE COMPLETO</button>
@@ -394,10 +377,19 @@ export default function Reception() {
                   <div ref={searchContainerRef} style={{ position: 'relative', width: '100%' }}>
                     <Search size={20} style={{ position: 'absolute', left: 20, top: 18, color: 'rgba(0,255,136,0.5)', zIndex: 1 }} />
                     <input
-                      placeholder="Identificar atleta..."
-                      value={search}
-                      onChange={e => setSearch(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleSuccess(search, 'manual')}
+                      placeholder={activeTab === 'qr' ? 'Código QR del socio (gff:…)' : 'Identificar atleta...'}
+                      value={activeTab === 'qr' ? qrCode : search}
+                      onChange={e => activeTab === 'qr' ? setQrCode(e.target.value) : setSearch(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key !== 'Enter') return;
+                        if (activeTab === 'qr') {
+                          const found = memberFromQr(qrCode, members);
+                          if (found) handleSuccess(found, 'qr');
+                          else setStatus('error');
+                          return;
+                        }
+                        handleSuccess(search, 'manual');
+                      }}
                       onBlur={() => setTimeout(() => setSuggestions([]), 200)}
                       style={{ width: '100%', padding: '18px 20px 18px 55px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, color: '#fff', fontSize: 15, outline: 'none', transition: '0.3s' }}
                       className="search-input-premium"
@@ -408,13 +400,25 @@ export default function Reception() {
                <div className="glass-card premium-shadow" style={{ flex: 1, padding: 24, border: `1px solid ${selectedMember.debt > 0 ? 'rgba(255,61,87,0.3)' : 'rgba(0,255,136,0.2)'}`, borderRadius: 28, display:'flex', flexDirection:'column', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
                      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <div style={{ width: 50, height: 50, borderRadius: 14, background: 'rgba(0,255,136,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 950, color: 'var(--neon-green)', border: '1px solid rgba(0,255,136,0.2)' }}>{selectedMember.name.slice(0,1)}</div>
+                        <div style={{ width: 50, height: 50, borderRadius: 14, background: 'rgba(0,255,136,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 950, color: 'var(--neon-green)', border: '1px solid rgba(0,255,136,0.2)' }}>{initials(selectedMember.name, 1)}</div>
                         <div>
                           <h3 style={{ fontSize: 16, fontWeight: 950, color: '#fff', margin:0 }}>{selectedMember.name}</h3>
                           <div style={{ fontSize: 10, color: 'var(--neon-green)', fontWeight: 800, marginTop: 2 }}>{selectedMember.plan}</div>
                         </div>
                      </div>
                      <button onClick={() => setSelectedMember(null)} style={{ background: 'rgba(255,61,87,0.1)', border: 'none', color: 'var(--danger-red)', padding: '8px 16px', borderRadius: 12, fontSize: 10, fontWeight: 950, cursor: 'pointer' }}>CANCELAR</button>
+                  </div>
+                  <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <img
+                      alt="QR socio"
+                      width={96}
+                      height={96}
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(memberQrPayload(String(selectedMember.id)))}`}
+                      style={{ borderRadius: 8, background: '#fff' }}
+                    />
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      Código de entrada: {memberQrPayload(String(selectedMember.id))}
+                    </div>
                   </div>
                   
                   <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:20 }}>
@@ -605,7 +609,7 @@ export default function Reception() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 40 }}>
                      <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
                         <div style={{ width: 130, height: 130, borderRadius: 36, background: 'rgba(0,255,136,0.1)', border: `3px solid ${selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)'}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize: 56, fontWeight:950, color: selectedMember.debt > 0 ? 'var(--danger-red)' : 'var(--neon-green)', boxShadow: `0 0 40px ${selectedMember.debt > 0 ? 'rgba(255,61,87,0.25)' : 'rgba(0,255,136,0.25)'}` }}>
-                           {selectedMember.name.slice(0,1)}
+                           {initials(selectedMember.name, 1)}
                         </div>
                         <div>
                            <div style={{ fontSize: 13, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 3, marginBottom: 8, textTransform: 'uppercase' }}>Atleta Profesional Elite</div>
@@ -798,7 +802,7 @@ export default function Reception() {
             setActiveMembers(prev => [{
                id: newMem ? String(newMem.id) : String(Date.now()),
                name: data.name,
-               initials: data.name.slice(0,2).toUpperCase(),
+               initials: initials(data.name),
                plan: data.plan,
                checkedInAt: Date.now(),
                membershipStatus: 'active',

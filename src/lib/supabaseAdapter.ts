@@ -30,7 +30,7 @@ export class SupabaseAdapter implements DatabaseAdapter {
       'catalogs': 'catalogs',
       'configuracion': 'configuracion',
     };
-    return map[name] ?? name.toLowerCase();
+    return map[name] ?? String(name || '').toLowerCase();
   }
 
   async getCollection<T>(name: string): Promise<T[]> {

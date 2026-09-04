@@ -10,8 +10,11 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
+import { Link } from 'react-router-dom';
 import { useGymData } from '../hooks/useGymData';
+import { AiAssist } from '../components/AiAssist';
 import { useAuth } from '../contexts/AuthContext';
+import { firstName } from '../lib/safeText';
 import { PanelLeaderboard } from '../components/ClientHUD/PanelLeaderboard';
 import { PanelNutrition } from '../components/ClientHUD/PanelNutrition';
 import { PanelWallet } from '../components/ClientHUD/PanelWallet';
@@ -29,18 +32,6 @@ import { PanelAIScanner } from '../components/ClientHUD/PanelAIScanner';
 ══════════════════════════════════════════ */
 type Tab       = 'scan' | 'workout' | 'leaderboard' | 'nutrition' | 'store' | 'wallet' | 'profile' | 'aicoach' | 'aiscanner';
 type ScanPhase = 'scanning' | 'found' | 'verified' | 'error_distance' | 'error_gps';
-
-// Los ejercicios ahora se cargan dinámicamente desde el ExerciseService
-
-const LEADERBOARD = [
-  { rank: 1, name: 'ALEX_WARRIOR', time: '32:45', pts: 4800, medal: 'gold',   change: '+2' },
-  { rank: 2, name: 'FIT_LUCY',     time: '34:10', pts: 4650, medal: 'silver', change: '0'  },
-  { rank: 12, name: 'YOU [ALEX G.]', time: '39:20', pts: 3750, medal: '',       change: '+4', isMe: true },
-];
-
-const progressData = [
-  { d: 'L', kcal: 320 }, { d: 'M', kcal: 450 }, { d: 'M', kcal: 280 }, { d: 'J', kcal: 510 }, { d: 'V', kcal: 390 }
-];
 
 /* ══════════════════════════════════════════
    ESTILOS HUD GLOBALES
@@ -81,11 +72,13 @@ export default function ClientAppView() {
   }, []);
 
   const athlete = useMemo(() => {
-    return members.find(m => m.id === user?.id) || {
-      name: user?.name || 'Invitado',
-      status: 'active',
+    return members.find(m => m.id === user?.id) || members[0] || {
+      name: user?.name || 'Sin atleta vinculado',
+      status: 'expired',
       debt: 0,
-      expiryDate: '2024-12-31'
+      expiryDate: '',
+      visits: 0,
+      streak: 0,
     };
   }, [members, user]);
 
@@ -141,12 +134,17 @@ export default function ClientAppView() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24, color: '#fff', padding: '10px 0' }}>
       <style>{CSS}</style>
+      <AiAssist
+        rol="socio"
+        texto="Tu objetivo se cumple en el piso, no en la pantalla. Escanea el QR de la máquina o entra a Sala: pecho alto/bajo, WOD, HYROX. Si tu membresía está vencida o hay mora, recepción no te deja entrar."
+      />
+      <Link to="/sala" style={{ color: 'var(--neon-green)', fontWeight: 800, fontSize: 14, marginBottom: 8 }}>Abrir sala del socio (QR y zonas) →</Link>
 
       {/* ── HEADER ELITE ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
            <h1 style={{ fontSize: 32, fontWeight: 950, letterSpacing: -1, marginBottom: 4 }}>
-              Hola, <span style={{ color: 'var(--neon-green)' }}>{athlete.name.split(' ')[0]}</span>
+              Hola, <span style={{ color: 'var(--neon-green)' }}>{firstName(athlete?.name)}</span>
            </h1>
            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Calendar size={14} style={{ color: 'var(--text-muted)' }} />
@@ -165,10 +163,10 @@ export default function ClientAppView() {
       {/* ── QUICK STATS ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
          {[
-           { label: 'PASOS', value: '8.420', icon: <Activity />, color: '#00E5FF' },
-           { label: 'CALORÍAS', value: '420 kcal', icon: <Flame />, color: '#FF6B35' },
-           { label: 'SUEÑO', value: '7h 20m', icon: <Heart />, color: '#A78BFA' },
-           { label: 'TIEMPO GYM', value: active ? fmt(sec) : '--:--', icon: <Clock />, color: 'var(--neon-green)', active: active }
+           { label: 'VISITAS', value: String(athlete.visits || 0), icon: <Activity />, color: '#00E5FF' },
+           { label: 'RACHA', value: String(athlete.streak || 0), icon: <Flame />, color: '#FF6B35' },
+           { label: 'SALDO', value: `$${(athlete.debt || 0).toLocaleString('es-CO')}`, icon: <Heart />, color: '#A78BFA' },
+           { label: 'TIEMPO SESIÓN', value: active ? fmt(sec) : '--:--', icon: <Clock />, color: 'var(--neon-green)', active: active }
          ].map(s => (
            <div key={s.label} className="glass-card premium-card-hover" style={{ padding: 20, borderRadius: 24, transition: '0.3s' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -262,7 +260,9 @@ export default function ClientAppView() {
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                     <div>
                        <h3 style={{ fontSize: 20, fontWeight: 950, color: '#fff' }}>Rutina de Hoy</h3>
-                       <p style={{ fontSize: 13, color: 'var(--neon-green)', fontWeight: 800 }}>DÍA 4: TREN SUPERIOR (FUERZA)</p>
+                       <p style={{ fontSize: 13, color: 'var(--neon-green)', fontWeight: 800 }}>
+                         {workouts.length ? `${workouts.length} ejercicios cargados` : 'Sin rutina cargada'}
+                       </p>
                     </div>
                     <button onClick={() => setActive(!active)} style={{ padding: '14px 28px', borderRadius: 18, background: active ? 'var(--danger-red)' : 'var(--neon-green)', color: '#000', border: 'none', fontWeight: 950, cursor: 'pointer', transition: '0.3s', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>
                        {active ? 'PAUSAR' : 'INICIAR ENTRENAMIENTO'}
@@ -317,25 +317,14 @@ export default function ClientAppView() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                  <div className="glass-card" style={{ padding: 24, borderRadius: 28 }}>
-                    <div style={{ fontSize: 12, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 20 }}>GASTO CALÓRICO (SEMANA)</div>
-                    <ResponsiveContainer width="100%" height={160}>
-                       <AreaChart data={progressData}>
-                          <defs>
-                             <linearGradient id="colorKcal" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="var(--neon-green)" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="var(--neon-green)" stopOpacity={0}/>
-                             </linearGradient>
-                          </defs>
-                          <Area type="monotone" dataKey="kcal" stroke="var(--neon-green)" fillOpacity={1} fill="url(#colorKcal)" strokeWidth={3} />
-                       </AreaChart>
-                    </ResponsiveContainer>
+                    <div style={{ fontSize: 12, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 12 }}>MEMBRESÍA</div>
+                    <div style={{ fontSize: 18, fontWeight: 900 }}>{athlete.plan || 'Sin plan'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Vence: {athlete.expiryDate || athlete.expiry || '—'}</div>
                  </div>
-                 <div className="glass-card" style={{ padding: 24, borderRadius: 28, background: 'rgba(255,214,0,0.05)', border: '1px solid rgba(255,214,0,0.1)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                       <Award size={18} style={{ color: '#FFD600' }} />
-                       <span style={{ fontSize: 13, fontWeight: 950, color: '#FFD600' }}>RECOMENDACIÓN IA</span>
-                    </div>
-                    <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>"Hoy estás rindiendo un <strong style={{ color: '#fff' }}>12% más</strong> de lo habitual. Te sugiero subir 2kg en tu última serie de Squats."</p>
+                 <div className="glass-card" style={{ padding: 24, borderRadius: 28 }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                      Las recomendaciones de IA aparecerán cuando haya un análisis real de la sesión. No se muestran sugerencias inventadas.
+                    </p>
                  </div>
               </div>
            </div>
