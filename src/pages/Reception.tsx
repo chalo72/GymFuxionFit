@@ -13,6 +13,7 @@ import {
 import { useGymData, Member, roundPrice } from '../hooks/useGymData';
 import { initials } from '../lib/safeText';
 import { canEnterGym, memberFromQr, memberQrPayload } from '../lib/accessGate';
+import { fichaCuenta, mergeTab, tabTotal } from '../lib/cuentaPiso';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
 import { AiAssist } from '../components/AiAssist';
 import { Link } from 'react-router-dom';
@@ -24,14 +25,7 @@ import { MembersList } from '../components/reception/MembersList';
 /* ══════════════════════════════════════════
    TIPOS & MOCKS HIDRINOS
    ══════════════════════════════════════════ */
-type MembershipStatus = 'active' | 'expiring' | 'expired' | 'suspended';
 type CheckInMethod = 'qr' | 'facial' | 'geo' | 'manual';
-
-interface ActiveMember {
-  id: string; name: string; initials: string; plan: string;
-  checkedInAt: number; membershipStatus: MembershipStatus;
-  color: string; checkInMethod?: CheckInMethod;
-}
 
 /* ══════════════════════════════════════════
    COMPONENTES AUXILIARES
@@ -67,7 +61,7 @@ export default function Reception() {
     return { total, count, topMethod, topProd };
   }, [transactions, todayStr]);
 
-  const [activeMembers, setActiveMembers] = useState<ActiveMember[]>([]);
+  const enSala = useMemo(() => members.filter((m) => m.presence?.inGym), [members]);
   const [logs, setLogs] = useState<any[]>([]);
   const [tick, setTick] = useState(0);
   const [search, setSearch] = useState('');
@@ -147,7 +141,7 @@ export default function Reception() {
     }
   };
 
-  const handleSuccess = (nameOrMember: string | Member, method: CheckInMethod) => {
+  const handleSuccess = async (nameOrMember: string | Member, method: CheckInMethod) => {
     let masterMember: Member | undefined;
     if (typeof nameOrMember === 'string') {
       masterMember = members.find(m => m.name && nameOrMember && m.name.toLowerCase() === nameOrMember.toLowerCase());
@@ -159,43 +153,45 @@ export default function Reception() {
     } else {
       masterMember = nameOrMember;
     }
-    
-    if (masterMember) {
-      setCart([]);
-      setSelectedMember(masterMember);
+
+    if (!masterMember) {
+      setStatus('error');
+      setTimeout(() => setStatus('idle'), 2000);
+      return;
+    }
+
+    setCart([]);
+    setSelectedMember(masterMember);
+    const live = members.find((x) => x.id === masterMember!.id) || masterMember;
+    const yaDentro = !!live.presence?.inGym;
+
+    if (!yaDentro) {
       const gate = canEnterGym(masterMember);
       if (!gate.ok) {
-         setAlertMember(masterMember);
-         setStatus('complete');
-         setTimeout(() => { setStatus('idle'); stopCamera(); }, 1000);
-         return;
+        setAlertMember(masterMember);
+        setStatus('complete');
+        setTimeout(() => { setStatus('idle'); stopCamera(); }, 1000);
+        return;
       }
     }
 
-    const nameToUse = masterMember ? masterMember.name : (typeof nameOrMember === 'string' ? nameOrMember : '');
-    if (!nameToUse) return;
-
-    const existing = activeMembers.find(m => m.name === nameToUse);
-    if (existing) {
-      setActiveMembers(prev => prev.filter(m => m.id !== existing.id));
-      setLogs(prev => [{ id: Date.now(), name: nameToUse, action: 'SALIDA', time: new Date().toLocaleTimeString().slice(0,5), method, color: '#ff4d4d' }, ...prev]);
+    const nameToUse = masterMember.name;
+    if (yaDentro) {
+      await updateMemberStatus(masterMember.id, {
+        presence: { inGym: false, enteredAt: live.presence?.enteredAt || Date.now(), method, doing: undefined },
+      });
+      setLogs((prev) => [{ id: Date.now(), name: nameToUse, action: 'SALIDA', time: new Date().toLocaleTimeString().slice(0, 5), method, color: '#ff4d4d' }, ...prev]);
     } else {
-      const newM: ActiveMember = {
-         id: masterMember ? String(masterMember.id) : String(Date.now()),
-         name: nameToUse,
-         initials: initials(nameToUse),
-         plan: masterMember ? masterMember.plan : 'Invitado',
-         checkedInAt: Date.now(),
-         membershipStatus: masterMember ? masterMember.status : 'active',
-         color: 'var(--neon-green)',
-         checkInMethod: method
-      };
-      setActiveMembers(prev => [newM, ...prev]);
-      setLogs(prev => [{ id: Date.now(), name: nameToUse, action: 'ENTRADA', time: new Date().toLocaleTimeString().slice(0,5), method, color: newM.color }, ...prev]);
+      await updateMemberStatus(masterMember.id, {
+        presence: { inGym: true, enteredAt: Date.now(), method, doing: live.sessionLive ? 'Sesión con entrenador' : 'En sala' },
+        lastVisit: new Date().toISOString(),
+        visits: (live.visits || 0) + 1,
+      });
+      setLogs((prev) => [{ id: Date.now(), name: nameToUse, action: 'ENTRADA', time: new Date().toLocaleTimeString().slice(0, 5), method, color: 'var(--neon-green)' }, ...prev]);
     }
-    
+
     setStatus('complete');
-    setTimeout(() => { 
+    setTimeout(() => {
       setStatus('idle'); setProgress(0); stopCamera(); setSearch(''); setSuggestions([]);
     }, 1500);
   };
@@ -223,7 +219,23 @@ export default function Reception() {
     try {
       for (const item of cart) {
         if (item.category !== 'Servicio') {
-          await registerProductSale(item.id, item.qty, selectedMember.name, paymentMethod);
+          const ok = await registerProductSale(item.id, item.qty, selectedMember.name, paymentMethod);
+          if (!ok) {
+            showToast(`Sin stock: ${item.name}`);
+            continue;
+          }
+          if (paymentMethod !== 'Crédito') {
+            await injectTransaction({
+              date: new Date().toISOString().split('T')[0],
+              time: new Date().toLocaleTimeString().slice(0, 5),
+              description: `Venta: ${item.qty}x ${item.name}`,
+              category: 'other',
+              type: 'income',
+              amount: item.price * item.qty,
+              method: paymentMethod,
+              client: selectedMember.name
+            });
+          }
         } else {
           const plan = plans.find(p => p.id === item.id);
           await injectTransaction({
@@ -285,6 +297,58 @@ export default function Reception() {
     }
   };
 
+  const handleCargarCuenta = async () => {
+    if (!selectedMember || cart.length === 0 || isProcessing) return;
+    const productos = cart.filter((i) => i.category !== 'Servicio');
+    if (productos.length === 0) {
+      showToast('Los planes se cobran, no se cargan a consumo del piso.');
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      for (const item of productos) {
+        const ok = await registerProductSale(item.id, item.qty, selectedMember.name, 'Cuenta piso');
+        if (!ok) {
+          showToast(`Sin stock: ${item.name}`);
+          continue;
+        }
+      }
+      const live = members.find((m) => m.id === selectedMember.id) || selectedMember;
+      await updateMemberStatus(selectedMember.id, {
+        openTab: mergeTab(live.openTab, productos.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price }))),
+      });
+      setLogs((prev) => [{ id: Date.now(), name: selectedMember.name, action: 'CUENTA PISO', time: new Date().toLocaleTimeString().slice(0, 5), method: 'Recepción', color: '#FFD700' }, ...prev]);
+      setCart([]);
+      showToast('Cargado a la cuenta. Paga al salir. El socio lo ve en su app.');
+    } catch (e) {
+      showToast('No se pudo cargar la cuenta.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCobrarTab = async (member: Member) => {
+    const total = tabTotal(member.openTab);
+    if (total <= 0) return;
+    setIsProcessing(true);
+    try {
+      await injectTransaction({
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString().slice(0, 5),
+        description: `Cuenta piso: ${(member.openTab || []).map((l) => `${l.qty}x ${l.name}`).join(', ')}`,
+        category: 'other',
+        type: 'income',
+        amount: total,
+        method: paymentMethod === 'Crédito' ? 'Efectivo' : paymentMethod,
+        client: member.name,
+      });
+      await updateMemberStatus(member.id, { openTab: [], pagoSolicitado: null });
+      showToast(`Cobrado $${total.toLocaleString('es-CO')} de consumo`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleClearDebt = async () => {
     if (selectedMember) {
       await clearMemberDebt(selectedMember.id);
@@ -296,7 +360,7 @@ export default function Reception() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24, padding: '10px' }}>
       <AiAssist
         rol="recepción"
-        texto="Orden: identificar → si hay mora o vencido, no deja pasar (el QR de socio no es teatro). Cobra o agenda aviso WhatsApp. El QR de máquina es para el socio en el piso, no para esta puerta."
+        texto="Quién está adentro sale de entrada real (QR, nombre o GPS del socio). Agua y bebidas: Cargar a cuenta para que el socio lo vea y lo pagues al salir. Cobrar ahora si ya pagó en caja."
       />
       <Link to="/avisos" style={{ fontSize: 13, color: 'var(--neon-green)', fontWeight: 700, marginTop: -12 }}>Lista de avisos WhatsApp (mora / por vencer) →</Link>
 
@@ -496,6 +560,7 @@ export default function Reception() {
                      ))}
                   </div>
                   <button onClick={handleFinalizeSale} disabled={cart.length === 0 || isProcessing} style={{ width:'100%', padding:20, borderRadius:20, background: cart.length > 0 && !isProcessing ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)', color:'#000', fontWeight:950, cursor: isProcessing ? 'wait' : 'pointer', transition: '0.4s', boxShadow: cart.length > 0 ? '0 10px 30px rgba(0,255,136,0.3)' : 'none', letterSpacing: 1 }}>{isProcessing ? 'PROCESANDO...' : 'CONFIRMAR Y COBRAR'}</button>
+                  <button type="button" onClick={handleCargarCuenta} disabled={cart.length === 0 || isProcessing} style={{ width:'100%', marginTop: 8, padding:14, borderRadius:16, background: 'transparent', color:'#FFD700', border: '1px solid rgba(255,215,0,0.4)', fontWeight:800, cursor: 'pointer', fontSize: 12 }}>CARGAR A CUENTA (paga al salir)</button>
                </div>
             )}
          </div>
@@ -504,43 +569,48 @@ export default function Reception() {
          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.04)', padding: '20px 32px', borderRadius: 28, border: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(10px)' }}>
                <div>
-                 <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 4 }}>PRESENCIA EN SALA</div>
-                 <div style={{ fontSize: 18, fontWeight: 950, color: '#fff' }}>ATLETAS ACTIVOS</div>
+                 <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 4 }}>PRESENCIA REAL</div>
+                 <div style={{ fontSize: 18, fontWeight: 950, color: '#fff' }}>QUIÉN ESTÁ ADENTRO</div>
                </div>
-               <div style={{ background: 'rgba(0,255,136,0.1)', padding: '12px 24px', borderRadius: 20, fontSize: 28, fontWeight: 950, color: 'var(--neon-green)', border: '1px solid rgba(0,255,136,0.2)', boxShadow: 'inset 0 0 15px rgba(0,255,136,0.1)' }}>{activeMembers.length}</div>
+               <div style={{ background: 'rgba(0,255,136,0.1)', padding: '12px 24px', borderRadius: 20, fontSize: 28, fontWeight: 950, color: 'var(--neon-green)', border: '1px solid rgba(0,255,136,0.2)', boxShadow: 'inset 0 0 15px rgba(0,255,136,0.1)' }}>{enSala.length}</div>
             </div>
             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20, overflowY: 'auto', paddingRight: 10, alignContent: 'start' }} className="custom-scrollbar">
-               {activeMembers.map(m => (
-                 <div key={m.id} onClick={() => { 
-                    const master = members.find(mx => String(mx.id) === String(m.id)) || {
-                      id: String(m.id),
-                      name: m.name,
-                      plan: m.plan,
-                      status: m.membershipStatus,
-                      expiryDate: '2026-12-31',
-                      debt: 0,
-                      lastVisit: new Date().toISOString(),
-                      color: m.color,
-                      objective: 'Entrenamiento Pro',
-                      injuries: 'Ninguna'
-                    } as Member; 
-                    setSelectedMember(master); 
-                    setShowProfile(true); 
-                    setCart([]);
-                 }} className="glass-card athlete-card-premium" style={{ padding: 24, border: '1px solid rgba(255,255,255,0.08)', background: `linear-gradient(135deg, ${m.color}08, rgba(255,255,255,0.01))`, borderRadius: 24, cursor: 'pointer', transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)', backdropFilter: 'blur(10px)' }}>
+               {enSala.length === 0 && (
+                 <p style={{ color: 'var(--text-muted)', fontSize: 13, gridColumn: '1 / -1' }}>Nadie marcado adentro. Entrada: QR o nombre aquí, o GPS del socio en Acceso Gym.</p>
+               )}
+               {enSala.map((m) => {
+                 const f = fichaCuenta(m);
+                 return (
+                 <div key={m.id} onClick={() => { setSelectedMember(m); setShowProfile(true); setCart([]); }} className="glass-card athlete-card-premium" style={{ padding: 24, border: f.consumo > 0 ? '1px solid rgba(255,215,0,0.4)' : '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(135deg, rgba(0,255,136,0.08), rgba(255,255,255,0.01))', borderRadius: 24, cursor: 'pointer' }}>
                     <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
-                       <div style={{ width: 50, height: 50, borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: `1px solid ${m.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: m.color, fontWeight: 950, fontSize: 18, boxShadow: `0 0 15px ${m.color}20` }}>{m.initials}</div>
+                       <div style={{ width: 50, height: 50, borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,255,136,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-green)', fontWeight: 950, fontSize: 18 }}>{initials(m.name)}</div>
                        <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 16, fontWeight: 950, color: '#fff' }}>{m.name}</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800 }}>{m.plan}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800 }}>{m.plan || 'Sin plan'} · {f.plan}</div>
                        </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, background: 'rgba(0,0,0,0.15)', padding: '10px 16px', borderRadius: 16, border: '1px solid rgba(255,255,255,0.02)' }}>
-                       <div style={{ fontSize: 12, color: 'var(--neon-green)', fontWeight: 950, display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14}/> {fmtTime(Math.floor((Date.now() - m.checkedInAt)/1000))}</div>
-                       <button onClick={(e) => { e.stopPropagation(); setActiveMembers(px => px.filter(ax => ax.id !== m.id)); }} style={{ background: 'rgba(255,61,87,0.1)', border: 'none', color: 'var(--danger-red)', padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 950, cursor: 'pointer' }}>FINALIZAR</button>
+                    <div style={{ fontSize: 12, marginTop: 12, color: '#ccc' }}>
+                      Entró {m.presence?.method === 'geo' ? 'por GPS' : (m.presence?.method || 'recepción')} · {f.haciendo || 'En sala'}{f.trainer ? ` · ${f.trainer}` : ''}
+                    </div>
+                    {(m.openTab || []).length > 0 && (
+                      <div style={{ marginTop: 10, fontSize: 12, color: '#FFD700' }}>
+                        Consumo: {(m.openTab || []).map((l) => `${l.qty}× ${l.name}`).join(', ')} = ${f.consumo.toLocaleString('es-CO')}
+                      </div>
+                    )}
+                    {f.mora > 0 && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--danger-red)' }}>Mora membresía ${f.mora.toLocaleString('es-CO')}</div>}
+                    {m.pagoSolicitado && <div style={{ marginTop: 6, fontSize: 11, color: 'var(--neon-green)' }}>Pide pagar en caja: ${m.pagoSolicitado.amount.toLocaleString('es-CO')}</div>}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, background: 'rgba(0,0,0,0.15)', padding: '10px 16px', borderRadius: 16, gap: 8 }}>
+                       <div style={{ fontSize: 12, color: 'var(--neon-green)', fontWeight: 950, display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14}/> {fmtTime(Math.floor((Date.now() - (m.presence?.enteredAt || Date.now())) / 1000))}</div>
+                       <div style={{ display: 'flex', gap: 6 }}>
+                         {f.consumo > 0 && (
+                           <button type="button" onClick={(e) => { e.stopPropagation(); handleCobrarTab(m); }} style={{ background: 'rgba(255,215,0,0.15)', border: 'none', color: '#FFD700', padding: '6px 10px', borderRadius: 10, fontSize: 10, fontWeight: 950, cursor: 'pointer' }}>COBRAR CONSUMO</button>
+                         )}
+                         <button type="button" onClick={(e) => { e.stopPropagation(); updateMemberStatus(m.id, { presence: { inGym: false, enteredAt: m.presence?.enteredAt || Date.now(), method: m.presence?.method || 'manual' } }); }} style={{ background: 'rgba(255,61,87,0.1)', border: 'none', color: 'var(--danger-red)', padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 950, cursor: 'pointer' }}>SALIDA</button>
+                       </div>
                     </div>
                  </div>
-               ))}
+                 );
+               })}
             </div>
          </div>
 
@@ -799,16 +869,11 @@ export default function Reception() {
               });
             }
 
-            setActiveMembers(prev => [{
-               id: newMem ? String(newMem.id) : String(Date.now()),
-               name: data.name,
-               initials: initials(data.name),
-               plan: data.plan,
-               checkedInAt: Date.now(),
-               membershipStatus: 'active',
-               color: 'var(--neon-green)',
-               checkInMethod: 'manual'
-            }, ...prev]);
+            if (newMem) {
+              await updateMemberStatus(newMem.id, {
+                presence: { inGym: true, enteredAt: Date.now(), method: 'manual', doing: 'Recién inscrito' },
+              });
+            }
 
             setShowQuickRegister(false);
             setLogs(prev => [{ 

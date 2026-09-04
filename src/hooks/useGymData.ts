@@ -147,6 +147,15 @@ export interface Member {
   sessionHistory?: any[];
   weeklyMetrics?: any[];
   trainingMetrics?: any;
+  presence?: {
+    inGym: boolean;
+    enteredAt: number;
+    method: string;
+    doing?: string;
+  };
+  openTab?: { id: string; name: string; qty: number; price: number; at: number }[];
+  sessionLive?: { startedAt: number; trainer?: string } | null;
+  pagoSolicitado?: { amount: number; at: number; nota: string } | null;
 }
 
 function useGymDataInternal() {

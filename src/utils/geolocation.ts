@@ -43,5 +43,9 @@ export const GYM_LOCATION: Coordinate = {
   longitude: -75.62110
 };
 
-// Distancia máxima permitida en kilómetros (100 metros)
-export const MAX_DISTANCE_IN_KILOMETERS = 0.1;
+export const GYM_PINS: Coordinate[] = [
+  GYM_LOCATION,
+  { latitude: 8.7505, longitude: -75.8814 },
+];
+
+export const MAX_DISTANCE_IN_KILOMETERS = 0.25;

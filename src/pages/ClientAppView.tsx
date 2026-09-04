@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ScanFace, Dumbbell, Trophy, Apple, User, Play, Pause,
   Check, ChevronRight, Zap, Flame, Target, Star,
@@ -11,6 +11,7 @@ import {
   Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 import { Link } from 'react-router-dom';
+import { findMemberForUser, fichaCuenta, tabTotal } from '../lib/cuentaPiso';
 import { useGymData } from '../hooks/useGymData';
 import { AiAssist } from '../components/AiAssist';
 import { useAuth } from '../contexts/AuthContext';
@@ -58,7 +59,7 @@ export default function ClientAppView() {
   const [active, setActive] = useState(false);
   const [sec, setSec] = useState(0);
   const [cartCount, setCartCount] = useState(0);
-  const { members, injectTransaction, updateMemberStatus } = useGymData();
+  const { members, updateMemberStatus } = useGymData();
   const { user } = useAuth();
   
   const [workouts, setWorkouts] = useState<WorkoutExercise[]>([]);
@@ -71,16 +72,24 @@ export default function ClientAppView() {
     });
   }, []);
 
-  const athlete = useMemo(() => {
-    return members.find(m => m.id === user?.id) || members[0] || {
-      name: user?.name || 'Sin atleta vinculado',
-      status: 'expired',
-      debt: 0,
-      expiryDate: '',
-      visits: 0,
-      streak: 0,
-    };
-  }, [members, user]);
+  const markedGeo = useRef(false);
+
+  const athlete = useMemo(() => findMemberForUser(members, user), [members, user]);
+
+  useEffect(() => {
+    if (phase !== 'verified' || !athlete?.id || markedGeo.current) return;
+    markedGeo.current = true;
+    updateMemberStatus(athlete.id, {
+      presence: {
+        inGym: true,
+        enteredAt: athlete.presence?.inGym ? athlete.presence.enteredAt : Date.now(),
+        method: 'geo',
+        doing: athlete.sessionLive ? 'Sesión con entrenador' : 'En el gym (GPS)',
+      },
+      lastVisit: new Date().toISOString(),
+      visits: athlete.presence?.inGym ? athlete.visits : (athlete.visits || 0) + 1,
+    });
+  }, [phase, athlete, updateMemberStatus]);
 
   useEffect(() => {
     if (tab !== 'scan') { setPhase('scanning'); return; }
@@ -99,12 +108,8 @@ export default function ClientAppView() {
           const { latitude, longitude } = position.coords;
           
           // Importamos el motor matemático
-          const { getDistanceBetweenCoordinates, GYM_LOCATION, MAX_DISTANCE_IN_KILOMETERS } = await import('../utils/geolocation');
-          
-          const distance = getDistanceBetweenCoordinates(
-            { latitude, longitude },
-            GYM_LOCATION
-          );
+          const { getDistanceBetweenCoordinates, GYM_PINS, MAX_DISTANCE_IN_KILOMETERS } = await import('../utils/geolocation');
+          const distance = Math.min(...GYM_PINS.map((pin) => getDistanceBetweenCoordinates({ latitude, longitude }, pin)));
 
           if (distance <= MAX_DISTANCE_IN_KILOMETERS) {
             setPhase('verified');
@@ -139,6 +144,12 @@ export default function ClientAppView() {
         texto="Tu objetivo se cumple en el piso, no en la pantalla. Escanea el QR de la máquina o entra a Sala: pecho alto/bajo, WOD, HYROX. Si tu membresía está vencida o hay mora, recepción no te deja entrar."
       />
       <Link to="/sala" style={{ color: 'var(--neon-green)', fontWeight: 800, fontSize: 14, marginBottom: 8 }}>Abrir sala del socio (QR y zonas) →</Link>
+      {!athlete && <p style={{ color: '#FFD700', fontSize: 13 }}>Tu login no está en una ficha. En recepción, pon el mismo correo del socio.</p>}
+      {athlete && tabTotal(athlete.openTab) > 0 && (
+        <div className="glass-card" style={{ padding: 14, border: '1px solid rgba(255,215,0,0.4)' }}>
+          Debes pagar al salir: {(athlete.openTab || []).map((l) => `${l.qty}× ${l.name}`).join(', ')} = ${tabTotal(athlete.openTab).toLocaleString('es-CO')}
+        </div>
+      )}
 
       {/* ── HEADER ELITE ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -155,7 +166,7 @@ export default function ClientAppView() {
         <div style={{ display: 'flex', gap: 12 }}>
            <div className="glass-card" style={{ padding: '12px 20px', borderRadius: 20, textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
               <div style={{ fontSize: 9, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 2 }}>ESTADO_MEMBRESÍA</div>
-              <div style={{ fontSize: 13, fontWeight: 950, color: 'var(--neon-green)' }}>{athlete.status === 'active' ? '● ACTIVA' : '○ VENCIDA'}</div>
+              <div style={{ fontSize: 13, fontWeight: 950, color: 'var(--neon-green)' }}>{athlete?.status === 'active' ? '● ACTIVA' : athlete ? `○ ${fichaCuenta(athlete).plan}` : '○ SIN FICHA'}</div>
            </div>
         </div>
       </div>
@@ -163,9 +174,9 @@ export default function ClientAppView() {
       {/* ── QUICK STATS ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
          {[
-           { label: 'VISITAS', value: String(athlete.visits || 0), icon: <Activity />, color: '#00E5FF' },
-           { label: 'RACHA', value: String(athlete.streak || 0), icon: <Flame />, color: '#FF6B35' },
-           { label: 'SALDO', value: `$${(athlete.debt || 0).toLocaleString('es-CO')}`, icon: <Heart />, color: '#A78BFA' },
+           { label: 'VISITAS', value: String(athlete?.visits || 0), icon: <Activity />, color: '#00E5FF' },
+           { label: 'RACHA', value: String(athlete?.streak || 0), icon: <Flame />, color: '#FF6B35' },
+           { label: 'SALDO', value: `$${(athlete?.debt || 0).toLocaleString('es-CO')}`, icon: <Heart />, color: '#A78BFA' },
            { label: 'TIEMPO SESIÓN', value: active ? fmt(sec) : '--:--', icon: <Clock />, color: 'var(--neon-green)', active: active }
          ].map(s => (
            <div key={s.label} className="glass-card premium-card-hover" style={{ padding: 20, borderRadius: 24, transition: '0.3s' }}>
@@ -245,7 +256,7 @@ export default function ClientAppView() {
                  </h2>
                  <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
                     {phase === 'verified' ? 'Bienvenido a Fuxion Fit. Registramos tu asistencia.' : 
-                     phase === 'error_distance' ? 'Estás a más de 100m del gimnasio. Acércate para registrar tu entrada.' :
+                     phase === 'error_distance' ? 'Estás lejos de las sedes (Ciénaga de Oro / Montería). Acércate o entra por recepción.' :
                      phase === 'error_gps' ? 'Debes otorgar permisos de ubicación para registrar asistencia.' : 'Buscando satélites y calculando distancia...'}
                  </p>
               </div>
@@ -264,7 +275,17 @@ export default function ClientAppView() {
                          {workouts.length ? `${workouts.length} ejercicios cargados` : 'Sin rutina cargada'}
                        </p>
                     </div>
-                    <button onClick={() => setActive(!active)} style={{ padding: '14px 28px', borderRadius: 18, background: active ? 'var(--danger-red)' : 'var(--neon-green)', color: '#000', border: 'none', fontWeight: 950, cursor: 'pointer', transition: '0.3s', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>
+                    <button onClick={() => {
+                       const next = !active;
+                       setActive(next);
+                       if (athlete?.id) {
+                         updateMemberStatus(athlete.id, {
+                           presence: athlete.presence?.inGym
+                             ? { ...athlete.presence, doing: next ? 'Entrenando' : 'En sala' }
+                             : athlete.presence,
+                         });
+                       }
+                    }} style={{ padding: '14px 28px', borderRadius: 18, background: active ? 'var(--danger-red)' : 'var(--neon-green)', color: '#000', border: 'none', fontWeight: 950, cursor: 'pointer', transition: '0.3s', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}>
                        {active ? 'PAUSAR' : 'INICIAR ENTRENAMIENTO'}
                     </button>
                  </div>
@@ -318,8 +339,9 @@ export default function ClientAppView() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                  <div className="glass-card" style={{ padding: 24, borderRadius: 28 }}>
                     <div style={{ fontSize: 12, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 12 }}>MEMBRESÍA</div>
-                    <div style={{ fontSize: 18, fontWeight: 900 }}>{athlete.plan || 'Sin plan'}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Vence: {athlete.expiryDate || athlete.expiry || '—'}</div>
+                    <div style={{ fontSize: 18, fontWeight: 900 }}>{athlete?.plan || 'Sin plan'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8 }}>Vence: {athlete?.expiryDate || athlete?.expiry || '—'}</div>
+                    <Link to="/sala" style={{ display: 'block', marginTop: 12, color: 'var(--neon-green)', fontSize: 13 }}>Zonas y máquinas (QR) →</Link>
                  </div>
                  <div className="glass-card" style={{ padding: 24, borderRadius: 28 }}>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -331,8 +353,8 @@ export default function ClientAppView() {
          )}
 
          {tab === 'leaderboard' && <PanelLeaderboard members={members} athlete={athlete} />}
-         {tab === 'nutrition' && <PanelNutrition />}
-         {tab === 'store' && <PanelStore onCartChange={setCartCount} injectTransaction={injectTransaction} updateMemberStatus={updateMemberStatus} athlete={athlete} />}
+         {tab === 'nutrition' && <PanelNutrition athlete={athlete} updateMemberStatus={updateMemberStatus} />}
+         {tab === 'store' && <PanelStore onCartChange={setCartCount} athlete={athlete} />}
          {tab === 'wallet' && <PanelWallet user={athlete} />}
          {tab === 'profile' && <PanelProfile user={athlete} />}
          {tab === 'aiscanner' && <PanelAIScanner />}

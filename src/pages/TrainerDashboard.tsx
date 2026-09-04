@@ -10,6 +10,7 @@ import {
   ResponsiveContainer, LineChart, Line,
 } from 'recharts';
 import { useGymData, Member } from '../hooks/useGymData';
+import { useAuth } from '../contexts/AuthContext';
 import { firstName, initials } from '../lib/safeText';
 import FlashProgramBuilder from '../components/trainer/FlashProgramBuilder';
 import { AiAssist } from '../components/AiAssist';
@@ -32,6 +33,7 @@ const progressHistory = [
 ══════════════════════════════════════ */
 export default function TrainerDashboard() {
   const { members, updateMemberStatus, addMember } = useGymData();
+  const { user } = useAuth();
   const [selectedClient, setSelectedClient] = useState<Member | null>(null);
   const [activeTab, setActiveTab] = useState<'progress' | 'log' | 'body' | 'goals' | 'notes' | 'connect'>('progress');
   const [showFlashBuilder, setShowFlashBuilder] = useState(false);
@@ -72,8 +74,8 @@ export default function TrainerDashboard() {
   };
 
   const toggleSession = (clientId: string) => {
+    const m = members.find((x) => x.id === clientId);
     if (activeSessions[clientId] !== undefined) {
-      // Terminar sesión
       const confirmEnd = window.confirm('¿Terminar sesión y guardar datos?');
       if (confirmEnd) {
         setActiveSessions(prev => {
@@ -81,13 +83,26 @@ export default function TrainerDashboard() {
           delete next[clientId];
           return next;
         });
+        if (m) {
+          updateMemberStatus(clientId, {
+            sessionLive: null,
+            presence: m.presence?.inGym ? { ...m.presence, doing: 'En sala' } : m.presence,
+          });
+        }
         setActiveTab('progress');
       }
     } else {
-      // Iniciar sesión
       setActiveSessions(prev => ({ ...prev, [clientId]: 0 }));
-      setSelectedClient(members.find(m => m.id === clientId) || null);
+      setSelectedClient(m || null);
       setActiveTab('log');
+      if (m) {
+        updateMemberStatus(clientId, {
+          sessionLive: { startedAt: Date.now(), trainer: user?.name || 'Entrenador' },
+          presence: m.presence?.inGym
+            ? { ...m.presence, doing: `Sesión con ${user?.name || 'entrenador'}` }
+            : m.presence,
+        });
+      }
     }
   };
 
