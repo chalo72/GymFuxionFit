@@ -2,64 +2,28 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="GymFuxionFit — Ecosistema Fitness de Nueva Generación con IA, Biometría y Realidad Aumentada" />
     <meta name="theme-color" content="#0A0A0F" />
     <title>GymFuxionFit — El Futuro del Fitness</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/citedhealth-embed@1/dist/embed.min.js"></script>
     <script>
-      const FORCE_VERSION = "v7.0.29"; // <--- CAMBIAR ESTO ROMPE LA CACHÉ
-      // 🕵️‍♂️ NUCLEAR CACHE PURGE V4 (Antigravity Anti-Cache Shield)
+      const FORCE_VERSION = "v7.0.30";
       (function() {
-        // 1. Limpiar Service Workers
         if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(registrations => {
-            for (let r of registrations) r.unregister();
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for (var i = 0; i < registrations.length; i++) registrations[i].unregister();
           });
         }
-        
-        // 2. Limpiar Caches de la API de Cache
-        if ('caches' in window) {
-          caches.keys().then(names => {
-            for (let n of names) caches.delete(n);
-          });
-        }
-
-        // 3. Forzar refresco si hay cambio de versión detectado por el Manifiesto
-        console.log("🛡️ Escudo Anti-Caché Activado");
-
-        // 4. Capturar fallos de importación dinámica (Vite Build Drift)
         window.addEventListener('error', function(e) {
-          if (e.message && (e.message.includes('Failed to fetch dynamically imported module') || e.message.includes('Importing a module script failed'))) {
-            console.warn("⚠️ Fallo en carga de módulo dinámico detectado. Forzando recarga limpia...");
-            location.reload(true);
-          }
+          var msg = (e && e.message) ? e.message : '';
+          if (msg.indexOf('Failed to fetch dynamically imported module') === -1 && msg.indexOf('Importing a module script failed') === -1) return;
+          if (sessionStorage.getItem('gff_reload')) return;
+          sessionStorage.setItem('gff_reload', '1');
+          location.reload();
         }, true);
-
-        // 5. Interceptar errores de promesas (importaciones dinámicas fallidas)
-        window.addEventListener('unhandledrejection', function(e) {
-          if (e.reason && e.reason.message && e.reason.message.includes('Failed to fetch dynamically imported module')) {
-            console.warn("⚠️ Promesa de módulo rechazada. Forzando recarga limpia...");
-            location.reload(true);
-          }
-        });
-
-        // 🚨 REPORTERO DE ERRORES CRÍTICOS (Para pantalla en blanco)
-        window.onerror = function(msg, url, line, col, error) {
-          if (msg.includes('Failed to fetch dynamically imported module')) return; // Ya manejado arriba
-          var div = document.createElement('div');
-          div.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:white;color:black;z-index:100000;padding:20px;font-family:monospace;border-bottom:5px solid red;font-size:12px;';
-          div.innerHTML = '<h3 style="color:red;margin:0">🚨 ERROR DE CARGA DETECTADO</h3>' +
-                          '<p><b>Mensaje:</b> ' + msg + '</p>' +
-                          '<p><b>Archivo:</b> ' + url + '</p>' +
-                          '<p><b>Línea:</b> ' + line + ':' + col + '</p>' +
-                          '<button onclick="location.reload()" style="padding:10px;background:black;color:white;border:none;cursor:pointer">REINTENTAR</button>';
-          document.body.appendChild(div);
-        };
-
       })();
     </script>
   </head>

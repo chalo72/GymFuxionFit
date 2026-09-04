@@ -1,11 +1,10 @@
 {
-  "version": "7.0.29",
-  "build": "20260904.1635",
+  "version": "7.0.30",
+  "build": "20260904.1705",
   "status": "PRODUCTO_REAL",
   "author": "Antigravity Nexus",
   "features": [
-    "Presencia real en recepción (QR/GPS)",
-    "Cuenta de piso: agua y consumo al salir",
-    "Tienda y pagos del socio sin simulacro"
+    "Celular: scroll real, login y menú usables",
+    "Lista completa de planes (día, semana, quincena, básico, pro, HYROX)"
   ]
 }

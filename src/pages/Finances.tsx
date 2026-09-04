@@ -393,7 +393,7 @@ export default function Finances() {
           </div>
         </div>
       ) : activeTab === 'income' ? (
-        <div style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:24, flex:1 }}>
+        <div className="finances-income-grid" style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:24, flex:1 }}>
            <div className="glass-card" style={{ padding:28, border: '1px solid var(--neon-green)20' }}>
               <h3 style={{ fontSize:20, fontWeight:950, marginBottom:4 }}>Registrar Cobro</h3>
               <p style={{ fontSize:13, color:'var(--text-muted)', marginBottom:20 }}>Cobrar a un cliente del gimnasio</p>
@@ -638,7 +638,7 @@ export default function Finances() {
             </div>
          </div>
       ) : activeTab === 'expense' ? (
-        <div style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:24, flex:1 }}>
+        <div className="finances-income-grid" style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:24, flex:1 }}>
            <div className="glass-card" style={{ padding:32, border: '1px solid rgba(255,255,255,0.1)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
                  <div>

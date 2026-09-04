@@ -172,7 +172,7 @@ export default function ClientAppView() {
       </div>
 
       {/* ── QUICK STATS ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
          {[
            { label: 'VISITAS', value: String(athlete?.visits || 0), icon: <Activity />, color: '#00E5FF' },
            { label: 'RACHA', value: String(athlete?.streak || 0), icon: <Flame />, color: '#FF6B35' },
@@ -266,7 +266,7 @@ export default function ClientAppView() {
          {tab === 'aicoach' && <PostureCoach />}
 
          {tab === 'workout' && (
-           <div style={{ height: '100%', display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24, animation: 'slideIn 0.5s ease-out' }}>
+           <div style={{ height: '100%', display: 'grid', gridTemplateColumns: '1fr', gap: 24, animation: 'slideIn 0.5s ease-out' }}>
               <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 32, borderRadius: 32 }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                     <div>

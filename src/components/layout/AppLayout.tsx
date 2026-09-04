@@ -70,15 +70,15 @@ export default function AppLayout() {
           isCollapsed={isCollapsed}
           handleToggleCollapse={handleToggleCollapse}
         />
-        <div className="page-content" style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        <div className="page-content page-scroll" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'auto' }}>
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.3, ease: 'easeOut' }}
-              style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column' }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              style={{ width: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}
             >
             <PageErrorBoundary key={location.pathname}>
               <Outlet />

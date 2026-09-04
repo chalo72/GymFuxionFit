@@ -37,10 +37,28 @@ export function saveUsers(users: StoredUser[]) {
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`gff:${password}`));
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  const payload = `gff:${password}`;
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(payload));
+    return Array.from(new Uint8Array(buf))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  } catch {
+    let h = 2166136261;
+    for (let i = 0; i < payload.length; i++) {
+      h ^= payload.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return `fb_${(h >>> 0).toString(16)}`;
+  }
+}
+
+function newId() {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  }
 }
 
 export function upsertUser(params: {
@@ -61,7 +79,7 @@ export function upsertUser(params: {
       users[i] = { ...users[i], name, role: params.role, passwordHash };
     } else {
       users.push({
-        id: crypto.randomUUID(),
+        id: newId(),
         name,
         email,
         role: params.role,

@@ -4,6 +4,7 @@ import { supabase, hasSupabase } from '../lib/supabase';
 import { trioSync } from '../lib/trioSync';
 import { syncManager } from '../services/syncManager';
 import { backupService } from '../lib/backupService';
+import { DEFAULT_PLANS, ensurePlanes } from '../data/planesGym';
 
 /* ══════════════════════════════════════════
    GLOBAL_SYNC_SERVICE V.1.1
@@ -227,14 +228,12 @@ function useGymDataInternal() {
     pacaCost: 6000
   });
   const [plans, setPlans] = useState<any[]>(() => {
-    const saved = localStorage.getItem('fuxion_custom_plans');
-    return saved ? JSON.parse(saved) : [
-      { id: 'dia',        label: 'Día',       price: 5000,   desc: 'Acceso por un día',                  color: '#FFD600', duration: 'dia'    },
-      { id: 'semana',     label: 'Semanal',   price: 25000,  desc: 'Acceso por 7 días',                  color: '#00E5FF', duration: 'semana' },
-      { id: 'mes_basico', label: 'Básico',    price: 45000,  desc: 'Acceso gimnasio · L-V · Sin clases', color: '#8A948A', duration: 'mes'    },
-      { id: 'mes_pro',    label: 'Pro',       price: 75000,  desc: 'Acceso completo · Clases incluidas', color: '#00FF88', duration: 'mes'    },
-      { id: 'mes_hyrox',  label: 'HYROX Pro', price: 120000, desc: 'Elite · HYROX · Trainer asignado',   color: '#FF6B35', duration: 'mes'    },
-    ];
+    try {
+      const saved = localStorage.getItem('fuxion_custom_plans');
+      return ensurePlanes(saved ? JSON.parse(saved) : null);
+    } catch {
+      return DEFAULT_PLANS.map((p) => ({ ...p }));
+    }
   });
   const [plansConfig, setPlansConfig] = useState(() => {
     const saved = localStorage.getItem('fuxion_plans_config');
@@ -346,7 +345,7 @@ function useGymDataInternal() {
       if (type === 'STAFF_UPDATE') setStaff(data);
       if (type === 'ASSETS_UPDATE') setAssets(data);
       if (type === 'PLANS_UPDATE') {
-        setPlans(data);
+        setPlans(ensurePlanes(data));
         const cfg: any = {};
         data.forEach((p: any) => { cfg[p.id] = p.price; });
         setPlansConfig(cfg);
@@ -361,7 +360,7 @@ function useGymDataInternal() {
         if (e.key === 'fuxion_products' && e.newValue) setProducts(JSON.parse(e.newValue));
         if (e.key === 'fuxion_custom_plans' && e.newValue) {
           const nextPlans = JSON.parse(e.newValue);
-          setPlans(nextPlans);
+          setPlans(ensurePlanes(nextPlans));
           const cfg: any = {};
           nextPlans.forEach((p: any) => { cfg[p.id] = p.price; });
           setPlansConfig(cfg);

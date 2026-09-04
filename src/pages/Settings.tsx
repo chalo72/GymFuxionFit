@@ -124,7 +124,7 @@ export default function Settings() {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 24 }}>
+      <div className="settings-layout" style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 24 }}>
         <div className="glass-card" style={{ padding: 12, height: 'fit-content' }}>
           {sections.map((sec) => (
             <button
@@ -150,7 +150,7 @@ export default function Settings() {
               <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <DollarSign size={20} color="var(--neon-green)" /> Precios y Planes
               </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div className="plans-price-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <div className="input-group">
                   <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>VALOR DÍA</label>
                   <input className="input-field" type="number" value={localPlans.dia} onChange={(e) => setLocalPlans({...localPlans, dia: e.target.value})} />

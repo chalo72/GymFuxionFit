@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, UserPlus, Phone, CreditCard, Check, Zap } from 'lucide-react';
+import { DEFAULT_PLANS } from '../../data/planesGym';
 import { Member } from '../../hooks/useGymData';
 
 interface QuickRegisterModalProps {
@@ -18,13 +19,10 @@ export default function QuickRegisterModal({ onClose, onSave, plansConfig }: Qui
     debt: 0
   });
 
-  const plans = [
-    { id: 'dia', label: 'Día', price: plansConfig?.dia || 5000, color: '#FFD600' },
-    { id: 'semana', label: 'Semana', price: plansConfig?.semana || 25000, color: '#00E5FF' },
-    { id: 'mes_basico', label: 'Básico', price: plansConfig?.mes_basico || 45000, color: '#8A948A' },
-    { id: 'mes_pro', label: 'Pro', price: plansConfig?.mes_pro || 75000, color: '#00FF88' },
-    { id: 'mes_hyrox', label: 'HYROX', price: plansConfig?.mes_hyrox || 120000, color: '#FF6B35' },
-  ];
+  const plans = DEFAULT_PLANS.map((p) => ({
+    ...p,
+    price: plansConfig?.[p.id] ?? p.price,
+  }));
 
   const currentPlanPrice = plans.find(p => p.id === form.plan || (p.label && form.plan && p.label.toLowerCase() === form.plan.toLowerCase()))?.price || 0;
 
@@ -35,6 +33,8 @@ export default function QuickRegisterModal({ onClose, onSave, plansConfig }: Qui
       expiry.setDate(expiry.getDate() + 1);
     } else if (form.plan === 'semana') {
       expiry.setDate(expiry.getDate() + 7);
+    } else if (form.plan === 'quincena') {
+      expiry.setDate(expiry.getDate() + 15);
     } else {
       expiry.setMonth(expiry.getMonth() + 1);
     }
@@ -62,7 +62,7 @@ export default function QuickRegisterModal({ onClose, onSave, plansConfig }: Qui
       <div className="glass-card premium-shadow" style={{
         maxWidth: 450, width: '100%', borderRadius: 28,
         background: 'var(--space-dark)', border: '1px solid rgba(0,255,136,0.2)',
-        overflow: 'hidden', position: 'relative'
+        overflow: 'auto', position: 'relative', maxHeight: '90dvh'
       }}>
         {/* Header */}
         <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -109,7 +109,7 @@ export default function QuickRegisterModal({ onClose, onSave, plansConfig }: Qui
           {/* Plan */}
           <div>
             <label style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 8, display: 'block', textTransform: 'uppercase' }}>Seleccionar Plan</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(88px, 1fr))', gap: 10 }}>
               {plans.map(p => (
                 <div 
                   key={p.id}

@@ -494,8 +494,8 @@ export default function Reception() {
                   </div>
                   
                   {/* ── ACCESOS RÁPIDOS DE MEMBRESÍA ── */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 14 }}>
-                    {plans.slice(0, 3).map(srv => (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(92px, 1fr))', gap: 10, marginBottom: 14 }}>
+                    {plans.map(srv => (
                       <button key={srv.id} onClick={() => addToCart({ id: srv.id, name: srv.label, sellPrice: srv.price, category: 'Servicio' })} style={{ padding: '12px 6px', borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: `1px solid ${srv.color}30`, color: '#fff', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: '0.25s' }} className="srv-btn-premium">
                         <div style={{ color: srv.color }}>{srv.duration === 'dia' ? <Zap size={14}/> : srv.duration === 'semana' ? <Calendar size={14}/> : <TrendingUp size={14}/>}</div>
                         <div style={{ fontSize: 9, fontWeight: 950, letterSpacing: 1 }}>{srv.label.toUpperCase()}</div>
@@ -732,8 +732,8 @@ export default function Reception() {
                      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                         <div className="glass-card" style={{ padding: 32, borderRadius: 32, border: '1px solid rgba(0,255,136,0.3)', background: 'rgba(0,255,136,0.04)', backdropFilter: 'blur(10px)' }}>
                            <h4 style={{ fontSize: 11, fontWeight: 950, color: 'var(--neon-green)', letterSpacing: 3, marginBottom: 24 }}>SERVICIOS RÁPIDOS</h4>
-                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 32 }}>
-                              {plans.slice(0, 3).map(srv => (
+                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 14, marginBottom: 32 }}>
+                              {plans.map(srv => (
                                  <button key={srv.id} onClick={() => addToCart({ ...srv, name: srv.label, sellPrice: srv.price, category: 'Servicio' })} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${srv.color}30`, borderRadius: 20, padding: '22px 10px', color: '#fff', cursor: 'pointer', transition: '0.3s', display:'flex', flexDirection:'column', alignItems:'center', gap: 10 }} className="srv-btn-premium">
                                     <div style={{ color: srv.color }}>{srv.duration === 'dia' ? <Zap size={16}/> : srv.duration === 'semana' ? <Calendar size={16}/> : <TrendingUp size={16}/>}</div>
                                     <div style={{ fontSize: 10, fontWeight: 950, letterSpacing: 1.5 }}>{srv.label.toUpperCase()}</div>
