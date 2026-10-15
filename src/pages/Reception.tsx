@@ -349,6 +349,85 @@ export default function Reception() {
     }
   };
 
+  /* ── COBRAR TODO Y DAR SALIDA (ficha en vivo) ── */
+  const handleCobrarTodoYSalida = async () => {
+    if (!selectedMember || isProcessing) return;
+    setIsProcessing(true);
+    const dateStr = new Date().toISOString().split('T')[0];
+    const timeStr = new Date().toLocaleTimeString().slice(0, 5);
+    const live = members.find((x) => x.id === selectedMember.id) || selectedMember;
+    try {
+      const tabItems = live.openTab || [];
+      const tabAmt = tabTotal(tabItems);
+
+      // 1) Cobrar consumo del piso
+      if (tabAmt > 0) {
+        await injectTransaction({
+          date: dateStr, time: timeStr,
+          description: `Consumo piso: ${tabItems.map((l) => `${l.qty}×${l.name}`).join(', ')}`,
+          category: 'other', type: 'income',
+          amount: tabAmt,
+          method: paymentMethod === 'Crédito' ? 'Efectivo' : paymentMethod,
+          client: selectedMember.name,
+        });
+      }
+
+      // 2) Cobrar carrito actual
+      for (const item of cart) {
+        if (item.category !== 'Servicio') {
+          const ok = await registerProductSale(item.id, item.qty, selectedMember.name, paymentMethod);
+          if (ok && paymentMethod !== 'Crédito') {
+            await injectTransaction({
+              date: dateStr, time: timeStr,
+              description: `Venta: ${item.qty}×${item.name}`,
+              category: 'other', type: 'income',
+              amount: item.price * item.qty, method: paymentMethod,
+              client: selectedMember.name,
+            });
+          }
+        } else {
+          const plan = plans.find((p) => p.id === item.id);
+          await injectTransaction({
+            date: dateStr, time: timeStr,
+            description: `Servicio: ${item.name}`,
+            category: plan?.duration === 'mes' || plan?.duration === 'semana' ? 'membership' : 'daypass',
+            type: 'income', amount: item.price * item.qty, method: paymentMethod,
+            client: selectedMember.name,
+          });
+          if (plan) {
+            let days = plan.duration === 'semana' ? 7 : plan.duration === 'mes' ? 30 : 1;
+            days *= item.qty;
+            const base = selectedMember.expiryDate || dateStr;
+            const [y, mo, d] = base.split('-').map(Number);
+            const from = new Date(y, mo - 1, d);
+            from > new Date() ? from : new Date(new Date().setDate(new Date().getDate()));
+            from.setDate(from.getDate() + days);
+            await updateMemberStatus(selectedMember.id, { status: 'active', expiryDate: from.toISOString().split('T')[0], debt: 0 });
+          }
+        }
+      }
+
+      // 3) Marcar salida y limpiar tab
+      await updateMemberStatus(selectedMember.id, {
+        presence: { inGym: false, enteredAt: live.presence?.enteredAt || Date.now(), method: live.presence?.method || 'manual' },
+        openTab: [], pagoSolicitado: null,
+      });
+
+      const totalCobrado = tabAmt + roundPrice(cart.reduce((a, c) => a + c.price * c.qty, 0));
+      setLogs((prev) => [{
+        id: Date.now(), name: selectedMember.name,
+        action: `COBRO TOTAL $${totalCobrado.toLocaleString('es-CO')} + SALIDA`,
+        time: timeStr, method: paymentMethod, color: 'var(--neon-green)',
+      }, ...prev]);
+      setCart([]); setShowProfile(false); setSelectedMember(null);
+      showToast(`✅ Cobrado $${totalCobrado.toLocaleString('es-CO')} · Salida registrada`);
+    } catch {
+      showToast('❌ Error al procesar el cobro total.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleClearDebt = async () => {
     if (selectedMember) {
       await clearMemberDebt(selectedMember.id);
@@ -692,6 +771,124 @@ export default function Reception() {
                      </div>
                      <button onClick={() => setShowProfile(false)} style={{ background:'rgba(255,255,255,0.08)', border:'none', color:'#fff', cursor:'pointer', padding: 20, borderRadius: 24, transition: '0.3s' }} className="close-btn-premium"><X size={28}/></button>
                   </div>
+
+                  {/* ══ FICHA EN VIVO — solo cuando el socio está adentro ══ */}
+                  {selectedMember.presence?.inGym && (() => {
+                    const live = members.find((x) => x.id === selectedMember.id) || selectedMember;
+                    const f = fichaCuenta(live);
+                    const tiempoSeg = Math.floor((Date.now() - (live.presence?.enteredAt || Date.now())) / 1000);
+                    const tabItems = live.openTab || [];
+                    const cartAmt = roundPrice(cart.reduce((a, c) => a + c.price * c.qty, 0));
+                    const totalSalida = f.consumo + f.mora + cartAmt;
+                    return (
+                      <div style={{ marginBottom: 36, background: 'rgba(0,255,136,0.04)', border: '2px solid rgba(0,255,136,0.35)', borderRadius: 32, padding: 32 }}>
+                        {/* ── Cabecera en vivo ── */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16, marginBottom: 28 }}>
+                          <div>
+                            <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--neon-green)', letterSpacing: 2.5, display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--neon-green)', display: 'inline-block', boxShadow: '0 0 8px var(--neon-green)', animation: 'pulse 2s ease-in-out infinite' }} />
+                              EN SALA AHORA
+                            </div>
+                            <div style={{ fontSize: 28, fontWeight: 950, color: '#fff', marginTop: 6 }}>
+                              <Clock size={20} style={{ verticalAlign: 'middle', marginRight: 8, color: 'var(--neon-green)' }} />
+                              {fmtTime(tiempoSeg)} · {live.presence?.method === 'geo' ? 'GPS' : live.presence?.method || 'recepción'}
+                            </div>
+                          </div>
+                          <button
+                            onClick={handleCobrarTodoYSalida}
+                            disabled={isProcessing || totalSalida <= 0}
+                            style={{ padding: '18px 28px', borderRadius: 22, background: totalSalida > 0 ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)', color: '#000', border: 'none', fontWeight: 950, fontSize: 14, cursor: isProcessing ? 'wait' : 'pointer', boxShadow: totalSalida > 0 ? '0 10px 30px rgba(0,255,136,0.45)' : 'none', letterSpacing: 0.5, transition: '0.3s' }}
+                          >
+                            {isProcessing ? '⌛ PROCESANDO...' : `💳 COBRAR TODO Y DAR SALIDA · $${totalSalida.toLocaleString('es-CO')}`}
+                          </button>
+                        </div>
+
+                        {/* ── Consumo del piso (tab abierto) ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 950, color: '#FFD700', letterSpacing: 2, marginBottom: 12 }}>
+                            🛒 CONSUMO DEL PISO {tabItems.length === 0 && <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>— Aún no ha pedido nada</span>}
+                          </div>
+                          {tabItems.length > 0 && (
+                            <div style={{ background: 'rgba(0,0,0,0.35)', borderRadius: 20, overflow: 'hidden' }}>
+                              {tabItems.map((l) => (
+                                <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                    <span style={{ background: 'rgba(255,215,0,0.15)', color: '#FFD700', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 950 }}>{l.qty}×</span>
+                                    <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{l.name}</span>
+                                  </div>
+                                  <span style={{ color: '#FFD700', fontWeight: 950, fontSize: 15 }}>${(l.qty * l.price).toLocaleString('es-CO')}</span>
+                                </div>
+                              ))}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', background: 'rgba(255,215,0,0.06)', borderTop: '1px solid rgba(255,215,0,0.2)' }}>
+                                <span style={{ color: '#FFD700', fontWeight: 950, fontSize: 12, letterSpacing: 1 }}>SUBTOTAL CONSUMO</span>
+                                <span style={{ color: '#FFD700', fontWeight: 950, fontSize: 20 }}>${f.consumo.toLocaleString('es-CO')}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* ── Agregar más items rápido ── */}
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 10 }}>➕ AGREGAR A LA CUENTA</div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            {products.filter(p => p.stock > 0).slice(0, 8).map((p) => (
+                              <button
+                                key={p.id}
+                                onClick={() => addToCart(p)}
+                                style={{ padding: '10px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: '0.2s', display: 'flex', gap: 6, alignItems: 'center' }}
+                              >
+                                <span style={{ fontSize: 14 }}>{p.category === 'drinks' ? '🥤' : '📦'}</span>
+                                <span>{p.name}</span>
+                                <span style={{ color: 'var(--neon-green)', fontWeight: 950, fontSize: 11 }}>${(p.sellPrice / 1000).toFixed(0)}K</span>
+                              </button>
+                            ))}
+                          </div>
+                          {cart.length > 0 && (
+                            <div style={{ marginTop: 12, background: 'rgba(0,255,136,0.04)', borderRadius: 16, padding: '12px 16px', border: '1px solid rgba(0,255,136,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>En carrito actual: {cart.map(c => `${c.qty}×${c.name}`).join(', ')}</span>
+                              <span style={{ color: 'var(--neon-green)', fontWeight: 950, fontSize: 14 }}>${cartAmt.toLocaleString('es-CO')}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* ── Recibo completo al salir ── */}
+                        <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 20, padding: '20px 24px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                          <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>📋 RECIBO AL SALIR</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {f.consumo > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Consumo piso</span>
+                                <span style={{ color: '#FFD700', fontWeight: 800 }}>${f.consumo.toLocaleString('es-CO')}</span>
+                              </div>
+                            )}
+                            {f.mora > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Mora membresía</span>
+                                <span style={{ color: 'var(--danger-red)', fontWeight: 800 }}>${f.mora.toLocaleString('es-CO')}</span>
+                              </div>
+                            )}
+                            {cartAmt > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Carrito ({cart.length} ítem{cart.length !== 1 ? 's' : ''})</span>
+                                <span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>${cartAmt.toLocaleString('es-CO')}</span>
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12, marginTop: 4 }}>
+                              <span style={{ color: '#fff', fontWeight: 950, fontSize: 15 }}>TOTAL A COBRAR</span>
+                              <span style={{ color: 'var(--neon-green)', fontWeight: 950, fontSize: 22, textShadow: '0 0 15px rgba(0,255,136,0.4)' }}>${totalSalida.toLocaleString('es-CO')}</span>
+                            </div>
+                          </div>
+                          <div style={{ marginTop: 16 }}>
+                            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as any)} style={{ width: '100%', padding: '14px 18px', borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, fontWeight: 800 }}>
+                              <option value="Efectivo">💵 Efectivo</option>
+                              <option value="Nequi">📱 Nequi</option>
+                              <option value="Crédito">💳 Deuda (Fiado)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* 3. TABS DEL EXPEDIENTE */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 40 }}>
