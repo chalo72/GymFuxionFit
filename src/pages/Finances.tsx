@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   TrendingUp, AlertCircle, ArrowUpRight,
   ArrowDownRight, Plus, Filter, X, Check,
@@ -75,7 +75,9 @@ function PaymentVoucher({ tx, onClose }: { tx: any; onClose: () => void }) {
   );
 }
 
-export default function Finances() {
+export type FinanceVista = 'dashboard' | 'income' | 'expense' | 'payroll' | 'goals' | 'agua';
+
+export default function Finances({ vista }: { vista?: FinanceVista }) {
   const {
     transactions: txList, members, injectTransaction,
     goals, addGoal, updateGoal, deleteGoal,
@@ -87,7 +89,8 @@ export default function Finances() {
     updateMemberStatus, clearMemberDebt,
     updateTransaction, deleteTransaction
   } = useGymData();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'income' | 'expense' | 'payroll' | 'goals' | 'agua'>('dashboard');
+  const [activeTab, setActiveTab] = useState<FinanceVista>(vista || 'dashboard');
+  useEffect(() => { if (vista) setActiveTab(vista); }, [vista]);
   
   const [showGoalModal, setShowGoalModal] = useState<boolean>(false);
   const [editingGoal, setEditingGoal] = useState<any | null>(null);
@@ -313,7 +316,7 @@ export default function Finances() {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', height:'100%', gap:20, padding: '10px 0' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+      {!vista && <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div>
            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:4 }}>
               <div style={{ width:8, height:8, background:'var(--neon-green)', borderRadius:'50%', boxShadow:'0 0 10px var(--neon-green)' }} />
@@ -338,7 +341,7 @@ export default function Finances() {
              </button>
            ))}
         </div>
-      </div>
+      </div>}
 
       {activeTab === 'dashboard' ? (
         <div style={{ display:'flex', flexDirection:'column', gap:20 }}>

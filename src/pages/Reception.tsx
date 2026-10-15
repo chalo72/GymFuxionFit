@@ -13,7 +13,7 @@ import {
 import { useGymData, Member, roundPrice } from '../hooks/useGymData';
 import { initials } from '../lib/safeText';
 import { canEnterGym, memberFromQr, memberQrPayload } from '../lib/accessGate';
-import { fichaCuenta, mergeTab, tabTotal } from '../lib/cuentaPiso';
+import { aplicarAbono, fichaCuenta, mergeTab, sumarCredito, tabTotal } from '../lib/cuentaPiso';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
 import { AiAssist } from '../components/AiAssist';
 import { Link } from 'react-router-dom';
@@ -35,6 +35,15 @@ const fmtTime = (s: number) => {
   const sec = s % 60;
   return `${m}:${sec.toString().padStart(2,'0')}`;
 };
+
+const diasPlan = (duration?: string) => {
+  if (duration === 'semana') return 7;
+  if (duration === 'quincena') return 15;
+  if (duration === 'mes') return 30;
+  return 1;
+};
+
+const catPlan = (duration?: string) => (duration === 'dia' ? 'daypass' : 'membership');
 
 /* ══════════════════════════════════════════
    HYBRID RECEPTION HUB (FUSION v5.0 - PREMIUM GLASS)
@@ -83,6 +92,7 @@ export default function Reception() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showQuickRegister, setShowQuickRegister] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [abonoAmount, setAbonoAmount] = useState('');
   const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null);
@@ -117,13 +127,14 @@ export default function Reception() {
   }, []);
 
   useEffect(() => {
-    if (search.length > 1 && activeTab === 'manual') {
-      const searchNormalized = search.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const filtered = members.filter(m => m.name && m.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(searchNormalized)).slice(0, 5);
-      setSuggestions(filtered);
-    } else {
-      setSuggestions([]);
-    }
+    if (activeTab !== 'manual') { setSuggestions([]); return; }
+    const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const q = norm(search);
+    const filtered = [...members]
+      .filter((m) => !q || (m.name && norm(m.name).includes(q)))
+      .sort((a, b) => Number(!!b.presence?.inGym) - Number(!!a.presence?.inGym) || (a.name || '').localeCompare(b.name || ''))
+      .slice(0, 40);
+    setSuggestions(filtered);
   }, [search, members, activeTab]);
 
   const startScanning = async (type: CheckInMethod) => {
@@ -216,63 +227,65 @@ export default function Reception() {
     if (!selectedMember || cart.length === 0 || isProcessing) return;
     
     setIsProcessing(true);
+    const dateStr = new Date().toISOString().split('T')[0];
+    const timeStr = new Date().toLocaleTimeString().slice(0, 5);
+    const live = members.find((m) => m.id === selectedMember.id) || selectedMember;
+    const esFiado = paymentMethod === 'Crédito';
     try {
+      let prod = 0;
+      let mem = 0;
+      let expiry = live.expiryDate;
+      let planNombre = live.plan;
       for (const item of cart) {
+        const sub = roundPrice(item.price * item.qty);
         if (item.category !== 'Servicio') {
           const ok = await registerProductSale(item.id, item.qty, selectedMember.name, paymentMethod);
           if (!ok) {
             showToast(`Sin stock: ${item.name}`);
             continue;
           }
-          if (paymentMethod !== 'Crédito') {
+          prod += sub;
+          if (!esFiado) {
             await injectTransaction({
-              date: new Date().toISOString().split('T')[0],
-              time: new Date().toLocaleTimeString().slice(0, 5),
-              description: `Venta: ${item.qty}x ${item.name}`,
-              category: 'other',
-              type: 'income',
-              amount: item.price * item.qty,
-              method: paymentMethod,
-              client: selectedMember.name
+              date: dateStr, time: timeStr,
+              description: `Producto: ${item.qty}x ${item.name}`,
+              category: 'product', type: 'income', amount: sub,
+              method: paymentMethod, client: selectedMember.name,
             });
           }
         } else {
           const plan = plans.find(p => p.id === item.id);
-          await injectTransaction({
-            date: new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleTimeString().slice(0, 5),
-            description: `Servicio: ${item.name}`,
-            category: plan?.duration === 'mes' || plan?.duration === 'semana' ? 'membership' : 'daypass',
-            type: 'income',
-            amount: item.price * item.qty,
-            method: paymentMethod,
-            client: selectedMember.name
-          });
-          
-          if (plan) {
-            let daysToAdd = 1;
-            if (plan.duration === 'semana') daysToAdd = 7;
-            if (plan.duration === 'mes') daysToAdd = 30;
-            daysToAdd *= item.qty;
-
-            const expiryStr = selectedMember.expiryDate || new Date().toISOString().split('T')[0];
-            const [y, m, d] = expiryStr.split('-').map(Number);
-            const currentExpiry = new Date(y, m - 1, d);
-            const now = new Date();
-            const startDate = currentExpiry > now ? currentExpiry : now;
-            startDate.setDate(startDate.getDate() + daysToAdd);
-            await updateMemberStatus(selectedMember.id, {
-              status: 'active',
-              expiryDate: startDate.toISOString().split('T')[0],
-              debt: 0
+          mem += sub;
+          planNombre = item.name;
+          if (!esFiado) {
+            await injectTransaction({
+              date: dateStr, time: timeStr,
+              description: `Mensualidad/rutina: ${item.name}`,
+              category: catPlan(plan?.duration), type: 'income', amount: sub,
+              method: paymentMethod, client: selectedMember.name,
             });
+          }
+          if (plan) {
+            const days = diasPlan(plan.duration) * item.qty;
+            const base = expiry || dateStr;
+            const [y, mo, d] = base.split('-').map(Number);
+            const from = new Date(y, mo - 1, d);
+            if (from <= new Date()) from.setTime(Date.now());
+            from.setDate(from.getDate() + days);
+            expiry = from.toISOString().split('T')[0];
           }
         }
       }
-      if (paymentMethod === 'Crédito') {
-        const total = roundPrice(cart.reduce((acc, curr) => acc + (curr.price * curr.qty), 0));
-        await updateMemberStatus(selectedMember.id, { debt: roundPrice((selectedMember.debt || 0) + total) });
+      const patch: Partial<Member> = {};
+      if (expiry && expiry !== live.expiryDate) {
+        patch.status = 'active';
+        patch.expiryDate = expiry;
+        patch.plan = planNombre;
       }
+      if (esFiado && (prod > 0 || mem > 0)) {
+        Object.assign(patch, sumarCredito(live, { productos: prod, membresia: mem }));
+      }
+      if (Object.keys(patch).length) await updateMemberStatus(selectedMember.id, patch);
       
       // LOG & CLEANUP
       setLogs(prev => [{ 
@@ -285,9 +298,11 @@ export default function Reception() {
       }, ...prev]);
       
       setCart([]);
-      setProductSearch(''); // Limpiar búsqueda
-      if (showProfile) setShowProfile(false); // Cierre automático del modal
-      setSelectedMember(null); // Deseleccionar para volver al estado inicial
+      setProductSearch('');
+      if (!esFiado) {
+        if (showProfile) setShowProfile(false);
+        setSelectedMember(null);
+      }
       
     } catch (error) {
       console.error("Error al procesar venta:", error);
@@ -349,80 +364,134 @@ export default function Reception() {
     }
   };
 
-  /* ── COBRAR TODO Y DAR SALIDA (ficha en vivo) ── */
-  const handleCobrarTodoYSalida = async () => {
+  /* ── COBRAR TODO O DEJAR EN CRÉDITO, Y DAR SALIDA ── */
+  const handleCobrarTodoYSalida = async (modo: 'pago' | 'credito') => {
     if (!selectedMember || isProcessing) return;
     setIsProcessing(true);
     const dateStr = new Date().toISOString().split('T')[0];
     const timeStr = new Date().toLocaleTimeString().slice(0, 5);
     const live = members.find((x) => x.id === selectedMember.id) || selectedMember;
+    const esFiado = modo === 'credito';
+    const method = esFiado ? 'Crédito' : (paymentMethod === 'Crédito' ? 'Efectivo' : paymentMethod);
     try {
       const tabItems = live.openTab || [];
-      const tabAmt = tabTotal(tabItems);
+      let prod = tabTotal(tabItems);
+      let mem = 0;
+      let expiry = live.expiryDate;
+      let planNombre = live.plan;
 
-      // 1) Cobrar consumo del piso
-      if (tabAmt > 0) {
+      if (!esFiado && prod > 0) {
         await injectTransaction({
           date: dateStr, time: timeStr,
-          description: `Consumo piso: ${tabItems.map((l) => `${l.qty}×${l.name}`).join(', ')}`,
-          category: 'other', type: 'income',
-          amount: tabAmt,
-          method: paymentMethod === 'Crédito' ? 'Efectivo' : paymentMethod,
-          client: selectedMember.name,
+          description: `Productos piso: ${tabItems.map((l) => `${l.qty}×${l.name}`).join(', ')}`,
+          category: 'product', type: 'income', amount: prod, method, client: selectedMember.name,
         });
       }
-
-      // 2) Cobrar carrito actual
       for (const item of cart) {
+        const sub = roundPrice(item.price * item.qty);
         if (item.category !== 'Servicio') {
-          const ok = await registerProductSale(item.id, item.qty, selectedMember.name, paymentMethod);
-          if (ok && paymentMethod !== 'Crédito') {
+          const ok = await registerProductSale(item.id, item.qty, selectedMember.name, method);
+          if (!ok) { showToast(`Sin stock: ${item.name}`); continue; }
+          prod += sub;
+          if (!esFiado) {
             await injectTransaction({
               date: dateStr, time: timeStr,
-              description: `Venta: ${item.qty}×${item.name}`,
-              category: 'other', type: 'income',
-              amount: item.price * item.qty, method: paymentMethod,
-              client: selectedMember.name,
+              description: `Producto: ${item.qty}×${item.name}`,
+              category: 'product', type: 'income', amount: sub, method, client: selectedMember.name,
             });
           }
         } else {
           const plan = plans.find((p) => p.id === item.id);
-          await injectTransaction({
-            date: dateStr, time: timeStr,
-            description: `Servicio: ${item.name}`,
-            category: plan?.duration === 'mes' || plan?.duration === 'semana' ? 'membership' : 'daypass',
-            type: 'income', amount: item.price * item.qty, method: paymentMethod,
-            client: selectedMember.name,
-          });
+          mem += sub;
+          planNombre = item.name;
+          if (!esFiado) {
+            await injectTransaction({
+              date: dateStr, time: timeStr,
+              description: `Mensualidad/rutina: ${item.name}`,
+              category: catPlan(plan?.duration), type: 'income', amount: sub, method, client: selectedMember.name,
+            });
+          }
           if (plan) {
-            let days = plan.duration === 'semana' ? 7 : plan.duration === 'mes' ? 30 : 1;
-            days *= item.qty;
-            const base = selectedMember.expiryDate || dateStr;
+            const days = diasPlan(plan.duration) * item.qty;
+            const base = expiry || dateStr;
             const [y, mo, d] = base.split('-').map(Number);
             const from = new Date(y, mo - 1, d);
-            from > new Date() ? from : new Date(new Date().setDate(new Date().getDate()));
+            if (from <= new Date()) from.setTime(Date.now());
             from.setDate(from.getDate() + days);
-            await updateMemberStatus(selectedMember.id, { status: 'active', expiryDate: from.toISOString().split('T')[0], debt: 0 });
+            expiry = from.toISOString().split('T')[0];
           }
         }
       }
-
-      // 3) Marcar salida y limpiar tab
-      await updateMemberStatus(selectedMember.id, {
+      const totalNuevo = roundPrice(prod + mem);
+      if (totalNuevo <= 0 && !live.presence?.inGym) {
+        showToast('No hay nada que cobrar.');
+        return;
+      }
+      const patch: Partial<Member> = {
         presence: { inGym: false, enteredAt: live.presence?.enteredAt || Date.now(), method: live.presence?.method || 'manual' },
-        openTab: [], pagoSolicitado: null,
-      });
-
-      const totalCobrado = tabAmt + roundPrice(cart.reduce((a, c) => a + c.price * c.qty, 0));
+        openTab: [],
+        pagoSolicitado: null,
+      };
+      if (expiry && expiry !== live.expiryDate) {
+        patch.status = 'active';
+        patch.expiryDate = expiry;
+        patch.plan = planNombre;
+      }
+      if (esFiado && totalNuevo > 0) Object.assign(patch, sumarCredito(live, { productos: prod, membresia: mem }));
+      await updateMemberStatus(selectedMember.id, patch);
       setLogs((prev) => [{
         id: Date.now(), name: selectedMember.name,
-        action: `COBRO TOTAL $${totalCobrado.toLocaleString('es-CO')} + SALIDA`,
-        time: timeStr, method: paymentMethod, color: 'var(--neon-green)',
+        action: esFiado ? `CRÉDITO $${totalNuevo.toLocaleString('es-CO')} + SALIDA` : `COBRO $${totalNuevo.toLocaleString('es-CO')} + SALIDA`,
+        time: timeStr, method, color: esFiado ? 'var(--danger-red)' : 'var(--neon-green)',
       }, ...prev]);
       setCart([]); setShowProfile(false); setSelectedMember(null);
-      showToast(`✅ Cobrado $${totalCobrado.toLocaleString('es-CO')} · Salida registrada`);
+      showToast(esFiado
+        ? `Quedó en crédito $${totalNuevo.toLocaleString('es-CO')}. Productos y mensualidad van aparte en su ficha.`
+        : `Cobrado $${totalNuevo.toLocaleString('es-CO')} · Salida registrada`);
     } catch {
-      showToast('❌ Error al procesar el cobro total.');
+      showToast('Error al cerrar la cuenta.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  /* ── ABONAR: primero productos, luego mensualidad. Entra a caja. ── */
+  const handleAbonar = async () => {
+    if (!selectedMember || isProcessing) return;
+    const abono = parseFloat(abonoAmount.replace(/\./g, '').replace(',', '.'));
+    if (!abono || abono <= 0) { showToast('Ingresa un monto válido'); return; }
+    const live = members.find((m) => m.id === selectedMember.id) || selectedMember;
+    const aplicado = aplicarAbono(live, abono);
+    const pagado = aplicado.aProductos + aplicado.aMembresia;
+    if (pagado <= 0) { showToast('Este socio no tiene crédito pendiente'); return; }
+    setIsProcessing(true);
+    const method = paymentMethod === 'Crédito' ? 'Efectivo' : paymentMethod;
+    const dateStr = new Date().toISOString().split('T')[0];
+    const timeStr = new Date().toLocaleTimeString().slice(0, 5);
+    try {
+      if (aplicado.aProductos > 0) {
+        await injectTransaction({
+          date: dateStr, time: timeStr,
+          description: `Abono productos: ${selectedMember.name}`,
+          category: 'product', type: 'income', amount: aplicado.aProductos, method, client: selectedMember.name,
+        });
+      }
+      if (aplicado.aMembresia > 0) {
+        await injectTransaction({
+          date: dateStr, time: timeStr,
+          description: `Abono mensualidad: ${selectedMember.name}`,
+          category: 'membership', type: 'income', amount: aplicado.aMembresia, method, client: selectedMember.name,
+        });
+      }
+      await updateMemberStatus(selectedMember.id, { debt: aplicado.debt, credito: aplicado.credito });
+      setAbonoAmount('');
+      const partes = [
+        aplicado.aProductos > 0 ? `productos $${aplicado.aProductos.toLocaleString('es-CO')}` : '',
+        aplicado.aMembresia > 0 ? `mensualidad $${aplicado.aMembresia.toLocaleString('es-CO')}` : '',
+      ].filter(Boolean).join(' · ');
+      showToast(`Abonó ${partes}. Resta $${aplicado.debt.toLocaleString('es-CO')}`);
+    } catch {
+      showToast('Error al registrar abono');
     } finally {
       setIsProcessing(false);
     }
@@ -439,7 +508,7 @@ export default function Reception() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24, padding: '10px' }}>
       <AiAssist
         rol="recepción"
-        texto="Quién está adentro sale de entrada real (QR, nombre o GPS del socio). Agua y bebidas: Cargar a cuenta para que el socio lo vea y lo pagues al salir. Cobrar ahora si ya pagó en caja."
+        texto="Busca al atleta en la lista. En su ficha, productos y mensualidad van separados. Si no tiene plata: Déjar en crédito. Si trae un abono, regístralo ahí: primero baja productos y después la mensualidad. Efectivo y Nequi entran a caja; el crédito no."
       />
       <Link to="/avisos" style={{ fontSize: 13, color: 'var(--neon-green)', fontWeight: 700, marginTop: -12 }}>Lista de avisos WhatsApp (mora / por vencer) →</Link>
 
@@ -533,11 +602,34 @@ export default function Reception() {
                         }
                         handleSuccess(search, 'manual');
                       }}
-                      onBlur={() => setTimeout(() => setSuggestions([]), 200)}
                       style={{ width: '100%', padding: '18px 20px 18px 55px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, color: '#fff', fontSize: 15, outline: 'none', transition: '0.3s' }}
                       className="search-input-premium"
                     />
                   </div>
+                  {activeTab === 'manual' && (
+                    <div style={{ width: '100%', marginTop: 16, maxHeight: 340, overflowY: 'auto' }} className="custom-scrollbar">
+                      <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1, color: 'var(--text-muted)', marginBottom: 8 }}>
+                        {suggestions.length} ATLETAS · toca el nombre para abrir la ficha
+                      </div>
+                      {suggestions.map((m) => (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => { setSelectedMember(m); setShowProfile(true); setCart([]); }}
+                          style={{ width: '100%', textAlign: 'left', marginBottom: 8, padding: '12px 14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.25)', color: '#fff', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
+                        >
+                          <span>
+                            <span style={{ fontWeight: 800 }}>{m.name}</span>
+                            <span style={{ display: 'block', fontSize: 11, color: m.presence?.inGym ? 'var(--neon-green)' : 'var(--text-muted)' }}>
+                              {m.presence?.inGym ? 'En sala' : 'Afuera'} · {m.plan || 'Sin plan'}
+                            </span>
+                          </span>
+                          {(m.debt || 0) > 0 && <span style={{ fontSize: 11, color: 'var(--danger-red)', fontWeight: 800 }}>Debe ${(m.debt || 0).toLocaleString('es-CO')}</span>}
+                        </button>
+                      ))}
+                      {suggestions.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No hay atletas con ese nombre.</div>}
+                    </div>
+                  )}
                </div>
             ) : (
                <div className="glass-card premium-shadow" style={{ flex: 1, padding: 24, border: `1px solid ${selectedMember.debt > 0 ? 'rgba(255,61,87,0.3)' : 'rgba(0,255,136,0.2)'}`, borderRadius: 28, display:'flex', flexDirection:'column', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)' }}>
@@ -779,7 +871,6 @@ export default function Reception() {
                     const tiempoSeg = Math.floor((Date.now() - (live.presence?.enteredAt || Date.now())) / 1000);
                     const tabItems = live.openTab || [];
                     const cartAmt = roundPrice(cart.reduce((a, c) => a + c.price * c.qty, 0));
-                    const totalSalida = f.consumo + f.mora + cartAmt;
                     return (
                       <div style={{ marginBottom: 36, background: 'rgba(0,255,136,0.04)', border: '2px solid rgba(0,255,136,0.35)', borderRadius: 32, padding: 32 }}>
                         {/* ── Cabecera en vivo ── */}
@@ -794,13 +885,24 @@ export default function Reception() {
                               {fmtTime(tiempoSeg)} · {live.presence?.method === 'geo' ? 'GPS' : live.presence?.method || 'recepción'}
                             </div>
                           </div>
-                          <button
-                            onClick={handleCobrarTodoYSalida}
-                            disabled={isProcessing || totalSalida <= 0}
-                            style={{ padding: '18px 28px', borderRadius: 22, background: totalSalida > 0 ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)', color: '#000', border: 'none', fontWeight: 950, fontSize: 14, cursor: isProcessing ? 'wait' : 'pointer', boxShadow: totalSalida > 0 ? '0 10px 30px rgba(0,255,136,0.45)' : 'none', letterSpacing: 0.5, transition: '0.3s' }}
-                          >
-                            {isProcessing ? '⌛ PROCESANDO...' : `💳 COBRAR TODO Y DAR SALIDA · $${totalSalida.toLocaleString('es-CO')}`}
-                          </button>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 240 }}>
+                            <button
+                              type="button"
+                              onClick={() => handleCobrarTodoYSalida('pago')}
+                              disabled={isProcessing || (f.consumo + cartAmt) <= 0}
+                              style={{ padding: '14px 18px', borderRadius: 16, background: (f.consumo + cartAmt) > 0 ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)', color: '#000', border: 'none', fontWeight: 950, fontSize: 13, cursor: 'pointer' }}
+                            >
+                              {isProcessing ? 'PROCESANDO...' : `COBRAR AHORA $${(f.consumo + cartAmt).toLocaleString('es-CO')} Y SALIR`}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleCobrarTodoYSalida('credito')}
+                              disabled={isProcessing || (f.consumo + cartAmt) <= 0}
+                              style={{ padding: '14px 18px', borderRadius: 16, background: 'transparent', color: 'var(--danger-red)', border: '1px solid rgba(255,61,87,0.45)', fontWeight: 950, fontSize: 13, cursor: 'pointer' }}
+                            >
+                              DEJAR EN CRÉDITO Y SALIR
+                            </button>
+                          </div>
                         </div>
 
                         {/* ── Consumo del piso (tab abierto) ── */}
@@ -851,41 +953,107 @@ export default function Reception() {
                           )}
                         </div>
 
-                        {/* ── Recibo completo al salir ── */}
+                        {/* ── Recibo separado por categorías ── */}
                         <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: 20, padding: '20px 24px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                          <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>📋 RECIBO AL SALIR</div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>📋 RECIBO AL SALIR — DESGLOSADO</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {/* Membresías (planes) */}
+                            {cart.filter(c => c.category === 'Servicio').length > 0 && (
+                              <div style={{ background: 'rgba(0,255,136,0.04)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(0,255,136,0.1)' }}>
+                                <div style={{ fontSize: 9, color: 'var(--neon-green)', fontWeight: 950, letterSpacing: 1.5, marginBottom: 6 }}>🏋️ MEMBRESÍA / RUTINA</div>
+                                {cart.filter(c => c.category === 'Servicio').map(c => (
+                                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                                    <span style={{ color: '#ccc' }}>{c.qty}× {c.name}</span>
+                                    <span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>${(c.price * c.qty).toLocaleString('es-CO')}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {/* Productos comprados ahora */}
+                            {cart.filter(c => c.category !== 'Servicio').length > 0 && (
+                              <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <div style={{ fontSize: 9, color: '#A78BFA', fontWeight: 950, letterSpacing: 1.5, marginBottom: 6 }}>📦 PRODUCTOS (cobro directo)</div>
+                                {cart.filter(c => c.category !== 'Servicio').map(c => (
+                                  <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                                    <span style={{ color: '#ccc' }}>{c.qty}× {c.name}</span>
+                                    <span style={{ color: '#A78BFA', fontWeight: 800 }}>${(c.price * c.qty).toLocaleString('es-CO')}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {/* Consumo piso (tab) */}
                             {f.consumo > 0 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Consumo piso</span>
-                                <span style={{ color: '#FFD700', fontWeight: 800 }}>${f.consumo.toLocaleString('es-CO')}</span>
+                              <div style={{ background: 'rgba(255,215,0,0.04)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(255,215,0,0.12)' }}>
+                                <div style={{ fontSize: 9, color: '#FFD700', fontWeight: 950, letterSpacing: 1.5, marginBottom: 6 }}>🥤 CONSUMO DEL PISO (tab)</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                                  <span style={{ color: '#ccc' }}>{tabItems.map(l => `${l.qty}×${l.name}`).join(', ')}</span>
+                                  <span style={{ color: '#FFD700', fontWeight: 800 }}>${f.consumo.toLocaleString('es-CO')}</span>
+                                </div>
                               </div>
                             )}
                             {f.mora > 0 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Mora membresía</span>
-                                <span style={{ color: 'var(--danger-red)', fontWeight: 800 }}>${f.mora.toLocaleString('es-CO')}</span>
-                              </div>
-                            )}
-                            {cartAmt > 0 && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Carrito ({cart.length} ítem{cart.length !== 1 ? 's' : ''})</span>
-                                <span style={{ color: 'var(--neon-green)', fontWeight: 800 }}>${cartAmt.toLocaleString('es-CO')}</span>
+                              <div style={{ background: 'rgba(255,61,87,0.06)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(255,61,87,0.15)' }}>
+                                <div style={{ fontSize: 9, color: 'var(--danger-red)', fontWeight: 950, letterSpacing: 1.5, marginBottom: 6 }}>CRÉDITO QUE YA TENÍA (no entra en este cobro)</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                                  <span style={{ color: '#ccc' }}>Productos fiados</span>
+                                  <span style={{ color: '#A78BFA', fontWeight: 800 }}>${f.creditoProductos.toLocaleString('es-CO')}</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 4 }}>
+                                  <span style={{ color: '#ccc' }}>Mensualidad / rutina</span>
+                                  <span style={{ color: 'var(--danger-red)', fontWeight: 800 }}>${f.creditoMembresia.toLocaleString('es-CO')}</span>
+                                </div>
                               </div>
                             )}
                             <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12, marginTop: 4 }}>
-                              <span style={{ color: '#fff', fontWeight: 950, fontSize: 15 }}>TOTAL A COBRAR</span>
-                              <span style={{ color: 'var(--neon-green)', fontWeight: 950, fontSize: 22, textShadow: '0 0 15px rgba(0,255,136,0.4)' }}>${totalSalida.toLocaleString('es-CO')}</span>
+                              <span style={{ color: '#fff', fontWeight: 950, fontSize: 15 }}>A COBRAR AHORA</span>
+                              <span style={{ color: 'var(--neon-green)', fontWeight: 950, fontSize: 22 }}>${(f.consumo + cartAmt).toLocaleString('es-CO')}</span>
                             </div>
                           </div>
-                          <div style={{ marginTop: 16 }}>
-                            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as any)} style={{ width: '100%', padding: '14px 18px', borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, fontWeight: 800 }}>
-                              <option value="Efectivo">💵 Efectivo</option>
-                              <option value="Nequi">📱 Nequi</option>
-                              <option value="Crédito">💳 Deuda (Fiado)</option>
+                          <div style={{ marginTop: 14 }}>
+                            <select value={paymentMethod === 'Crédito' ? 'Efectivo' : paymentMethod} onChange={e => setPaymentMethod(e.target.value as 'Efectivo' | 'Nequi')} style={{ width: '100%', padding: '14px 18px', borderRadius: 14, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 13, fontWeight: 800 }}>
+                              <option value="Efectivo">Efectivo</option>
+                              <option value="Nequi">Nequi</option>
                             </select>
                           </div>
                         </div>
+
+                        <div style={{ marginTop: 16, background: 'rgba(255,61,87,0.06)', borderRadius: 18, padding: '18px 20px', border: '1px solid rgba(255,61,87,0.2)' }}>
+                          <div style={{ fontSize: 10, fontWeight: 950, color: 'var(--danger-red)', letterSpacing: 2, marginBottom: 8 }}>
+                            CRÉDITO DEL SOCIO · ${(f.mora || 0).toLocaleString('es-CO')}
+                          </div>
+                          <div style={{ fontSize: 13, color: '#ccc', marginBottom: 8 }}>
+                            Productos ${f.creditoProductos.toLocaleString('es-CO')} · Mensualidad ${f.creditoMembresia.toLocaleString('es-CO')}
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 10, color: transactions.some((t) => t.date === todayStr && (t.description || '').startsWith('Abono') && (t.client || '') === live.name) ? 'var(--neon-green)' : 'var(--text-muted)' }}>
+                            {transactions.some((t) => t.date === todayStr && (t.description || '').startsWith('Abono') && (t.client || '') === live.name) ? 'Hoy sí abonó' : 'Hoy no ha abonado'}
+                          </div>
+                          {f.mora > 0 && (
+                            <div style={{ display: 'flex', gap: 10 }}>
+                              <input type="number" placeholder="Monto del abono" value={abonoAmount} onChange={e => setAbonoAmount(e.target.value)} style={{ flex: 1, padding: '12px 16px', borderRadius: 12, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14 }} />
+                              <button type="button" onClick={handleAbonar} disabled={isProcessing || !abonoAmount} style={{ padding: '12px 20px', borderRadius: 12, background: 'rgba(255,61,87,0.2)', border: '1px solid rgba(255,61,87,0.4)', color: '#fff', fontWeight: 950, fontSize: 12, cursor: 'pointer' }}>ABONAR</button>
+                              <button type="button" onClick={() => setAbonoAmount(String(f.mora || 0))} style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontWeight: 800, fontSize: 11, cursor: 'pointer' }}>TODO</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {selectedMember && !selectedMember.presence?.inGym && (() => {
+                    const live = members.find((x) => x.id === selectedMember.id) || selectedMember;
+                    const f = fichaCuenta(live);
+                    const abonoHoy = transactions.some((t) => t.date === todayStr && (t.description || '').startsWith('Abono') && (t.client || '') === live.name);
+                    return (
+                      <div style={{ marginBottom: 28, background: 'rgba(255,61,87,0.05)', border: '1px solid rgba(255,61,87,0.25)', borderRadius: 24, padding: 22 }}>
+                        <div style={{ fontSize: 12, fontWeight: 950, color: '#fff', marginBottom: 8 }}>Crédito de {live.name}</div>
+                        <div style={{ fontSize: 13, color: '#ccc', marginBottom: 6 }}>Productos ${f.creditoProductos.toLocaleString('es-CO')} · Mensualidad ${f.creditoMembresia.toLocaleString('es-CO')}</div>
+                        <div style={{ fontSize: 12, fontWeight: 800, marginBottom: 12, color: abonoHoy ? 'var(--neon-green)' : 'var(--text-muted)' }}>{abonoHoy ? 'Hoy sí abonó' : 'Hoy no ha abonado'}</div>
+                        {f.mora > 0 && (
+                          <div style={{ display: 'flex', gap: 10 }}>
+                            <input type="number" placeholder="Monto del abono" value={abonoAmount} onChange={e => setAbonoAmount(e.target.value)} style={{ flex: 1, padding: '12px 16px', borderRadius: 12, background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: 14 }} />
+                            <button type="button" onClick={handleAbonar} disabled={isProcessing || !abonoAmount} style={{ padding: '12px 20px', borderRadius: 12, background: 'rgba(255,61,87,0.2)', border: '1px solid rgba(255,61,87,0.4)', color: '#fff', fontWeight: 950, cursor: 'pointer' }}>ABONAR</button>
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
@@ -1016,35 +1184,6 @@ export default function Reception() {
          </div>
       )}
 
-      {/* Quick Register Modal */}
-      {/* ── DROPDOWN DE SUGERENCIAS (position:fixed — nunca recortado por overflow) ── */}
-      {dropdownRect && suggestions.length > 0 && (
-        <div style={{
-          position: 'fixed',
-          top: dropdownRect.top,
-          left: dropdownRect.left,
-          width: dropdownRect.width,
-          background: 'rgba(8,12,10,0.98)',
-          borderRadius: 20,
-          border: '1px solid rgba(0,255,136,0.45)',
-          overflow: 'hidden',
-          zIndex: 99999,
-          backdropFilter: 'blur(24px)',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(0,255,136,0.1)',
-        }}>
-          {suggestions.map(m => (
-            <div
-              key={m.id}
-              onMouseDown={e => { e.preventDefault(); handleSuccess(m, 'manual'); }}
-              style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.15s' }}
-              className="suggestion-item"
-            >
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>{m.name}</span>
-              <span style={{ fontSize: 10, color: 'var(--neon-green)', fontWeight: 900, background: 'rgba(0,255,136,0.1)', padding: '4px 10px', borderRadius: 8 }}>{m.plan}</span>
-            </div>
-          ))}
-        </div>
-      )}
 
       {showQuickRegister && (
         <QuickRegisterModal 

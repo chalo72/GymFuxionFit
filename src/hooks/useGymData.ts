@@ -5,6 +5,7 @@ import { trioSync } from '../lib/trioSync';
 import { syncManager } from '../services/syncManager';
 import { backupService } from '../lib/backupService';
 import { DEFAULT_PLANS, ensurePlanes } from '../data/planesGym';
+import { creditoDe } from '../lib/cuentaPiso';
 
 /* ══════════════════════════════════════════
    GLOBAL_SYNC_SERVICE V.1.1
@@ -155,6 +156,8 @@ export interface Member {
     doing?: string;
   };
   openTab?: { id: string; name: string; qty: number; price: number; at: number }[];
+  /** Deuda partida: tienda/piso vs plan. `debt` sigue siendo la suma. */
+  credito?: { productos: number; membresia: number };
   sessionLive?: { startedAt: number; trainer?: string } | null;
   pagoSolicitado?: { amount: number; at: number; nota: string } | null;
 }
@@ -497,17 +500,24 @@ function useGymDataInternal() {
   const clearMemberDebt = async (memberId: string) => {
     const member = members.find(m => m.id === memberId);
     if (!member || member.debt <= 0) return;
-    const debt = member.debt;
-    await updateMemberStatus(memberId, { debt: 0 });
-    await injectTransaction({
-      date: new Date().toISOString().split('T')[0],
-      time: new Date().toLocaleTimeString().slice(0, 5),
-      description: `PAGO_DEUDA: ${member.name}`,
-      category: 'membership',
-      type: 'income',
-      amount: debt,
-      method: 'Efectivo'
-    });
+    const split = creditoDe(member);
+    const hoy = new Date().toISOString().split('T')[0];
+    const hora = new Date().toLocaleTimeString().slice(0, 5);
+    await updateMemberStatus(memberId, { debt: 0, credito: { productos: 0, membresia: 0 } });
+    if (split.productos > 0) {
+      await injectTransaction({
+        date: hoy, time: hora,
+        description: `Abono productos: ${member.name}`,
+        category: 'product', type: 'income', amount: split.productos, method: 'Efectivo', client: member.name,
+      });
+    }
+    if (split.membresia > 0) {
+      await injectTransaction({
+        date: hoy, time: hora,
+        description: `Abono mensualidad: ${member.name}`,
+        category: 'membership', type: 'income', amount: split.membresia, method: 'Efectivo', client: member.name,
+      });
+    }
   };
 
   const registerProductSale = async (productId: string, qty: number, clientName: string, method: string) => {

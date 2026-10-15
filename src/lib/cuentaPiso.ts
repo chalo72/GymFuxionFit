@@ -39,6 +39,34 @@ export function findMemberForUser(members: Member[], user: User | null): Member 
   );
 }
 
+export type CreditoSplit = { productos: number; membresia: number };
+
+/** Si nunca se partió, la deuda vieja cuenta como mensualidad. */
+export function creditoDe(m: Member): CreditoSplit {
+  if (m.credito) return { productos: m.credito.productos || 0, membresia: m.credito.membresia || 0 };
+  return { productos: 0, membresia: m.debt || 0 };
+}
+
+export function sumarCredito(m: Member, add: CreditoSplit): { debt: number; credito: CreditoSplit } {
+  const base = creditoDe(m);
+  const credito = {
+    productos: Math.max(0, Math.round(base.productos + (add.productos || 0))),
+    membresia: Math.max(0, Math.round(base.membresia + (add.membresia || 0))),
+  };
+  return { credito, debt: credito.productos + credito.membresia };
+}
+
+/** El abono baja primero productos y después la mensualidad. */
+export function aplicarAbono(m: Member, monto: number) {
+  const base = creditoDe(m);
+  let rest = Math.max(0, Math.round(monto));
+  const aProductos = Math.min(rest, base.productos);
+  rest -= aProductos;
+  const aMembresia = Math.min(rest, base.membresia);
+  const credito = { productos: base.productos - aProductos, membresia: base.membresia - aMembresia };
+  return { credito, debt: credito.productos + credito.membresia, aProductos, aMembresia };
+}
+
 export function fichaCuenta(m: Member) {
   const d = m.expiryDate || m.expiry;
   let plan = 'Al día';
@@ -46,11 +74,14 @@ export function fichaCuenta(m: Member) {
   else if (m.status === 'expired') plan = 'Vencido · renovar';
   else if (m.status === 'expiring') plan = 'Por vencer';
   else if (!m.plan) plan = 'Sin plan · inscribir';
-  const mora = m.debt || 0;
+  const split = creditoDe(m);
+  const mora = split.productos + split.membresia;
   const consumo = tabTotal(m.openTab);
   return {
     plan,
     mora,
+    creditoProductos: split.productos,
+    creditoMembresia: split.membresia,
     consumo,
     aCobrarSalida: consumo,
     totalPendiente: mora + consumo,
