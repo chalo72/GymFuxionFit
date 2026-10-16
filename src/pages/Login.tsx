@@ -9,8 +9,8 @@ export const ROLE_HOME: Record<UserRole, string> = {
   admin: '/',
   trainer: '/trainer',
   receptionist: '/reception',
-  client: '/sala',
-  athlete: '/sala',
+  client: '/',
+  athlete: '/',
 };
 
 export default function Login() {

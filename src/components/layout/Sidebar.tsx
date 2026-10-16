@@ -12,8 +12,10 @@ import { useAuth } from '../../contexts/AuthContext';
 /* ── Elementos de navegación por rol ── */
 const adminNav = [
   { section: 'Inicio', items: [
-    { to: '/',            icon: LayoutDashboard, label: 'Hoy' },
-    { to: '/reception',   icon: UserCheck,       label: 'Recepción' },
+    { to: '/',            icon: LayoutDashboard, label: 'Por dónde' },
+    { to: '/finances',    icon: TrendingUp,      label: 'La plata' },
+    { to: '/reception',   icon: UserCheck,       label: 'La puerta' },
+    { to: '/settings?tab=pricing', icon: Settings, label: 'Los precios' },
     { to: '/members',     icon: Users,           label: 'Miembros' },
     { to: '/schedule',    icon: CalendarRange,   label: 'Calendario' },
     { to: '/classes',     icon: CalendarDays,    label: 'Clases' },
@@ -49,25 +51,26 @@ const adminNav = [
 
 const trainerNav = [
   { section: 'Mi espacio', items: [
-    { to: '/', icon: LayoutDashboard, label: 'Hoy' },
     { to: '/trainer', icon: Zap, label: 'Mis atletas' },
+    { to: '/entreno', icon: Dumbbell, label: 'La sesión' },
+    { to: '/nutrition', icon: Apple, label: 'La comida' },
+    { to: '/', icon: LayoutDashboard, label: 'Hoy' },
     { to: '/evaluacion', icon: ClipboardList, label: 'Entrevista' },
-    { to: '/entreno', icon: Dumbbell, label: 'Sesión' },
     { to: '/elite-plan', icon: BrainCircuit, label: 'Plan' },
     { to: '/schedule', icon: CalendarRange, label: 'Agenda' },
     { to: '/classes', icon: CalendarDays, label: 'Clases' },
   ]},
   { section: 'Herramientas', items: [
     { to: '/ai-coach', icon: Brain, label: 'AI Coach' },
-    { to: '/nutrition', icon: Apple, label: 'Nutrición' },
     { to: '/piso-qr', icon: QrCode, label: 'Piso QR' },
   ]},
 ];
 
 const receptionNav = [
   { section: 'Recepción', items: [
+    { to: '/reception', icon: UserCheck, label: 'La entrada' },
+    { to: '/finances', icon: TrendingUp, label: 'La caja' },
     { to: '/', icon: LayoutDashboard, label: 'Hoy' },
-    { to: '/reception', icon: UserCheck, label: 'Recepción' },
     { to: '/avisos', icon: MessageCircle, label: 'Avisos' },
   ]},
   { section: 'Sala', items: [
@@ -85,12 +88,13 @@ const receptionNav = [
 
 const clientNav = [
   { section: 'Mi Área Personal', items: [
-    { to: '/sala', icon: QrCode, label: 'Sala y QR' },
-    { to: '/client/progress', icon: TrendingUp, label: 'Mi Progreso' },
-    { to: '/client/nutrition',icon: Apple,      label: 'Nutrición' },
-    { to: '/entreno', icon: Dumbbell, label: 'Sesión' },
-    { to: '/client/training', icon: Dumbbell,   label: 'Entrenamiento' },
-    { to: '/reports',         icon: BarChart3,  label: 'Mis Reportes' },
+    { to: '/', icon: LayoutDashboard, label: 'Por dónde' },
+    { to: '/entreno', icon: Dumbbell, label: 'Mi entreno' },
+    { to: '/client/nutrition', icon: Apple, label: 'Lo que comí' },
+    { to: '/client/progress', icon: TrendingUp, label: 'Mi peso' },
+    { to: '/sala', icon: QrCode, label: 'El piso' },
+    { to: '/client/training', icon: Dumbbell, label: 'Zonas' },
+    { to: '/reports', icon: BarChart3, label: 'Mis reportes' },
   ]},
 ];
 

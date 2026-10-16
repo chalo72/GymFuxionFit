@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { firstName, initials } from '../lib/safeText';
 import FlashProgramBuilder from '../components/trainer/FlashProgramBuilder';
 import { AiAssist } from '../components/AiAssist';
+import Empieza from '../components/layout/Empieza';
 import { Link } from 'react-router-dom';
 
 /* ══════════════════════════════════════
@@ -202,6 +203,7 @@ export default function TrainerDashboard() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - var(--navbar-height) - 56px)', minHeight: 600 }}>
       <div style={{ padding: '12px 24px 0', flexShrink: 0 }}>
+        <Empieza role="trainer" />
         <AiAssist
           rol="entrenador"
           texto="Hoy: 1) atiende al que está en el piso, no al celular. 2) Imprime Piso QR y pega en banca, prensa, sled y rig. 3) Si el socio no sabe pecho alto vs bajo, mándalo a escanear la zona Pecho. Hierro, WOD e HYROX no se mezclan a lo loco: elige una disciplina por sesión."

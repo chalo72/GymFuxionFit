@@ -6,6 +6,7 @@ import Navbar from './Navbar';
 import CommandPalette from './CommandPalette';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAutoUpdate } from '../../hooks/useAutoUpdate';
+import { useAuth } from '../../contexts/AuthContext';
 import PageErrorBoundary from '../enjambre/PageErrorBoundary';
 
 const pageTitles: Record<string, string> = {
@@ -38,6 +39,14 @@ export default function AppLayout() {
   useAutoUpdate();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const aviso = user?.role === 'trainer'
+    ? { texto: 'Entrenador: empieza por tus atletas.', to: '/trainer' }
+    : user?.role === 'receptionist'
+      ? { texto: 'Recepción: busca el nombre o el número y toca Entrar.', to: '/reception' }
+      : user?.role === 'client' || user?.role === 'athlete'
+        ? { texto: 'Empieza por tu entreno de hoy.', to: '/' }
+        : { texto: 'Gerente: empieza por la plata, la puerta o los precios.', to: '/' };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
@@ -75,9 +84,11 @@ export default function AppLayout() {
           isCollapsed={isCollapsed}
           handleToggleCollapse={handleToggleCollapse}
         />
-        <button type="button" className="aviso-71" onClick={() => navigate('/entreno')}>
-          Versión 7.1 activa. Aquí quedó lo nuevo: control del peso y calorías de hoy.
-        </button>
+        {location.pathname !== aviso.to && (
+          <button type="button" className="aviso-71" onClick={() => navigate(aviso.to)}>
+            {aviso.texto}
+          </button>
+        )}
         <div className="page-content page-scroll" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'auto' }}>
           <AnimatePresence mode="wait">
             <motion.div

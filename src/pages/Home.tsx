@@ -9,10 +9,9 @@ import GymSwarm from '../components/enjambre/GymSwarm';
 import { esGerencia } from '../lib/maintenanceAgent';
 import { diasMoratoria } from '../lib/accessGate';
 import { asignarNumeros, leerPasos } from '../lib/puerta';
-import { leerSesiones, ultimoLevantado } from '../lib/entreno';
-import { comidasDeHoy, leerMeta, sumar } from '../lib/comida';
 import ControlPeso from '../components/entreno/ControlPeso';
 import ComidaHoy from '../components/nutrition/ComidaHoy';
+import Empieza from '../components/layout/Empieza';
 
 function daysUntil(dateStr?: string) {
   if (!dateStr) return null;
@@ -78,58 +77,25 @@ export default function Home() {
     { to: '/avisos', label: 'Avisos', hint: 'WhatsApp', icon: AlertTriangle },
   ];
 
+  if (socio && user) {
+    return (
+      <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 32 }}>
+        <Empieza role={user.role} />
+        <button type="button" className="btn btn-ghost" onClick={() => navigate('/sala')}>
+          El piso y los QR, cuando ya estés en la máquina
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 32 }}>
-      <section className="mejor">
-        <p className="fit-kicker">Versión 7.1 · esto es lo nuevo</p>
-        <h3>Peso y calorías, de primero</h3>
+      {user && <Empieza role={user.role} />}
+      <details className="mejor">
+        <summary style={{ cursor: 'pointer', fontWeight: 800, marginBottom: 12 }}>Entreno y calorías, si los quieres ver</summary>
         <ControlPeso />
         <ComidaHoy />
-      </section>
-      <section className="fit-hero">
-        <p className="fit-kicker">Gym Fuxion Fit</p>
-        <h2>Hola, {greeting}.<br /><span>Hoy en el gym.</span></h2>
-        <svg className="fit-silueta" viewBox="0 0 200 260" aria-hidden>
-          <ellipse cx="100" cy="248" rx="54" ry="8" fill="rgba(200,245,66,0.18)" />
-          <path d="M100 28c10 0 18 8 18 18s-8 18-18 18-18-8-18-18 8-18 18-18zm-28 52c8 6 18 10 28 10s20-4 28-10l16 28-18 8 8 36-16 54-10-28-10 28-16-54 8-36-18-8 16-28z" fill="none" stroke="#C8F542" strokeWidth="3" />
-          <path d="M78 118c18 22 26 22 44 0" fill="none" stroke="#C8F542" strokeWidth="2" opacity="0.7" />
-        </svg>
-        <div className="fit-cta-fila">
-          <button type="button" className="fit-cta" onClick={() => navigate(principal.to)}>{principal.label}</button>
-          {!socio && (
-            <button type="button" className="fit-cta linea" onClick={() => navigate('/entreno')}>Ver el entreno</button>
-          )}
-        </div>
-      </section>
-
-      <section className="mejor">
-        <div className="mejor-grid">
-          <button type="button" className="mejor-card ancho" onClick={() => navigate('/entreno')}>
-            <strong>Control del peso</strong>
-            <span>
-              {(() => {
-                const u = ultimoLevantado(leerSesiones());
-                return u ? `Último: ${u.nombre} ${u.peso} kg × ${u.reps}` : 'Anota el peso y compáralo con la vez pasada';
-              })()}
-            </span>
-          </button>
-          <button type="button" className="mejor-card ancho" onClick={() => navigate('/client/nutrition')}>
-            <strong>Calorías de hoy</strong>
-            <span>
-              {(() => {
-                const t = sumar(comidasDeHoy());
-                const meta = leerMeta();
-                return `${t.kcal} / ${meta.kcal} kcal · proteína ${t.prote} g`;
-              })()}
-            </span>
-          </button>
-        </div>
-      </section>
-
-      <section className="mejor">
-        <p className="fit-kicker">Lo mejor, en esta pantalla</p>
-        <h3>Del entreno, listo para usar</h3>
-        <div className="mejor-grid">
+        <div className="mejor-grid" style={{ marginTop: 12 }}>
           {[
             { to: '/entreno?pieza=Sesión', titulo: 'Siguiente serie', texto: 'Peso, reps y el porqué' },
             { to: '/entreno?pieza=Discos', titulo: 'Discos', texto: 'Qué va a cada lado' },
@@ -146,6 +112,18 @@ export default function Home() {
               <span>{p.texto}</span>
             </button>
           ))}
+        </div>
+      </details>
+      <section className="fit-hero">
+        <p className="fit-kicker">Gym Fuxion Fit</p>
+        <h2>Hola, {greeting}.<br /><span>Hoy en el gym.</span></h2>
+        <svg className="fit-silueta" viewBox="0 0 200 260" aria-hidden>
+          <ellipse cx="100" cy="248" rx="54" ry="8" fill="rgba(200,245,66,0.18)" />
+          <path d="M100 28c10 0 18 8 18 18s-8 18-18 18-18-8-18-18 8-18 18-18zm-28 52c8 6 18 10 28 10s20-4 28-10l16 28-18 8 8 36-16 54-10-28-10 28-16-54 8-36-18-8 16-28z" fill="none" stroke="#C8F542" strokeWidth="3" />
+          <path d="M78 118c18 22 26 22 44 0" fill="none" stroke="#C8F542" strokeWidth="2" opacity="0.7" />
+        </svg>
+        <div className="fit-cta-fila">
+          <button type="button" className="fit-cta" onClick={() => navigate(principal.to)}>{principal.label}</button>
         </div>
       </section>
 

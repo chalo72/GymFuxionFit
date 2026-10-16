@@ -2186,6 +2186,56 @@ img {
 }
 .hoy-precios button { color: #111; background: var(--neon-green); border: none; cursor: pointer; }
 
+.empieza { margin-bottom: 8px; }
+.empieza-kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #C8F542;
+}
+.empieza-frase {
+  margin: 0 0 14px;
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 900;
+}
+.empieza-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.empieza-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 132px;
+  padding: 16px;
+  border: none;
+  border-radius: 18px;
+  background: #0e140f;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.empieza-card strong { font-size: 18px; }
+.empieza-card span:last-child { color: #b7c2b4; font-size: 14px; line-height: 1.35; }
+.empieza-n {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #C8F542;
+  color: #111;
+  font-weight: 900;
+  display: grid;
+  place-items: center;
+}
+@media (max-width: 720px) {
+  .empieza-grid { grid-template-columns: 1fr; }
+  .empieza-card { min-height: 0; }
+}
 .aviso-71 {
   width: 100%;
   min-height: 48px;

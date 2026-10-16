@@ -17,6 +17,7 @@ import { asignarNumeros, leerPasos, registrarPaso, type PasoPuerta } from '../li
 import { aplicarAbono, fichaCuenta, mergeTab, sumarCredito, tabTotal } from '../lib/cuentaPiso';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
 import { AiAssist } from '../components/AiAssist';
+import Empieza from '../components/layout/Empieza';
 import { Link } from 'react-router-dom';
 import QuickRegisterModal from '../components/reception/QuickRegisterModal';
 import { PosCart } from '../components/reception/PosCart';
@@ -531,6 +532,7 @@ export default function Reception() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24, padding: '10px' }}>
+      <Empieza role="receptionist" />
       <AiAssist
         rol="recepción"
         texto="Busca al atleta en la lista. En su ficha, productos y mensualidad van separados. Si no tiene plata: Déjar en crédito. Si trae un abono, regístralo ahí: primero baja productos y después la mensualidad. Efectivo y Nequi entran a caja; el crédito no."

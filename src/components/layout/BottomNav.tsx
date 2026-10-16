@@ -1,33 +1,41 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, UserCheck, Wallet, Users, Menu, Dumbbell, Apple, CalendarRange, QrCode, Plus } from 'lucide-react';
+import { LayoutDashboard, UserCheck, Wallet, Users, Menu, Dumbbell, Apple, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 type Item = { to: string; label: string; icon: typeof Wallet };
 
-const recepción: Item[] = [
+const gerente: Item[] = [
   { to: '/', label: 'Inicio', icon: LayoutDashboard },
-  { to: '/reception', label: 'Recepción', icon: UserCheck },
+  { to: '/finances', label: 'Plata', icon: Wallet },
+  { to: '/reception', label: 'Puerta', icon: UserCheck },
+  { to: '/settings?tab=pricing', label: 'Precios', icon: Wallet },
+];
+
+const recepción: Item[] = [
+  { to: '/reception', label: 'Entrada', icon: UserCheck },
   { to: '/finances', label: 'Caja', icon: Wallet },
-  { to: '/finances?tab=personal', label: 'Personal', icon: Users },
+  { to: '/members', label: 'Gente', icon: Users },
+  { to: '/', label: 'Inicio', icon: LayoutDashboard },
 ];
 
 const entrenador: Item[] = [
-  { to: '/', label: 'Inicio', icon: LayoutDashboard },
   { to: '/trainer', label: 'Atletas', icon: Users },
-  { to: '/schedule', label: 'Agenda', icon: CalendarRange },
-  { to: '/nutrition', label: 'Nutrición', icon: Apple },
+  { to: '/entreno', label: 'Sesión', icon: Dumbbell },
+  { to: '/nutrition', label: 'Comida', icon: Apple },
+  { to: '/', label: 'Inicio', icon: LayoutDashboard },
 ];
 
 const socio: Item[] = [
-  { to: '/sala', label: 'Sala', icon: QrCode },
-  { to: '/client/training', label: 'Entreno', icon: Dumbbell },
+  { to: '/', label: 'Inicio', icon: LayoutDashboard },
+  { to: '/entreno', label: 'Entreno', icon: Dumbbell },
   { to: '/client/nutrition', label: 'Comida', icon: Apple },
-  { to: '/client/progress', label: 'Progreso', icon: LayoutDashboard },
+  { to: '/client/progress', label: 'Peso', icon: LayoutDashboard },
 ];
 
 function activo(to: string, path: string, search: string) {
   if (to.includes('tab=personal')) return path === '/finances' && search.includes('tab=personal');
   if (to === '/finances') return path === '/finances' && !search.includes('tab=personal');
+  if (to.includes('tab=pricing')) return path === '/settings' && search.includes('tab=pricing');
   return path === to;
 }
 
@@ -36,12 +44,20 @@ export default function BottomNav({ onOpenMenu }: { onOpenMenu: () => void }) {
   const navigate = useNavigate();
   const { pathname, search } = useLocation();
   const role = user?.role ?? 'admin';
-  const items = role === 'trainer' ? entrenador : role === 'client' || role === 'athlete' ? socio : recepción;
-  const centro = role === 'trainer'
-    ? { to: '/trainer', label: 'Atletas' }
-    : role === 'client' || role === 'athlete'
-      ? { to: '/entreno', label: 'Sesión' }
-      : { to: '/reception', label: 'Recepción' };
+  const items = role === 'admin'
+    ? gerente
+    : role === 'trainer'
+      ? entrenador
+      : role === 'client' || role === 'athlete'
+        ? socio
+        : recepción;
+  const centro = role === 'admin'
+    ? { to: '/finances', label: 'La plata' }
+    : role === 'trainer'
+      ? { to: '/trainer', label: 'Atletas' }
+      : role === 'client' || role === 'athlete'
+        ? { to: '/entreno', label: 'Mi entreno' }
+        : { to: '/reception', label: 'La entrada' };
   const lados = items.filter((item) => item.to !== centro.to).slice(0, 3);
 
   return (

@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { findMemberForUser, fichaCuenta, tabTotal } from '../lib/cuentaPiso';
 import { useGymData } from '../hooks/useGymData';
 import { AiAssist } from '../components/AiAssist';
+import Empieza from '../components/layout/Empieza';
 import { useAuth } from '../contexts/AuthContext';
 import { firstName } from '../lib/safeText';
 import { PanelLeaderboard } from '../components/ClientHUD/PanelLeaderboard';
@@ -139,6 +140,7 @@ export default function ClientAppView() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 24, color: '#fff', padding: '10px 0' }}>
       <style>{CSS}</style>
+      <Empieza role="client" />
       <AiAssist
         rol="socio"
         texto="Tu objetivo se cumple en el piso, no en la pantalla. Escanea el QR de la máquina o entra a Sala: pecho alto/bajo, WOD, HYROX. Si tu membresía está vencida o hay mora, recepción no te deja entrar."

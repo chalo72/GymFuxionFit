@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { AiAssist } from '../components/AiAssist';
 import { DISCIPLINAS, MAQUINAS, ZONAS } from '../data/pisoGym';
 import { firstName } from '../lib/safeText';
+import Empieza from '../components/layout/Empieza';
 
 export default function SalaCliente() {
   const { user } = useAuth();
@@ -12,9 +13,9 @@ export default function SalaCliente() {
       <h1 style={{ fontSize: 28, fontWeight: 800, margin: '8px 0 4px' }}>
         Hola{user?.name ? `, ${firstName(user.name)}` : ''}
       </h1>
-      <p style={{ color: '#8A948A', marginBottom: 16, fontSize: 15, lineHeight: 1.5 }}>
-        Viniste al gym por un objetivo (salud, físico, rendimiento). Escanea el QR de la máquina o de la zona. Hierro, funcional, HYROX y cardio: el piso te guía.
-      </p>
+      <Empieza role={user?.role === 'trainer' ? 'trainer' : user?.role === 'admin' ? 'admin' : user?.role === 'receptionist' ? 'receptionist' : 'client'} />
+      <details style={{ marginTop: 18 }}>
+        <summary style={{ cursor: 'pointer', fontWeight: 800 }}>El piso y los QR, cuando ya sepas qué hacer</summary>
       <AiAssist
         rol="socio"
         texto="Empieza por la zona de tu objetivo. Si estás perdido, pecho / pierna / WOD. Si hay mora, recepción te bloquea el ingreso: primero dejar la cuenta al día."
@@ -36,6 +37,7 @@ export default function SalaCliente() {
       {MAQUINAS.map((m) => (
         <Link key={m.id} to={`/piso/maquina/${m.id}`} style={{ display: 'block', padding: '8px 0', color: '#ddd', textDecoration: 'none', fontSize: 14 }}>{m.nombre}</Link>
       ))}
+      </details>
       <p style={{ marginTop: 28, fontSize: 12, color: '#666' }}>Montería y Ciénaga de Oro · el único piso con QR por máquina y por zona.</p>
     </div>
   );
