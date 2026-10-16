@@ -41,7 +41,7 @@ interface AuthContextType {
     role: UserRole;
     password: string;
   }) => Promise<string | null>;
-  accesoDirecto: (role: UserRole) => Promise<string | null>;
+  accesoDirecto: (role: UserRole, nombre?: string) => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -136,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return err;
   };
 
-  const accesoDirecto = async (role: UserRole) => {
+  const accesoDirecto = async (role: UserRole, nombre?: string) => {
     const cuenta = ACCESO_DIRECTO.cuentas.find((c) => c.role === role);
     if (!cuenta) return 'Rol no disponible.';
     const err = await upsertUser({
@@ -149,7 +149,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setHasLocalUsers(true);
     const found = loadUsers().find((u) => u.email === cuenta.email);
     if (!found) return 'No se pudo crear la sesión.';
-    setUser(toSession(found));
+    const session = toSession(found);
+    const quien = nombre?.trim();
+    if (quien) session.name = quien;
+    setUser(session);
     return null;
   };
 
