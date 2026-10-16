@@ -9,6 +9,8 @@ import GymSwarm from '../components/enjambre/GymSwarm';
 import { esGerencia } from '../lib/maintenanceAgent';
 import { diasMoratoria } from '../lib/accessGate';
 import { asignarNumeros, leerPasos } from '../lib/puerta';
+import { leerSesiones, ultimoLevantado } from '../lib/entreno';
+import { comidasDeHoy, leerMeta, sumar } from '../lib/comida';
 
 function daysUntil(dateStr?: string) {
   if (!dateStr) return null;
@@ -89,6 +91,30 @@ export default function Home() {
           {!socio && (
             <button type="button" className="fit-cta linea" onClick={() => navigate('/entreno')}>Ver el entreno</button>
           )}
+        </div>
+      </section>
+
+      <section className="mejor">
+        <div className="mejor-grid">
+          <button type="button" className="mejor-card ancho" onClick={() => navigate('/entreno')}>
+            <strong>Control del peso</strong>
+            <span>
+              {(() => {
+                const u = ultimoLevantado(leerSesiones());
+                return u ? `Último: ${u.nombre} ${u.peso} kg × ${u.reps}` : 'Anota el peso y compáralo con la vez pasada';
+              })()}
+            </span>
+          </button>
+          <button type="button" className="mejor-card ancho" onClick={() => navigate('/client/nutrition')}>
+            <strong>Calorías de hoy</strong>
+            <span>
+              {(() => {
+                const t = sumar(comidasDeHoy());
+                const meta = leerMeta();
+                return `${t.kcal} / ${meta.kcal} kcal · proteína ${t.prote} g`;
+              })()}
+            </span>
+          </button>
         </div>
       </section>
 

@@ -2231,6 +2231,7 @@ img {
 }
 .mejor-card strong { display: block; font-size: 16px; margin-bottom: 6px; }
 .mejor-card span { color: #C8F542; font-size: 13px; font-weight: 700; }
+.mejor-card.ancho { grid-column: span 2; min-height: 88px; }
 .fit-agenda { display: flex; flex-direction: column; gap: 10px; }
 .fit-fila {
   display: flex;

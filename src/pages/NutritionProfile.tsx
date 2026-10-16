@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import ComidaHoy from '../components/nutrition/ComidaHoy';
+import { comidasDeHoy, leerMeta, sumar } from '../lib/comida';
 import {
   Apple, TrendingUp, Calendar, Plus, Check, AlertCircle,
   BarChart3, PieChart as PieIcon, Target, Trash2, Edit
@@ -17,12 +19,15 @@ export default function NutritionDashboard() {
     startDate: 'Enero 2026',
   });
 
+  const meta = leerMeta();
+  const hoy = sumar(comidasDeHoy());
+  const pct = (n: number, t: number) => Math.min(100, Math.round((n / Math.max(1, t)) * 100));
   const nutritionData = {
     today: {
-      calories: { current: 1640, target: 2200, pct: 74 },
-      protein: { current: 142, target: 180, pct: 79 },
-      carbs: { current: 210, target: 250, pct: 84 },
-      fats: { current: 48, target: 65, pct: 74 },
+      calories: { current: hoy.kcal, target: meta.kcal, pct: pct(hoy.kcal, meta.kcal) },
+      protein: { current: hoy.prote, target: meta.prote, pct: pct(hoy.prote, meta.prote) },
+      carbs: { current: hoy.carb, target: meta.carb, pct: pct(hoy.carb, meta.carb) },
+      fats: { current: hoy.grasa, target: meta.grasa, pct: pct(hoy.grasa, meta.grasa) },
     }
   };
 
@@ -37,6 +42,8 @@ export default function NutritionDashboard() {
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>{activePlan.goal} • Iniciado en {activePlan.startDate}</p>
       </div>
+
+      <ComidaHoy />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
         {[

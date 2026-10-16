@@ -5,6 +5,8 @@ import {
   hoyISO, leerExtra, leerSesiones, musculoReciente, planDe, porcion, racha, snackDe, sugerir,
   usarPerdon, type EjercicioLog, type Serie, type Sesion, type TipoSerie,
 } from '../lib/entreno';
+import ControlPeso from '../components/entreno/ControlPeso';
+import ComidaHoy from '../components/nutrition/ComidaHoy';
 
 const TABS = ['Sesión', 'Discos', 'Músculos', 'Plan', 'Snack', 'Foto', 'Etiqueta', 'Reloj', 'Informe'] as const;
 type Tab = typeof TABS[number];
@@ -143,6 +145,8 @@ export default function EntrenoStudio() {
         <div><strong>{extra.agua}</strong><span>vasos de agua</span></div>
       </div>
       <p className="porque">{sug.porque}</p>
+      <ControlPeso />
+      <ComidaHoy />
       <div className="tabs">
         {TABS.map((t) => (
           <button key={t} type="button" className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>

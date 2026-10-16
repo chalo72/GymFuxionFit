@@ -40,6 +40,30 @@ export function ultimaSerie(nombre: string, sesiones = leerSesiones()) {
   return null;
 }
 
+export function historialPeso(nombre: string, sesiones = leerSesiones()) {
+  const filas: { fecha: string; peso: number; reps: number }[] = [];
+  for (const s of [...sesiones].reverse()) {
+    for (const e of s.ejercicios) {
+      if (e.nombre.toLowerCase() !== nombre.toLowerCase()) continue;
+      const mejor = e.series
+        .filter((x) => x.hecha && x.tipo !== 'calentamiento')
+        .sort((a, b) => b.peso - a.peso)[0];
+      if (mejor) filas.push({ fecha: s.fecha, peso: mejor.peso, reps: mejor.reps });
+    }
+  }
+  return filas;
+}
+
+export function ultimoLevantado(sesiones = leerSesiones()) {
+  for (const s of sesiones) {
+    for (const e of s.ejercicios) {
+      const hecha = [...e.series].reverse().find((x) => x.hecha && x.tipo !== 'calentamiento');
+      if (hecha) return { fecha: s.fecha, nombre: e.nombre, peso: hecha.peso, reps: hecha.reps };
+    }
+  }
+  return null;
+}
+
 export function sugerir(nombre: string) {
   const u = ultimaSerie(nombre);
   if (!u) return { peso: 20, reps: 8, porque: 'Primera vez. Arranca suave y anota cómo se sintió.' };

@@ -3,6 +3,7 @@ import { Apple, Flame, Beef, Droplets, Zap, TrendingUp, Plus, Search, X, Activit
 import { useGymData } from '../hooks/useGymData';
 import { AiAssist } from '../components/AiAssist';
 import { initials } from '../lib/safeText';
+import ComidaHoy from '../components/nutrition/ComidaHoy';
 import {
   AreaChart,
   Area,
@@ -104,6 +105,7 @@ export default function Nutrition() {
         rol="nutrición"
         texto="Costa Caribe: hidratación primero. Proteína en cada comida si el objetivo es composición. No inventes déficits agresivos en el calor. Registra lo que el socio realmente come, no el plan perfecto."
       />
+      <ComidaHoy />
       
       {/* ─── MODAL REGISTRAR COMIDA ─── */}
       {isModalOpen && (
