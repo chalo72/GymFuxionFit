@@ -82,6 +82,8 @@ export default function CruceDia({ cajaEsperada }: { cajaEsperada?: number }) {
         .cruce-nueva select { min-height: 52px; border-radius: 16px; background: rgba(0,0,0,.35); color: #fff; border: 1px solid rgba(255,255,255,.12); padding: 0 12px; }
         @media (max-width: 800px) { .cruce-nueva { grid-template-columns: 1fr; } }
       `}</style>
+      <details>
+        <summary>Agregar una cámara, si todavía no está</summary>
       <div className="cruce-nueva">
         <input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre, ej. Puerta" />
         <select value={marca} onChange={(e) => setMarca(e.target.value)}>
@@ -94,6 +96,7 @@ export default function CruceDia({ cajaEsperada }: { cajaEsperada?: number }) {
         <input value={canal} onChange={(e) => setCanal(e.target.value)} placeholder="Canal o modelo, opcional" />
         <button type="button" className="turno-principal" onClick={agregar}>Guardar cámara</button>
       </div>
+      </details>
     </section>
   );
 }

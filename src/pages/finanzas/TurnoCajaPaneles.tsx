@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Moon, Sun, Sunset, Minus, Plus } from 'lucide-react';
 import { useGymData } from '../../hooks/useGymData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -6,6 +7,7 @@ import {
   BILLETES, MONEDAS, duracion, fechaClave, horaCorta, leerTurnos, guardarTurnos,
   pesos, resumirTurno, turnoAbierto, turnoSugerido, type NombreTurno, type TurnoCaja,
 } from '../../lib/turnosCaja';
+import { armarCruce } from '../../lib/cruceDia';
 import CruceDia from '../../components/finanzas/CruceDia';
 
 const TURNOS: { id: NombreTurno; icon: typeof Sun; rango: string }[] = [
@@ -104,7 +106,7 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
         <section className="turno-hero">
           <p className="turno-kicker">Caja cerrada</p>
           <h3>Abrir turno</h3>
-          <p>Elige el turno, escribe quién tiene el cajón y con cuánto efectivo arranca. Nequi y créditos no van en esta base.</p>
+          <p>Esta es la caja principal: el cajón de billetes. Paso 1: elige mañana, tarde o noche. Paso 2: escribe quién lo tiene. Paso 3: pon la base, aunque sea cero, y abre. Nequi y el fiado no van en esa base.</p>
         </section>
         <div className="turno-opciones">
           {TURNOS.map((t) => {
@@ -152,6 +154,7 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
         <Kpi titulo="Efectivo que salió" valor={pesos(resumen.efectivoSalio)} rojo />
         <Kpi titulo="Debe haber en el cajón" valor={pesos(resumen.esperado)} fuerte />
       </div>
+      <p className="turno-leyenda">Ese número sale así: base + efectivo que entró − efectivo que salió. Para cuadrar, toca Contar y cerrar y compara con los billetes que tienes en la mano.</p>
       <div className="turno-aparte">
         <span>Nequi {pesos(resumen.nequi)} · no está en el cajón</span>
         <span>Crédito {pesos(resumen.credito)} · no es plata de caja</span>
@@ -159,17 +162,21 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
       <div className="turno-acciones">
         <button type="button" onClick={() => setMov(mov === 'entrada' ? null : 'entrada')}>Meter efectivo</button>
         <button type="button" onClick={() => setMov(mov === 'salida' ? null : 'salida')}>Sacar efectivo</button>
-        <button type="button" className="turno-principal" onClick={onCuadre}>Contar y cerrar</button>
+        <button type="button" className="turno-principal" onClick={onCuadre}>Cerrar la caja y contar el efectivo que quedó</button>
       </div>
       {mov && (
         <div className="turno-mov">
-          <strong>{mov === 'entrada' ? 'Entra efectivo al cajón' : 'Sale efectivo del cajón'}</strong>
+          <strong>{mov === 'entrada' ? 'Meter plata al cajón, aparte de las ventas' : 'Sacar plata del cajón'}</strong>
+          <p>Las ventas y el Nequi no se escriben aquí. Entran solos cuando se cobran en Recepción.</p>
           <input value={monto} onChange={(e) => setMonto(e.target.value)} inputMode="numeric" placeholder="Cuánto" />
           <input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Para qué: vueltos, agua, base..." />
           <button type="button" className="turno-principal" onClick={mover}>Anotar</button>
         </div>
       )}
-      <CruceDia cajaEsperada={resumen.esperado} />
+      <details className="turno-card">
+        <summary>Cámaras, solo si quieres compararlas después</summary>
+        <CruceDia cajaEsperada={resumen.esperado} />
+      </details>
       <div className="turno-lista">
         {resumen.delTurno.length === 0 && <p>Todavía no hay movimientos en este turno.</p>}
         {resumen.delTurno.slice().reverse().map((t) => (
@@ -189,7 +196,8 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
 }
 
 export function CuadreCaja() {
-  const { transactions } = useGymData();
+  const { transactions, members } = useGymData();
+  const [, setParams] = useSearchParams();
   const { abierto, lista, guardar } = useTurnos();
   const [conteo, setConteo] = useState<Record<number, string>>({});
   const [nota, setNota] = useState('');
@@ -199,6 +207,7 @@ export function CuadreCaja() {
     () => (abierto ? resumirTurno(transactions, abierto) : null),
     [transactions, abierto],
   );
+  const dia = useMemo(() => armarCruce(members, transactions), [members, transactions]);
 
   const contado = [...BILLETES, ...MONEDAS].reduce((a, v) => a + (Number(conteo[v] || 0) * v), 0);
   const hayConteo = Object.values(conteo).some((n) => Number(n) > 0);
@@ -241,36 +250,42 @@ export function CuadreCaja() {
     return (
       <div className="turno-wrap">
         <Estilos />
-        <CruceDia />
         <section className="turno-hero">
-          <p className="turno-kicker">Sin turno abierto</p>
+          <p className="turno-kicker">Caja cerrada</p>
           <h3>Primero abre la caja</h3>
-          <p>El cruce de gente ya está arriba. El conteo de billetes espera a que el turno esté abierto.</p>
+          <p>El cierre cuenta los billetes que quedaron. Sin turno abierto no hay nada que cerrar. Las ventas y el Nequi no se escriben aquí.</p>
+          <button type="button" className="turno-principal" onClick={() => setParams({}, { replace: true })}>Abrir la caja</button>
         </section>
-        {aviso && <p className="turno-aviso">{aviso}</p>}
       </div>
     );
   }
+
+  const ventas = resumen.efectivoEntro + resumen.nequi;
 
   return (
     <div className="turno-wrap">
       <Estilos />
       <section className="turno-banner">
         <div>
-          <p className="turno-kicker">Cuadre de {abierto.nombre}</p>
-          <h3>{abierto.responsable}</h3>
-          <p>{horaCorta(abierto.abiertoAt)} · {duracion(abierto.abiertoAt)}</p>
+          <p className="turno-kicker">Cerrar caja · {abierto.nombre}</p>
+          <h3>Así quedó el día</h3>
+          <p>{abierto.responsable} · desde {horaCorta(abierto.abiertoAt)}</p>
         </div>
         <strong className="turno-esperado">{pesos(resumen.esperado)}</strong>
       </section>
+      <p className="turno-leyenda">Estos números ya entraron al cobrar en Recepción. Aquí no se vuelven a escribir las compras ni el Nequi.</p>
       <div className="turno-kpis">
-        <Kpi titulo="Base" valor={pesos(abierto.fondo)} />
-        <Kpi titulo="Entró efectivo" valor={pesos(resumen.efectivoEntro)} />
-        <Kpi titulo="Salió efectivo" valor={pesos(resumen.efectivoSalio)} rojo />
-        <Kpi titulo="Nequi aparte" valor={pesos(resumen.nequi)} />
+        <Kpi titulo="Clientes que entraron" valor={String(dia.appEntraron)} />
+        <Kpi titulo="Ventas cobradas" valor={pesos(ventas)} />
+        <Kpi titulo="Pago en efectivo" valor={pesos(resumen.efectivoEntro)} />
+        <Kpi titulo="Pago en Nequi" valor={pesos(resumen.nequi)} />
+        <Kpi titulo="Créditos, no van al cajón" valor={pesos(resumen.credito)} />
+        <Kpi titulo="Salió del cajón" valor={pesos(resumen.efectivoSalio)} rojo />
+        <Kpi titulo="Base con la que abriste" valor={pesos(abierto.fondo)} />
+        <Kpi titulo="Debe haber al cerrar" valor={pesos(resumen.esperado)} fuerte />
       </div>
-      <CruceDia cajaEsperada={resumen.esperado} />
-      <p className="turno-leyenda">Cuenta los billetes y las monedas del cajón. El sistema espera {pesos(resumen.esperado)}. El crédito ({pesos(resumen.credito)}) no se cuenta. Nequi queda aparte.</p>
+      <h3 className="turno-dia">Efectivo que quedó: cuenta los billetes</h3>
+      <p className="turno-leyenda">Pon cuántos billetes hay de cada valor. El botón + suma uno. Ese total es la plata física del cajón, no las ventas.</p>
       <div className="turno-denoms">
         {BILLETES.map((v) => (
           <Denom key={v} valor={v} cant={conteo[v] || ''} onChange={(n) => setConteo({ ...conteo, [v]: n })} onStep={(d) => poner(v, d)} />
@@ -280,13 +295,13 @@ export function CuadreCaja() {
         ))}
       </div>
       <div className={`turno-resultado ${diferencia === 0 ? 'ok' : diferencia !== null && diferencia < 0 ? 'falta' : ''}`}>
-        <span>Contado {pesos(contado)}</span>
+        <span>Efectivo contado {pesos(contado)} · debía haber {pesos(resumen.esperado)}</span>
         <strong>
           {diferencia === null ? 'Falta contar' : diferencia === 0 ? 'Cuadra exacto' : diferencia > 0 ? `Sobra ${pesos(diferencia)}` : `Falta ${pesos(Math.abs(diferencia))}`}
         </strong>
       </div>
       <input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Nota: vueltos, pago de agua, quién recibe..." />
-      <button type="button" className="turno-principal" onClick={cerrar}>Cerrar turno</button>
+      <button type="button" className="turno-principal" onClick={cerrar}>Cerrar la caja con este efectivo</button>
       {aviso && <p className="turno-aviso">{aviso}</p>}
     </div>
   );
