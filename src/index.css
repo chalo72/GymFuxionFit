@@ -2214,6 +2214,23 @@ img {
   cursor: pointer;
   box-shadow: 0 10px 28px rgba(200, 245, 66, 0.35);
 }
+.fit-cta-fila { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.fit-cta.linea { background: transparent; color: var(--neon-green); border: 2px solid var(--neon-green); box-shadow: none; }
+.mejor { display: flex; flex-direction: column; gap: 10px; }
+.mejor h3 { margin: 0; font-size: 22px; }
+.mejor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.mejor-card {
+  min-height: 108px;
+  text-align: left;
+  border-radius: 22px;
+  padding: 14px;
+  background: #0e140f;
+  border: 1px solid rgba(200, 245, 66, 0.35);
+  color: #fff;
+  cursor: pointer;
+}
+.mejor-card strong { display: block; font-size: 16px; margin-bottom: 6px; }
+.mejor-card span { color: #C8F542; font-size: 13px; font-weight: 700; }
 .fit-agenda { display: flex; flex-direction: column; gap: 10px; }
 .fit-fila {
   display: flex;

@@ -84,7 +84,35 @@ export default function Home() {
           <path d="M100 28c10 0 18 8 18 18s-8 18-18 18-18-8-18-18 8-18 18-18zm-28 52c8 6 18 10 28 10s20-4 28-10l16 28-18 8 8 36-16 54-10-28-10 28-16-54 8-36-18-8 16-28z" fill="none" stroke="#C8F542" strokeWidth="3" />
           <path d="M78 118c18 22 26 22 44 0" fill="none" stroke="#C8F542" strokeWidth="2" opacity="0.7" />
         </svg>
-        <button type="button" className="fit-cta" onClick={() => navigate(principal.to)}>{principal.label}</button>
+        <div className="fit-cta-fila">
+          <button type="button" className="fit-cta" onClick={() => navigate(principal.to)}>{principal.label}</button>
+          {!socio && (
+            <button type="button" className="fit-cta linea" onClick={() => navigate('/entreno')}>Ver el entreno</button>
+          )}
+        </div>
+      </section>
+
+      <section className="mejor">
+        <p className="fit-kicker">Lo mejor, en esta pantalla</p>
+        <h3>Del entreno, listo para usar</h3>
+        <div className="mejor-grid">
+          {[
+            { to: '/entreno?pieza=Sesión', titulo: 'Siguiente serie', texto: 'Peso, reps y el porqué' },
+            { to: '/entreno?pieza=Discos', titulo: 'Discos', texto: 'Qué va a cada lado' },
+            { to: '/entreno?pieza=Músculos', titulo: '17 músculos', texto: 'Fresco o con lesión' },
+            { to: '/entreno?pieza=Plan', titulo: 'Plan', texto: 'Días de la semana' },
+            { to: '/entreno?pieza=Snack', titulo: '8 a 15 min', texto: 'Sin equipo, 3 niveles' },
+            { to: '/entreno?pieza=Foto', titulo: 'Foto y medidas', texto: '14 medidas en este equipo' },
+            { to: '/entreno?pieza=Etiqueta', titulo: 'Etiqueta', texto: 'Código y porción' },
+            { to: '/entreno?pieza=Reloj', titulo: 'En el banco', texto: 'Números grandes' },
+            { to: '/entreno?pieza=Informe', titulo: 'Racha', texto: '2 perdones y CSV' },
+          ].map((p) => (
+            <button key={p.to} type="button" className="mejor-card" onClick={() => navigate(p.to)}>
+              <strong>{p.titulo}</strong>
+              <span>{p.texto}</span>
+            </button>
+          ))}
+        </div>
       </section>
 
       <div className="fit-agenda">

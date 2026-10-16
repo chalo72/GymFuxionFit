@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   MEDIDAS, MUSCULOS, calentamiento, csvSesiones, diasDesde, discos, guardarExtra, guardarSesiones,
   hoyISO, leerExtra, leerSesiones, musculoReciente, planDe, porcion, racha, snackDe, sugerir,
@@ -11,8 +11,23 @@ type Tab = typeof TABS[number];
 
 function id() { return `${Date.now()}_${Math.random().toString(16).slice(2, 6)}`; }
 
+const PISTAS: Record<Tab, string> = {
+  'Sesión': 'Peso anterior y por qué',
+  'Discos': 'Por lado de la barra',
+  'Músculos': 'Fresco o lesión',
+  'Plan': 'Días de la semana',
+  'Snack': 'Corta, sin equipo',
+  'Foto': 'Progreso y medidas',
+  'Etiqueta': 'Código y porción',
+  'Reloj': 'Números del banco',
+  'Informe': 'Racha, perdón y CSV',
+};
+
 export default function EntrenoStudio() {
-  const [tab, setTab] = useState<Tab>('Sesión');
+  const [params, setParams] = useSearchParams();
+  const pedido = params.get('pieza') as Tab | null;
+  const tab: Tab = pedido && (TABS as readonly string[]).includes(pedido) ? pedido : 'Sesión';
+  const setTab = (t: Tab) => setParams({ pieza: t });
   const [sesiones, setSesiones] = useState<Sesion[]>(() => leerSesiones());
   const [extra, setExtra] = useState(() => leerExtra());
   const [sesion, setSesion] = useState<Sesion>(() => ({
@@ -115,15 +130,25 @@ export default function EntrenoStudio() {
   };
 
   const d = discos(Number(pesoObj) || 0, Number(barra) || 20);
+  const frescos = MUSCULOS.filter((m) => diasDesde(recientes[m]) > 2 && !extra.lesion.includes(m)).length;
 
   return (
     <div className="entreno-studio">
-      <p className="fit-kicker">Registro del socio</p>
+      <p className="fit-kicker">Lo mejor, junto</p>
       <h2>Entreno</h2>
-      <p className="leyenda">Anotar es gratis. La siguiente serie sale de lo que ya hiciste. La racha perdona dos días por semana. No hay rangos de pago ni monedas.</p>
+      <div className="tablero">
+        <div><strong>{racha(sesiones)}</strong><span>días de racha</span></div>
+        <div><strong>{sug.peso} kg</strong><span>× {sug.reps} · {nombre}</span></div>
+        <div><strong>{frescos}</strong><span>músculos frescos</span></div>
+        <div><strong>{extra.agua}</strong><span>vasos de agua</span></div>
+      </div>
+      <p className="porque">{sug.porque}</p>
       <div className="tabs">
         {TABS.map((t) => (
-          <button key={t} type="button" className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{t}</button>
+          <button key={t} type="button" className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>
+            <b>{t}</b>
+            <small>{PISTAS[t]}</small>
+          </button>
         ))}
       </div>
 
@@ -293,9 +318,19 @@ export default function EntrenoStudio() {
       <style>{`
         .entreno-studio { display: flex; flex-direction: column; gap: 12px; color: #fff; }
         .entreno-studio h2 { margin: 0; font-size: 32px; }
-        .leyenda, .porque { margin: 0; color: #c5d1b0; font-size: 14px; }
-        .tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-        .tabs button, .entreno-studio .fila button, .serie button {
+        .tablero { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .tablero div { background: #0e140f; border: 1px solid rgba(200,245,66,.35); border-radius: 22px; padding: 14px; }
+        .tablero strong { display: block; font-size: 28px; color: #C8F542; }
+        .tablero span, .leyenda, .porque { color: #c5d1b0; font-size: 14px; }
+        .porque { margin: 0; }
+        .tabs { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; }
+        .tabs button {
+          min-height: 74px; border-radius: 18px; border: 1px solid rgba(200,245,66,.3);
+          background: #0e140f; color: #fff; padding: 10px 12px; cursor: pointer; text-align: left;
+        }
+        .tabs button b { display: block; font-size: 15px; }
+        .tabs button small { color: #c5d1b0; }
+        .entreno-studio .fila button, .serie button {
           min-height: 42px; border-radius: 999px; border: 1px solid rgba(200,245,66,.3);
           background: #0e140f; color: #fff; padding: 8px 14px; cursor: pointer; font-weight: 800;
         }
