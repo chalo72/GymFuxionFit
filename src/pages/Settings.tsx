@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useGymData } from '../hooks/useGymData';
 import { useAuth } from '../contexts/AuthContext';
 import { loadUsers, type UserRole } from '../lib/localUsers';
+import { guardarPin, leerPines, NOMBRE_ROL } from '../lib/pines';
 import { diasMoratoria, guardarMoratoria } from '../lib/accessGate';
 
 const sections = [
@@ -16,6 +17,38 @@ const sections = [
   { id: 'database', icon: Database, title: 'Base de Datos', description: 'PostgreSQL, TimescaleDB y Redis' },
   { id: 'pricing', icon: DollarSign, title: 'Precios y Planes', description: 'Configurar costos de membresías y daypasses' },
 ];
+
+function PinesPanel() {
+  const [pines, setPines] = useState(() => leerPines());
+  const [aviso, setAviso] = useState('');
+  const roles: UserRole[] = ['admin', 'receptionist', 'trainer', 'client'];
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>PIN de cada quien</h3>
+      <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+        Cuatro números. El gerente entra con el suyo y aquí cambia el de recepción, entrenador y socio.
+      </p>
+      {roles.map((rol) => (
+        <label key={rol} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ width: 120 }}>{NOMBRE_ROL[rol]}</span>
+          <input
+            className="input-field"
+            inputMode="numeric"
+            maxLength={4}
+            value={pines[rol]}
+            onChange={(e) => setPines({ ...pines, [rol]: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+          />
+          <button type="button" className="btn btn-primary" onClick={() => {
+            if (pines[rol].length < 4) { setAviso('El PIN tiene 4 números.'); return; }
+            setPines(guardarPin(rol, pines[rol]));
+            setAviso(`PIN de ${NOMBRE_ROL[rol]} guardado en este equipo.`);
+          }}>Guardar</button>
+        </label>
+      ))}
+      {aviso && <p style={{ fontSize: 13 }}>{aviso}</p>}
+    </div>
+  );
+}
 
 function AccesosPanel() {
   const { upsertAccount, user } = useAuth();
@@ -37,6 +70,7 @@ function AccesosPanel() {
 
   return (
     <div>
+      <PinesPanel />
       <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Accesos del gym</h3>
       <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
         La clave de gerencia es la que creaste al abrir la primera cuenta. No está guardada en texto: no la puedo adivinar.

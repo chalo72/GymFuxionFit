@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import type { UserRole } from '../contexts/AuthContext';
 import { useGymData } from '../hooks/useGymData';
-import { mapStaffRole, loadUsers, ACCESO_DIRECTO } from '../lib/localUsers';
+import { mapStaffRole, loadUsers } from '../lib/localUsers';
+import { pinesVisibles, rolDePin } from '../lib/pines';
 
 export const ROLE_HOME: Record<UserRole, string> = {
   admin: '/',
@@ -24,12 +25,20 @@ export default function Login() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const pines = pinesVisibles();
 
   if (isAuthenticated && user) {
     return <Navigate to={ROLE_HOME[user.role] ?? '/'} replace />;
   }
+
+  const entrarConPin = async (codigo: string) => {
+    const rol = rolDePin(codigo);
+    if (!rol) { setError('Ese PIN no está. El de gerente es 2607.'); return; }
+    await entrarDirecto(rol);
+  };
 
   const entrarDirecto = async (role: UserRole) => {
     setError('');
@@ -87,20 +96,39 @@ export default function Login() {
           <div className="login-header">
             <div className="login-logo"><Dumbbell /></div>
             <h1 className="login-title">Gym<span>Fuxion</span>Fit</h1>
-            <p className="login-subtitle">Acceso directo temporal · clave {ACCESO_DIRECTO.clave}</p>
+            <p className="login-subtitle">Entra con el PIN. El de gerente es 2607.</p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-            {ACCESO_DIRECTO.cuentas.map((c) => (
+          <form className="login-form" onSubmit={(e) => { e.preventDefault(); entrarConPin(pin); }}>
+            <label className="input-label">PIN</label>
+            <input
+              className="input-field"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={4}
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="4 números"
+              style={{ fontSize: 32, letterSpacing: 8, textAlign: 'center', fontWeight: 900 }}
+            />
+            <button type="submit" className="btn btn-glow" style={{ width: '100%', marginTop: 12 }} disabled={busy}>
+              Entrar
+            </button>
+            {error && <p style={{ color: 'var(--danger-red)', fontSize: 13, fontWeight: 700 }}>{error}</p>}
+          </form>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '16px 0 20px' }}>
+            {pines.map((c) => (
               <button
-                key={c.role}
+                key={c.rol}
                 type="button"
-                className="btn btn-glow"
-                style={{ width: '100%' }}
+                className="btn btn-ghost"
+                style={{ width: '100%', justifyContent: 'space-between' }}
                 disabled={busy}
-                onClick={() => entrarDirecto(c.role)}
+                onClick={() => entrarDirecto(c.rol)}
               >
-                Entrar como {c.name}
+                <span>Entrar como {c.nombre}</span>
+                <strong>{c.pin}</strong>
               </button>
             ))}
           </div>
