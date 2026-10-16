@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
 import Navbar from './Navbar';
@@ -37,6 +37,7 @@ const pageTitles: Record<string, string> = {
 export default function AppLayout() {
   useAutoUpdate();
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
@@ -74,6 +75,9 @@ export default function AppLayout() {
           isCollapsed={isCollapsed}
           handleToggleCollapse={handleToggleCollapse}
         />
+        <button type="button" className="aviso-71" onClick={() => navigate('/entreno')}>
+          Versión 7.1 activa. Aquí quedó lo nuevo: control del peso y calorías de hoy.
+        </button>
         <div className="page-content page-scroll" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'auto' }}>
           <AnimatePresence mode="wait">
             <motion.div

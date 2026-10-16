@@ -1,10 +1,10 @@
 {
-  "version": "7.0.30",
-  "build": "20260904.1705",
+  "version": "7.1.0",
+  "build": "20261016.0800",
   "status": "PRODUCTO_REAL",
   "author": "Antigravity Nexus",
   "features": [
-    "Celular: scroll real, login y menú usables",
-    "Lista completa de planes (día, semana, quincena, básico, pro, HYROX)"
+    "Control del peso: más y menos kilos, comparado con la vez pasada",
+    "Calorías, proteína, carbos y grasa de lo que sí se comió hoy"
   ]
 }

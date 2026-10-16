@@ -11,6 +11,8 @@ import { diasMoratoria } from '../lib/accessGate';
 import { asignarNumeros, leerPasos } from '../lib/puerta';
 import { leerSesiones, ultimoLevantado } from '../lib/entreno';
 import { comidasDeHoy, leerMeta, sumar } from '../lib/comida';
+import ControlPeso from '../components/entreno/ControlPeso';
+import ComidaHoy from '../components/nutrition/ComidaHoy';
 
 function daysUntil(dateStr?: string) {
   if (!dateStr) return null;
@@ -78,6 +80,12 @@ export default function Home() {
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 32 }}>
+      <section className="mejor">
+        <p className="fit-kicker">Versión 7.1 · esto es lo nuevo</p>
+        <h3>Peso y calorías, de primero</h3>
+        <ControlPeso />
+        <ComidaHoy />
+      </section>
       <section className="fit-hero">
         <p className="fit-kicker">Gym Fuxion Fit</p>
         <h2>Hola, {greeting}.<br /><span>Hoy en el gym.</span></h2>

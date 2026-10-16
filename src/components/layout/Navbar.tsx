@@ -51,9 +51,9 @@ export default function Navbar({
         </button>
         <h1 className="navbar-title">{title}</h1>
         <div className="navbar-breadcrumb">
-          <span style={{ color: '#fff', fontSize: 8, fontWeight: 950, background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, marginRight: 8 }}>
-            v{versionData.version}
-          </span>
+          <button type="button" onClick={() => navigate('/entreno')} style={{ color: '#111', fontSize: 11, fontWeight: 900, background: '#C8F542', padding: '4px 8px', borderRadius: 8, marginRight: 8, border: 'none', cursor: 'pointer' }}>
+            v{versionData.version} · Peso y calorías
+          </button>
           <button onClick={handleToggleCollapse} style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 950, cursor: 'pointer' }}>
             {isCollapsed ? 'Ampliar menú' : 'Compactar menú'}
           </button>
