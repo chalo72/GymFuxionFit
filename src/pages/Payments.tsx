@@ -294,12 +294,12 @@ export default function Payments() {
                     <stop offset="100%" stopColor="#00FF88" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="proGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FF6B35" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#FF6B35" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#8A9C96" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#8A9C96" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="hyroxRevGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#A78BFA" stopOpacity={0.2} />
-                    <stop offset="100%" stopColor="#A78BFA" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#C5D1CC" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#C5D1CC" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
@@ -310,8 +310,8 @@ export default function Payments() {
                   formatter={(v: number, name: string) => [`$${v.toLocaleString()}`, name]}
                 />
                 <Area type="monotone" dataKey="basic" name="Básico" stroke="#00FF88" strokeWidth={2} fill="url(#basicGrad)" dot={false} />
-                <Area type="monotone" dataKey="pro" name="Pro" stroke="#FF6B35" strokeWidth={2} fill="url(#proGrad)" dot={false} />
-                <Area type="monotone" dataKey="hyrox" name="HYROX" stroke="#A78BFA" strokeWidth={2} fill="url(#hyroxRevGrad)" dot={false} />
+                <Area type="monotone" dataKey="pro" name="Pro" stroke="#8A9C96" strokeWidth={2} fill="url(#proGrad)" dot={false} />
+                <Area type="monotone" dataKey="hyrox" name="HYROX" stroke="#C5D1CC" strokeWidth={2} fill="url(#hyroxRevGrad)" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -322,8 +322,8 @@ export default function Payments() {
         <div className="dashboard-grid" style={{ gap: 20 }}>
           {[
             { name: 'Plan Básico', price: 40, members: 520, color: '#00FF88', features: ['Acceso sala principal', 'Vestuarios', 'App básica'] },
-            { name: 'Plan Pro', price: 75, members: 450, color: '#FF6B35', features: ['Todo Plan Básico', 'Clases grupales', 'AI Coach básico', 'Nutrición básica'] },
-            { name: 'Plan HYROX Pro', price: 120, members: 277, color: '#A78BFA', features: ['Todo Plan Pro', 'Entrenamiento HYROX', 'Genesis Scan', 'AI Coach Elite', 'Wearables sync'] },
+            { name: 'Plan Pro', price: 75, members: 450, color: '#8A9C96', features: ['Todo Plan Básico', 'Clases grupales', 'AI Coach básico', 'Nutrición básica'] },
+            { name: 'Plan HYROX Pro', price: 120, members: 277, color: '#C5D1CC', features: ['Todo Plan Pro', 'Entrenamiento HYROX', 'Genesis Scan', 'AI Coach Elite', 'Wearables sync'] },
           ].map((plan) => (
             <div key={plan.name} className="glass-card" style={{ borderColor: `${plan.color}25` }}>
               <div style={{ fontWeight: 800, fontSize: 'var(--text-xl)', color: plan.color, marginBottom: 4 }}>

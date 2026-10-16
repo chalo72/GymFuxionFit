@@ -25,7 +25,7 @@ export default function CRM() {
 
   const columns = [
     { id: 'leads', title: 'Nuevos Leads', color: '#00FF88', count: leads.filter(l => l.status === 'leads').length },
-    { id: 'contacted', title: 'Contactados', color: '#FF6B35', count: leads.filter(l => l.status === 'contacted').length },
+    { id: 'contacted', title: 'Contactados', color: '#8A9C96', count: leads.filter(l => l.status === 'contacted').length },
     { id: 'trial', title: 'Clase de Prueba', color: '#00E676', count: leads.filter(l => l.status === 'trial').length },
     { id: 'closed', title: 'Cerrados', color: '#00E676', count: leads.filter(l => l.status === 'closed').length },
   ];

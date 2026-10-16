@@ -144,7 +144,7 @@ export default function ClientAppView() {
         texto="Tu objetivo se cumple en el piso, no en la pantalla. Escanea el QR de la máquina o entra a Sala: pecho alto/bajo, WOD, HYROX. Si tu membresía está vencida o hay mora, recepción no te deja entrar."
       />
       <Link to="/sala" style={{ color: 'var(--neon-green)', fontWeight: 800, fontSize: 14, marginBottom: 8 }}>Abrir sala del socio (QR y zonas) →</Link>
-      {!athlete && <p style={{ color: '#FFD700', fontSize: 13 }}>Tu login no está en una ficha. En recepción, pon el mismo correo del socio.</p>}
+      {!athlete && <p style={{ color: '#C5D1CC', fontSize: 13 }}>Tu login no está en una ficha. En recepción, pon el mismo correo del socio.</p>}
       {athlete && tabTotal(athlete.openTab) > 0 && (
         <div className="glass-card" style={{ padding: 14, border: '1px solid rgba(255,215,0,0.4)' }}>
           Debes pagar al salir: {(athlete.openTab || []).map((l) => `${l.qty}× ${l.name}`).join(', ')} = ${tabTotal(athlete.openTab).toLocaleString('es-CO')}
@@ -174,9 +174,9 @@ export default function ClientAppView() {
       {/* ── QUICK STATS ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
          {[
-           { label: 'VISITAS', value: String(athlete?.visits || 0), icon: <Activity />, color: '#00E5FF' },
-           { label: 'RACHA', value: String(athlete?.streak || 0), icon: <Flame />, color: '#FF6B35' },
-           { label: 'SALDO', value: `$${(athlete?.debt || 0).toLocaleString('es-CO')}`, icon: <Heart />, color: '#A78BFA' },
+           { label: 'VISITAS', value: String(athlete?.visits || 0), icon: <Activity />, color: '#00FF88' },
+           { label: 'RACHA', value: String(athlete?.streak || 0), icon: <Flame />, color: '#8A9C96' },
+           { label: 'SALDO', value: `$${(athlete?.debt || 0).toLocaleString('es-CO')}`, icon: <Heart />, color: '#C5D1CC' },
            { label: 'TIEMPO SESIÓN', value: active ? fmt(sec) : '--:--', icon: <Clock />, color: 'var(--neon-green)', active: active }
          ].map(s => (
            <div key={s.label} className="glass-card premium-card-hover" style={{ padding: 20, borderRadius: 24, transition: '0.3s' }}>

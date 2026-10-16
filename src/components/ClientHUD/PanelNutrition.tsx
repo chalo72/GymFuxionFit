@@ -41,9 +41,9 @@ export function PanelNutrition({ athlete, updateMemberStatus }: { athlete?: Memb
   const totalFats = loggedFoods.reduce((sum, f) => sum + (Number(f.fats) || 0), 0);
 
   const pieData = [
-    { name: 'Proteína', value: totalProtein, color: '#FF6B35' },
+    { name: 'Proteína', value: totalProtein, color: '#8A9C96' },
     { name: 'Carbohidratos', value: totalCarbs, color: '#00FF88' },
-    { name: 'Grasas', value: totalFats, color: '#FFD700' },
+    { name: 'Grasas', value: totalFats, color: '#C5D1CC' },
   ].filter((d) => d.value > 0);
 
   return (

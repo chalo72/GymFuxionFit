@@ -27,7 +27,7 @@ export default function Analytics() {
       planCounts[p] = (planCounts[p] || 0) + 1;
     });
     
-    const colors = ['#FFD600', '#00E5FF', '#00F0FF', '#FF6B35', '#00E676', '#888888'];
+    const colors = ['#C5D1CC', '#00FF88', '#00FF88', '#8A9C96', '#00E676', '#888888'];
     const distData = Object.entries(planCounts)
       .filter(([_, count]) => count > 0)
       .map(([planId, count], i) => {
@@ -120,8 +120,8 @@ export default function Analytics() {
               <AreaChart data={monthlyRevenue}>
                 <defs>
                   <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#00F0FF" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#00F0FF" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#00FF88" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#00FF88" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
@@ -139,11 +139,11 @@ export default function Analytics() {
                 <Area
                   type="monotone"
                   dataKey="revenue"
-                  stroke="#00F0FF"
+                  stroke="#00FF88"
                   strokeWidth={2}
                   fill="url(#cyanGrad)"
                   dot={false}
-                  activeDot={{ r: 5, fill: '#00F0FF', stroke: 'rgba(0,240,255,0.3)', strokeWidth: 6 }}
+                  activeDot={{ r: 5, fill: '#00FF88', stroke: 'rgba(0,240,255,0.3)', strokeWidth: 6 }}
                 />
               </AreaChart>
             </ResponsiveContainer>

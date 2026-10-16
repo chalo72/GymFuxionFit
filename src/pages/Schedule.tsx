@@ -50,7 +50,7 @@ const schedule: DaySchedule = {
       subtitulo: 'Carrera + ejercicios por estaciones — Como un circuito con correr y hacer fuerza',
       instructor: 'Coach Alex',
       enrolled: 18, capacity: 20,
-      type: 'hyrox', color: '#FF6B35', duration: '60 min',
+      type: 'hyrox', color: '#8A9C96', duration: '60 min',
       description: 'Entrenamiento de alta intensidad combinando running con 8 estaciones de ejercicios funcionales. Ideal para atletas que quieren desafiarse.',
       image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600',
       isActive: true,
@@ -73,7 +73,7 @@ const schedule: DaySchedule = {
       subtitulo: 'Posiciones de yoga en movimiento — Estira el cuerpo y calma la mente',
       instructor: 'Coach Sofía',
       enrolled: 10, capacity: 20,
-      type: 'yoga', color: '#A78BFA', duration: '60 min',
+      type: 'yoga', color: '#C5D1CC', duration: '60 min',
       description: 'Secuencias dinámicas de asanas (posiciones de yoga) para mejorar la flexibilidad, el equilibrio y la concentración mental.',
       image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600',
       isActive: true,
@@ -95,7 +95,7 @@ const schedule: DaySchedule = {
       subtitulo: 'Ejercicio del día — Mezcla de fuerza y cardio para quemar calorías',
       instructor: 'Coach Andrés',
       enrolled: 15, capacity: 18,
-      type: 'strength', color: '#00F0FF', duration: '45 min',
+      type: 'strength', color: '#00FF88', duration: '45 min',
       description: 'El Workout of the Day (WOD) de CrossFit combina movimientos de halterofilia, gimnasia y cardio metabólico en una sesión intensa y variada.',
       image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=600',
       isActive: true,
@@ -165,7 +165,7 @@ const schedule: DaySchedule = {
       subtitulo: 'Carrera + ejercicios por estaciones — Entrenamiento tipo competencia oficial',
       instructor: 'Coach Alex',
       enrolled: 18, capacity: 20,
-      type: 'hyrox', color: '#FF6B35', duration: '60 min',
+      type: 'hyrox', color: '#8A9C96', duration: '60 min',
       description: 'Bloque oficial de preparación para competencia HYROX. Simula las 8 estaciones del evento real con cronometraje y registro de marcas personales.',
       image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600',
       isActive: true,
@@ -193,8 +193,8 @@ const typeLabels: Record<string, string> = {
 
 const nivelColors: Record<string, string> = {
   'Principiante': '#00FF88',
-  'Intermedio': '#FF9900',
-  'Avanzado': '#FF3D57',
+  'Intermedio': '#C5D1CC',
+  'Avanzado': '#C5D1CC',
 };
 
 const nivelEmoji: Record<string, string> = {
@@ -223,7 +223,7 @@ function ClassDetailModal({ cls, onClose }: { cls: ClassBlock; onClose: () => vo
   };
 
   const ocupacionPct = Math.round((cls.enrolled / cls.capacity) * 100);
-  const ocupacionColor = ocupacionPct >= 90 ? '#FF3D57' : ocupacionPct >= 70 ? '#FF9900' : '#00FF88';
+  const ocupacionColor = ocupacionPct >= 90 ? '#C5D1CC' : ocupacionPct >= 70 ? '#C5D1CC' : '#00FF88';
 
   return (
     <div
@@ -570,10 +570,10 @@ function ClassDetailModal({ cls, onClose }: { cls: ClassBlock; onClose: () => vo
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               flexShrink: 0,
                             }}>
-                              <Shield size={14} style={{ color: '#FFD600' }} />
+                              <Shield size={14} style={{ color: '#C5D1CC' }} />
                             </div>
                             <div>
-                              <div style={{ fontSize: 11, fontWeight: 800, color: '#FFD600', marginBottom: 3, textTransform: 'uppercase', letterSpacing: 0.8 }}>Consejo del Coach</div>
+                              <div style={{ fontSize: 11, fontWeight: 800, color: '#C5D1CC', marginBottom: 3, textTransform: 'uppercase', letterSpacing: 0.8 }}>Consejo del Coach</div>
                               <div style={{ fontSize: 13, color: 'rgba(255,214,0,0.85)', lineHeight: 1.6 }}>
                                 {r.consejo}
                               </div>
@@ -633,7 +633,7 @@ function CreateClassModal({ onClose, onAdd }: { onClose: () => void, onAdd: (c: 
       enrolled: 0,
       capacity,
       type,
-      color: type === 'hyrox' ? '#FF6B35' : type === 'yoga' ? '#A78BFA' : '#00F0FF',
+      color: type === 'hyrox' ? '#8A9C96' : type === 'yoga' ? '#C5D1CC' : '#00FF88',
       duration: '60 min',
       description: 'Clase recién creada. Configura las rutinas.',
       image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400',
@@ -797,7 +797,7 @@ export default function Schedule() {
               const isExpanded = expandedId === i;
               const tab = getTab(i);
               const ocupacionPct = Math.round((cls.enrolled / cls.capacity) * 100);
-              const ocupacionColor = ocupacionPct >= 90 ? '#FF3D57' : ocupacionPct >= 70 ? '#FF9900' : 'var(--neon-green)';
+              const ocupacionColor = ocupacionPct >= 90 ? '#C5D1CC' : ocupacionPct >= 70 ? '#C5D1CC' : 'var(--neon-green)';
 
               return (
                 <div
@@ -983,7 +983,7 @@ export default function Schedule() {
                                       {r.descripcion}
                                     </div>
                                     <div style={{
-                                      fontSize: 11, color: '#FFD600',
+                                      fontSize: 11, color: '#C5D1CC',
                                       display: 'flex', alignItems: 'flex-start', gap: 6,
                                       background: 'rgba(255,214,0,0.06)', padding: '6px 10px', borderRadius: 8
                                     }}>

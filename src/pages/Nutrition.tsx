@@ -28,8 +28,8 @@ const weeklyCalories = [
 
 const macros = [
   { name: 'Proteína', value: 35, color: '#00FF88', grams: 182, goal: 200 },
-  { name: 'Carbohidratos', value: 45, color: '#FF6B35', grams: 234, goal: 250 },
-  { name: 'Grasas', value: 20, color: '#A78BFA', grams: 52, goal: 60 },
+  { name: 'Carbohidratos', value: 45, color: '#8A9C96', grams: 234, goal: 250 },
+  { name: 'Grasas', value: 20, color: '#C5D1CC', grams: 52, goal: 60 },
 ];
 
 const meals = [
@@ -373,8 +373,8 @@ export default function Nutrition() {
                     <stop offset="100%" stopColor="#00FF88" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="goalGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#FF6B35" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#FF6B35" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#8A9C96" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="#8A9C96" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
@@ -384,7 +384,7 @@ export default function Nutrition() {
                   contentStyle={{ background: 'rgba(14,18,14,0.95)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 12, fontSize: 12 }}
                   formatter={(v: number, name: string) => [`${v.toLocaleString()} kcal`, name === 'calories' ? 'Ingesta' : 'Meta']}
                 />
-                <Area type="monotone" dataKey="goal" name="goal" stroke="#FF6B35" strokeWidth={2} fill="url(#goalGrad)" strokeDasharray="6 3" dot={false} />
+                <Area type="monotone" dataKey="goal" name="goal" stroke="#8A9C96" strokeWidth={2} fill="url(#goalGrad)" strokeDasharray="6 3" dot={false} />
                 <Area type="monotone" dataKey="calories" name="calories" stroke="#00FF88" strokeWidth={2.5} fill="url(#calGrad)" dot={{ r: 4, fill: '#00FF88', stroke: 'rgba(0,255,136,0.3)', strokeWidth: 5 }} />
               </AreaChart>
             </ResponsiveContainer>

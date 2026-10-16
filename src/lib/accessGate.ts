@@ -7,14 +7,38 @@ export function daysUntilExpiry(dateStr?: string) {
   return Math.ceil((t - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
-export function canEnterGym(m: Member): { ok: true } | { ok: false; reason: string } {
+const MORA_KEY = 'fuxion_moratoria_dias';
+
+/** Días de cortesía después de que vence el plan. 3 si nadie lo ha cambiado. */
+export function diasMoratoria() {
+  const raw = localStorage.getItem(MORA_KEY);
+  const n = raw == null ? 3 : Number(raw);
+  if (!Number.isFinite(n) || n < 0) return 3;
+  return Math.min(30, Math.floor(n));
+}
+
+export function guardarMoratoria(dias: number) {
+  const n = Math.max(0, Math.min(30, Math.floor(Number(dias) || 0)));
+  localStorage.setItem(MORA_KEY, String(n));
+}
+
+export type Gate =
+  | { ok: true; moratoria?: boolean; diasVencido?: number }
+  | { ok: false; reason: string };
+
+export function canEnterGym(m: Member): Gate {
   if ((m.debt || 0) > 0) {
     return { ok: false, reason: `Mora $${(m.debt || 0).toLocaleString('es-CO')}` };
   }
   if (m.status === 'suspended') return { ok: false, reason: 'Cuenta suspendida' };
-  if (m.status === 'expired') return { ok: false, reason: 'Membresía vencida' };
   const d = daysUntilExpiry(m.expiryDate || m.expiry);
-  if (d !== null && d < 0) return { ok: false, reason: 'Membresía vencida' };
+  const gracia = diasMoratoria();
+  if (d !== null && d < 0) {
+    const vencido = Math.abs(d);
+    if (vencido <= gracia) return { ok: true, moratoria: true, diasVencido: vencido };
+    return { ok: false, reason: `Venció hace ${vencido} días. La moratoria es de ${gracia}.` };
+  }
+  if (m.status === 'expired' && d === null) return { ok: false, reason: 'Membresía vencida' };
   return { ok: true };
 }
 

@@ -30,7 +30,7 @@ export const DEFAULT_PRODUCTS: GymProduct[] = [
 export const DEFAULT_PLANS: GymPlan[] = [
   { id:'basic', label:'Básico',    color:'#8A948A', desc:'Acceso gimnasio · L-V · Sin clases', dailyPrice:3000,  monthlyPrice:45000  },
   { id:'pro',   label:'Pro',       color:'#00FF88', desc:'Acceso completo · Clases incluidas', dailyPrice:5000,  monthlyPrice:75000  },
-  { id:'hyrox', label:'HYROX Pro', color:'#FF6B35', desc:'Elite · HYROX · Trainer asignado',  dailyPrice:8000,  monthlyPrice:120000 },
+  { id:'hyrox', label:'HYROX Pro', color:'#8A9C96', desc:'Elite · HYROX · Trainer asignado',  dailyPrice:8000,  monthlyPrice:120000 },
 ];
 
 const GymConfigContext = createContext<GymConfigCtx>({

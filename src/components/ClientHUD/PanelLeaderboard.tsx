@@ -15,7 +15,7 @@ export function PanelLeaderboard({ members, athlete }: { members: any[], athlete
       <div className="glass-card" style={{ padding: 24, display:'flex', flexDirection:'column', border:'1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
            <div>
-              <h3 style={{ fontSize: 18, fontWeight: 950, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}><Trophy color="#FFD700" /> CLASIFICACIÓN GLOBAL</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 950, color: '#fff', display: 'flex', alignItems: 'center', gap: 8 }}><Trophy color="#C5D1CC" /> CLASIFICACIÓN GLOBAL</h3>
               <p style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 800, letterSpacing:1 }}>ZONA: FUXION ELITE | TOTAL ATLETAS: {list.length}</p>
            </div>
         </div>
@@ -27,10 +27,10 @@ export function PanelLeaderboard({ members, athlete }: { members: any[], athlete
                <div key={m.id} style={{ 
                  display: 'grid', gridTemplateColumns: '40px 1fr 100px 60px', padding: 16, 
                  background: isMe ? 'rgba(0,240,255,0.1)' : 'rgba(255,255,255,0.02)', 
-                 borderRadius: 14, border: isMe ? '1px solid #00F0FF' : '1px solid transparent',
+                 borderRadius: 14, border: isMe ? '1px solid #00FF88' : '1px solid transparent',
                  alignItems: 'center'
                }}>
-                  <div style={{ fontSize: 16, fontWeight: 950, color: isMe ? '#00F0FF' : rank <= 3 ? '#FFD700' : 'var(--text-muted)' }}>#{rank}</div>
+                  <div style={{ fontSize: 16, fontWeight: 950, color: isMe ? '#00FF88' : rank <= 3 ? '#C5D1CC' : 'var(--text-muted)' }}>#{rank}</div>
                   <div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{firstName(m.name)} {isMe ? '(TÚ)' : ''}</div>
                   <div style={{ fontSize: 13, fontWeight: 900, color: 'var(--neon-green)', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <Activity size={14} /> {m.visits || 0} pts
@@ -45,8 +45,8 @@ export function PanelLeaderboard({ members, athlete }: { members: any[], athlete
       </div>
       
       <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-         <div className="glass-card" style={{ padding: 24, border:'1px solid #00F0FF', textAlign: 'center' }}>
-            <div style={{ fontSize: 12, fontWeight: 950, color:'#00F0FF', marginBottom:8 }}>TU RANGO ACTUAL</div>
+         <div className="glass-card" style={{ padding: 24, border:'1px solid #00FF88', textAlign: 'center' }}>
+            <div style={{ fontSize: 12, fontWeight: 950, color:'#00FF88', marginBottom:8 }}>TU RANGO ACTUAL</div>
             <div style={{ fontSize: 48, fontWeight: 900, color: '#fff', textShadow: '0 0 20px rgba(0,240,255,0.5)' }}>#{myRank || '-'}</div>
             <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>De {list.length} atletas inscritos</p>
          </div>

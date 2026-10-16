@@ -1,10 +1,10 @@
 export const DEFAULT_PLANS = [
-  { id: 'dia', label: 'Día', price: 5000, desc: 'Acceso por un día', color: '#FFD600', duration: 'dia' },
-  { id: 'semana', label: 'Semanal', price: 25000, desc: 'Acceso por 7 días', color: '#00E5FF', duration: 'semana' },
-  { id: 'quincena', label: 'Quincena', price: 30000, desc: 'Acceso 15 días', color: '#A78BFA', duration: 'quincena' },
+  { id: 'dia', label: 'Día', price: 5000, desc: 'Acceso por un día', color: '#C5D1CC', duration: 'dia' },
+  { id: 'semana', label: 'Semanal', price: 25000, desc: 'Acceso por 7 días', color: '#00FF88', duration: 'semana' },
+  { id: 'quincena', label: 'Quincena', price: 30000, desc: 'Acceso 15 días', color: '#C5D1CC', duration: 'quincena' },
   { id: 'mes_basico', label: 'Básico', price: 45000, desc: 'Gimnasio · L-V', color: '#8A948A', duration: 'mes' },
   { id: 'mes_pro', label: 'Pro', price: 75000, desc: 'Completo · clases', color: '#00FF88', duration: 'mes' },
-  { id: 'mes_hyrox', label: 'HYROX Pro', price: 120000, desc: 'Elite · HYROX', color: '#FF6B35', duration: 'mes' },
+  { id: 'mes_hyrox', label: 'HYROX Pro', price: 120000, desc: 'Elite · HYROX', color: '#8A9C96', duration: 'mes' },
 ];
 
 export function ensurePlanes(raw: unknown) {

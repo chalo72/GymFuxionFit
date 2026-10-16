@@ -348,8 +348,8 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
         <div className="kpi-row" style={{ gap:16 }}>
              {[
                { l: 'INGRESOS TOTALES', v: stats.income, c: 'var(--neon-green)' },
-               { l: 'TOTAL GASTOS', v: stats.expense, c: '#ff4d4d' },
-               { l: 'FONDOS AHORRO', v: stats.savings, c: '#00E5FF' },
+               { l: 'TOTAL GASTOS', v: stats.expense, c: '#C5D1CC' },
+               { l: 'FONDOS AHORRO', v: stats.savings, c: '#00FF88' },
                { l: 'LIQUIDACIÓN NETA', v: stats.net, c: '#fff' }
              ].map(k => (
                 <div key={k.l} className="glass-card" style={{ padding: 20 }}>
@@ -364,7 +364,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                    <h3 style={{ fontSize: 13, fontWeight: 950 }}>FLUJO_DE_CAPITAL_TIEMPO_REAL</h3>
                    <div style={{ display:'flex', gap:10 }}>
                       <span style={{ fontSize:10, color:'var(--neon-green)', fontWeight:800 }}>● IN</span>
-                      <span style={{ fontSize:10, color:'#ff4d4d', fontWeight:800 }}>● OUT</span>
+                      <span style={{ fontSize:10, color:'#C5D1CC', fontWeight:800 }}>● OUT</span>
                    </div>
                 </div>
                 <ResponsiveContainer width="100%" height={220}>
@@ -372,14 +372,14 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                       <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{fontSize:10, fill:'rgba(255,255,255,0.3)'}} />
                        <Tooltip contentStyle={{background:'#0a0f0d', border:'none', borderRadius:10, fontSize:10, color:'#fff'}} />
                       <Area type="monotone" dataKey="ingresos" stroke="var(--neon-green)" fill="rgba(0,255,136,0.1)" strokeWidth={2} />
-                      <Area type="monotone" dataKey="gastos" stroke="#ff4d4d" fill="rgba(255,77,77,0.05)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="gastos" stroke="#C5D1CC" fill="rgba(255,77,77,0.05)" strokeWidth={2} />
                    </AreaChart>
                 </ResponsiveContainer>
              </div>
              <div className="glass-card" style={{ padding: 24 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
                    <h3 style={{ fontSize: 13, fontWeight: 950 }}>DEBT_SENTINEL</h3>
-                   <span style={{ fontSize:9, fontWeight:900, color:'#ff4d4d' }}>ALERTAS_ACTIVA</span>
+                   <span style={{ fontSize:9, fontWeight:900, color:'#C5D1CC' }}>ALERTAS_ACTIVA</span>
                 </div>
                 <div style={{ display:'flex', flexDirection:'column', gap:10, maxHeight:220, overflow:'auto' }}>
                    {members.filter(m => (m.debt || 0) > 0).map(m => (
@@ -388,7 +388,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                             <div style={{ fontSize:11, fontWeight:800 }}>{m.name}</div>
                             <div style={{ fontSize:11, color:'var(--text-muted)' }}>Mora: ${m.debt?.toLocaleString()}</div>
                          </div>
-                         <ShieldCheck size={14} color="#ff4d4d" />
+                         <ShieldCheck size={14} color="#C5D1CC" />
                       </div>
                    ))}
                 </div>
@@ -448,7 +448,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                             : filteredMembers.map(m => (
                              <div key={m.id} onClick={() => setSelectedMember(m)} style={{ padding:14, cursor:'pointer', borderBottom:'1px solid rgba(255,255,255,0.05)', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                                 <div style={{ fontSize:14, fontWeight:800 }}>{m.name}</div>
-                                <div style={{ fontSize:11, color: m.status === 'active' ? 'var(--neon-green)' : '#ff4d4d', fontWeight:700 }}>{m.status === 'active' ? 'Activo' : m.status === 'expired' ? 'Vencido' : m.status}</div>
+                                <div style={{ fontSize:11, color: m.status === 'active' ? 'var(--neon-green)' : '#C5D1CC', fontWeight:700 }}>{m.status === 'active' ? 'Activo' : m.status === 'expired' ? 'Vencido' : m.status}</div>
                              </div>
                           ))}
                        </div>
@@ -460,12 +460,12 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                    <div style={{ background:'rgba(255,214,0,0.06)', border:'1px solid rgba(255,214,0,0.25)', borderRadius:14, padding:16 }}>
                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
                        <div>
-                         <div style={{ fontSize:13, fontWeight:950, color:'#FFD600' }}>⚠️ Tiene deuda pendiente</div>
+                         <div style={{ fontSize:13, fontWeight:950, color:'#C5D1CC' }}>⚠️ Tiene deuda pendiente</div>
                          <div style={{ fontSize:18, fontWeight:950, color:'#fff', marginTop:2 }}>${(selectedMember.debt || 0).toLocaleString()}</div>
                        </div>
                        <button
                          onClick={() => clearMemberDebt(selectedMember.id)}
-                         style={{ padding:'8px 14px', borderRadius:10, background:'rgba(255,214,0,0.15)', border:'1px solid rgba(255,214,0,0.4)', color:'#FFD600', fontSize:12, fontWeight:950, cursor:'pointer' }}
+                         style={{ padding:'8px 14px', borderRadius:10, background:'rgba(255,214,0,0.15)', border:'1px solid rgba(255,214,0,0.4)', color:'#C5D1CC', fontSize:12, fontWeight:950, cursor:'pointer' }}
                        >
                          Pagar todo
                        </button>
@@ -476,12 +476,12 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                          type="number" placeholder="¿Cuánto abona?"
                          value={abonoAmount || ''}
                          onChange={e => setAbonoAmount(Number(e.target.value))}
-                         style={{ flex:1, padding:'11px 12px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,214,0,0.2)', color:'#FFD600', fontWeight:950, fontSize:15 }}
+                         style={{ flex:1, padding:'11px 12px', borderRadius:10, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,214,0,0.2)', color:'#C5D1CC', fontWeight:950, fontSize:15 }}
                        />
                        <button
                          onClick={handleAbono}
                          disabled={abonoAmount <= 0}
-                         style={{ padding:'11px 18px', borderRadius:10, background: abonoAmount > 0 ? '#FFD600' : 'rgba(255,214,0,0.1)', border:'none', color:'#000', fontWeight:950, fontSize:13, cursor: abonoAmount > 0 ? 'pointer' : 'not-allowed' }}
+                         style={{ padding:'11px 18px', borderRadius:10, background: abonoAmount > 0 ? '#C5D1CC' : 'rgba(255,214,0,0.1)', border:'none', color:'#000', fontWeight:950, fontSize:13, cursor: abonoAmount > 0 ? 'pointer' : 'not-allowed' }}
                        >
                          Abonar
                        </button>
@@ -493,7 +493,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                  {selectedMember && (
                    <button
                      onClick={() => setACredito(v => !v)}
-                     style={{ padding:'10px 16px', borderRadius:12, background: aCredito ? 'rgba(255,77,77,0.15)' : 'rgba(255,255,255,0.03)', border: `1px solid ${aCredito ? '#ff4d4d' : 'rgba(255,255,255,0.1)'}`, color: aCredito ? '#ff4d4d' : 'var(--text-muted)', fontSize:13, fontWeight:800, cursor:'pointer', textAlign:'left', transition:'0.2s' }}
+                     style={{ padding:'10px 16px', borderRadius:12, background: aCredito ? 'rgba(255,77,77,0.15)' : 'rgba(255,255,255,0.03)', border: `1px solid ${aCredito ? '#C5D1CC' : 'rgba(255,255,255,0.1)'}`, color: aCredito ? '#C5D1CC' : 'var(--text-muted)', fontSize:13, fontWeight:800, cursor:'pointer', textAlign:'left', transition:'0.2s' }}
                    >
                      {aCredito ? '🔴 Modo Crédito ACTIVO — el cliente pagará después' : '💳 Dar a crédito (cobrar después)'}
                    </button>
@@ -534,7 +534,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                        />
                        <div style={{ flex:1, background:'rgba(255,255,255,0.03)', borderRadius:12, border:'1px solid rgba(255,255,255,0.1)', display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 16px' }}>
                           <div style={{ fontSize:12, fontWeight:700, color:'var(--text-muted)' }}>Le devuelves:</div>
-                          <div style={{ fontSize:22, fontWeight:950, color: changeAmount > 0 ? '#00E5FF' : '#fff' }}>${changeAmount.toLocaleString()}</div>
+                          <div style={{ fontSize:22, fontWeight:950, color: changeAmount > 0 ? '#00FF88' : '#fff' }}>${changeAmount.toLocaleString()}</div>
                        </div>
                     </div>
                  </div>
@@ -569,7 +569,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                       style={{
                         flex:2, padding:18, borderRadius:14, border:'none', fontSize:16, fontWeight:950,
                         cursor: (!selectedMember || amount <= 0 || isProcessing) ? 'not-allowed' : 'pointer', transition:'0.2s',
-                        background: isProcessing ? 'rgba(0,255,136,0.4)' : (!selectedMember || amount <= 0) ? 'rgba(255,255,255,0.1)' : aCredito ? '#ff4d4d' : 'var(--neon-green)',
+                        background: isProcessing ? 'rgba(0,255,136,0.4)' : (!selectedMember || amount <= 0) ? 'rgba(255,255,255,0.1)' : aCredito ? '#C5D1CC' : 'var(--neon-green)',
                         color: (!selectedMember || amount <= 0) ? 'var(--text-muted)' : aCredito ? '#fff' : '#000'
                       }}
                     >
@@ -612,7 +612,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                          <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
                            <div style={{ color:'var(--neon-green)', fontWeight:950, fontSize:14 }}>+${t.amount?.toLocaleString()}</div>
                            <button onClick={() => { setEditingTx(t); setTxForm({ description: t.description || t.client || '', amount: t.amount }); }} style={{ color:'var(--text-muted)', background:'none', border:'none', cursor:'pointer' }} title="Editar"><PenTool size={13}/></button>
-                           <button onClick={() => handleDeleteTransaction(t.id)} style={{ color:'#ff4d4d', opacity:0.6, background:'none', border:'none', cursor:'pointer' }} title="Eliminar"><X size={13}/></button>
+                           <button onClick={() => handleDeleteTransaction(t.id)} style={{ color:'#C5D1CC', opacity:0.6, background:'none', border:'none', cursor:'pointer' }} title="Eliminar"><X size={13}/></button>
                          </div>
                       </div>
                   ))}
@@ -631,9 +631,9 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                            <div>
                               <div style={{ fontSize:11, fontWeight:800 }}>{item.name}</div>
                               <div style={{ fontSize:9, color:'var(--text-muted)' }}>Eliminado el: {new Date(item.deletedAt).toLocaleString()}</div>
-                              <div style={{ fontSize:10, color:'#ff4d4d', marginTop: 4 }}>Motivo: {item.reason}</div>
+                              <div style={{ fontSize:10, color:'#C5D1CC', marginTop: 4 }}>Motivo: {item.reason}</div>
                            </div>
-                           <div style={{ color:'#ff4d4d', fontWeight:950 }}>${item.amount.toLocaleString()}</div>
+                           <div style={{ color:'#C5D1CC', fontWeight:950 }}>${item.amount.toLocaleString()}</div>
                         </div>
                     ));
                  })()}
@@ -659,7 +659,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                  {obligations.map(ob => (
                     <div key={ob.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:16, background: ob.status==='pending' ? 'rgba(255,77,77,0.05)' : 'rgba(0,255,136,0.02)', borderRadius:16, border: `1px solid ${ob.status==='pending' ? 'rgba(255,77,77,0.1)' : 'rgba(0,255,136,0.1)'}` }}>
                        <div style={{ display:'flex', gap:15, alignItems:'center' }}>
-                          <div style={{ width:40, height:40, borderRadius:12, background:'rgba(255,255,255,0.03)', display:'flex', alignItems:'center', justifyContent:'center', color: ob.status==='pending' ? '#ff4d4d' : 'var(--neon-green)' }}>
+                          <div style={{ width:40, height:40, borderRadius:12, background:'rgba(255,255,255,0.03)', display:'flex', alignItems:'center', justifyContent:'center', color: ob.status==='pending' ? '#C5D1CC' : 'var(--neon-green)' }}>
                              {ob.category==='rent' ? <Database size={18}/> : <PenTool size={18}/>}
                           </div>
                           <div>
@@ -670,19 +670,19 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                        <div style={{ textAlign:'right', display:'flex', alignItems:'center', gap:20 }}>
                           <div style={{ fontSize:15, fontWeight:950 }}>${ob.amount.toLocaleString()}</div>
                           {ob.status === 'pending' ? (
-                             <button onClick={() => payObligation(ob.id)} style={{ padding:'8px 14px', borderRadius:10, background:'#ff4d4d', color:'#fff', border:'none', fontSize:10, fontWeight:950, cursor:'pointer' }}>PAGAR_AHORA</button>
+                             <button onClick={() => payObligation(ob.id)} style={{ padding:'8px 14px', borderRadius:10, background:'#C5D1CC', color:'#fff', border:'none', fontSize:10, fontWeight:950, cursor:'pointer' }}>PAGAR_AHORA</button>
                           ) : (
                              <span style={{ fontSize:10, fontWeight:950, color:'var(--neon-green)' }}>PAGADO ✓</span>
                           )}
                           <button onClick={() => { setEditingOb(ob); setObForm({ name: ob.name, amount: ob.amount, dueDate: ob.dueDate, category: ob.category }); setShowObModal(true); }} style={{ color:'var(--neon-green)', opacity:0.5, background:'none', border:'none', cursor:'pointer', marginRight: 10 }} title="Editar"><PenTool size={14}/></button>
-                          <button onClick={() => handleDeleteObligation(ob)} style={{ color:'#ff4d4d', opacity:0.3, background:'none', border:'none', cursor:'pointer' }} title="Eliminar"><X size={14}/></button>
+                          <button onClick={() => handleDeleteObligation(ob)} style={{ color:'#C5D1CC', opacity:0.3, background:'none', border:'none', cursor:'pointer' }} title="Eliminar"><X size={14}/></button>
                        </div>
                     </div>
                  ))}
               </div>
               <div style={{ marginTop:24, padding:20, background:'rgba(255,255,255,0.02)', borderRadius:16, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                  <div style={{ fontSize:11, fontWeight:800, color:'var(--text-muted)' }}>TOTAL OBLIGACIONES PENDIENTES</div>
-                 <div style={{ fontSize:22, fontWeight:950, color:'#ff4d4d' }}>
+                 <div style={{ fontSize:22, fontWeight:950, color:'#C5D1CC' }}>
                     ${obligations.filter(o => o.status === 'pending').reduce((a, o) => a + o.amount, 0).toLocaleString()}
                  </div>
               </div>
@@ -697,9 +697,9 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                           <div style={{ fontSize:9, color:'var(--text-muted)' }}>{t.date}</div>
                        </div>
                        <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-                          <div style={{ color:'#ff4d4d', fontWeight:950 }}>-${t.amount.toLocaleString()}</div>
+                          <div style={{ color:'#C5D1CC', fontWeight:950 }}>-${t.amount.toLocaleString()}</div>
                           <button onClick={() => { setEditingTx(t); setTxForm({ description: t.description || '', amount: t.amount }); }} style={{ color:'var(--text-muted)', background:'none', border:'none', cursor:'pointer' }} title="Editar"><PenTool size={13}/></button>
-                          <button onClick={() => handleDeleteTransaction(t.id)} style={{ color:'#ff4d4d', opacity:0.6, background:'none', border:'none', cursor:'pointer' }} title="Eliminar"><X size={13}/></button>
+                          <button onClick={() => handleDeleteTransaction(t.id)} style={{ color:'#C5D1CC', opacity:0.6, background:'none', border:'none', cursor:'pointer' }} title="Eliminar"><X size={13}/></button>
                        </div>
                     </div>
                 ))}
@@ -710,8 +710,8 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
         <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
-                 <h3 style={{ fontSize:18, fontWeight:950 }}>ESTRUCTURA_DE_PERSONAL</h3>
-                 <p style={{ fontSize:10, color:'var(--text-muted)', fontWeight:800 }}>GESTIÓN DE SUELDOS Y COLABORADORES</p>
+                 <h3 style={{ fontSize:22, fontWeight:950 }}>Personal del gym</h3>
+                 <p style={{ fontSize:13, color:'var(--text-muted)', fontWeight:700 }}>Aseo, recepción, entrenadores y gerencia. El préstamo se agrega aparte, solo si tú lo decides.</p>
               </div>
               <div style={{ display:'flex', gap:12, alignItems:'center' }}>
                  <div style={{ display:'flex', alignItems:'center', gap:8, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:12, padding:'4px 6px 4px 12px' }}>
@@ -727,7 +727,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                     </select>
                     <button
                       onClick={() => generateMonthlyPayroll(payrollPeriod)}
-                      style={{ background:'rgba(0,229,255,0.15)', border:'1px solid #00E5FF50', color:'#00E5FF', padding:'8px 14px', borderRadius:10, fontSize:10, fontWeight:950, cursor:'pointer' }}
+                      style={{ background:'rgba(0,229,255,0.15)', border:'1px solid #00FF8850', color:'#00FF88', padding:'8px 14px', borderRadius:10, fontSize:10, fontWeight:950, cursor:'pointer' }}
                     >
                       GENERAR NÓMINA
                     </button>
@@ -736,10 +736,22 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                     onClick={() => { setEditingStaff(null); setStaffForm({name:'', role:'', salary:0, phone:'', email:'', tempPassword: 'Gym' + Math.floor(Math.random()*1000), status:'active', payPeriod:'complete'}); setShowStaffModal(true); }}
                     style={{ background:'var(--neon-green)', border:'none', color:'#000', padding:'10px 20px', borderRadius:12, fontSize:11, fontWeight:950, cursor:'pointer' }}
                  >
-                    + AÑADIR STAFF
+                    Agregar empleado
                  </button>
               </div>
            </div>
+
+           {staff.length === 0 && (
+             <button
+               type="button"
+               onClick={() => { setEditingStaff(null); setStaffForm({name:'', role:'Aseo', salary:0, phone:'', email:'', tempPassword: 'Gym' + Math.floor(Math.random()*1000), status:'active', payPeriod:'complete'}); setShowStaffModal(true); }}
+               className="glass-card"
+               style={{ padding: 28, textAlign: 'left', cursor: 'pointer', border: '1px dashed rgba(0,255,136,0.45)' }}
+             >
+               <div style={{ fontSize: 18, fontWeight: 900 }}>Todavía no hay empleados</div>
+               <div style={{ marginTop: 6, color: 'var(--text-muted)' }}>Aquí agregas al barrendero, la recepción, los entrenadores y el gerente.</div>
+             </button>
+           )}
 
            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(320px, 1fr))', gap:20 }}>
               {staff.map(s => {
@@ -749,7 +761,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                 const period = s.payPeriod || 'complete';
                 const basePay = period === 'complete' ? s.salary : s.salary / 2;
                 const netPay = Math.max(0, basePay - advance - loanDeduction);
-                const periodColor = period === 'q1' ? 'var(--neon-green)' : period === 'q2' ? '#FFD600' : '#00E5FF';
+                const periodColor = period === 'q1' ? 'var(--neon-green)' : period === 'q2' ? '#C5D1CC' : '#00FF88';
                 const periodLabel = period === 'q1' ? '1ra QUINCENA' : period === 'q2' ? '2da QUINCENA' : 'MES COMPLETO';
                 return (
                  <div key={s.id} className="glass-card" style={{ padding:20 }}>
@@ -767,7 +779,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                        <div style={{ display:'flex', gap:6 }}>
                           <button onClick={() => { const msg = `Hola ${s.name}! Bienvenido al equipo de GymFuxionFit. 🚀%0A%0AAquí tienes tus credenciales de acceso:%0A👤 Usuario: ${s.email}%0A🔑 Clave: ${s.tempPassword || 'fuxion123'}%0A🔗 Acceso: ${window.location.origin}%0A%0A¡Nos vemos en el entrenamiento! 💪`; window.open(`https://wa.me/57${s.phone}?text=${msg}`, '_blank'); }} style={{ background:'rgba(0,255,136,0.1)', border:'none', padding:7, borderRadius:8, color:'var(--neon-green)', cursor:'pointer' }} title="Enviar Credenciales"><Send size={13}/></button>
                           <button onClick={() => { setEditingStaff(s); setStaffForm({ ...s, tempPassword: s.tempPassword || '', payPeriod: s.payPeriod || 'complete' }); setShowStaffModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', padding:7, borderRadius:8, color:'#fff', cursor:'pointer' }}><PenTool size={13}/></button>
-                          <button onClick={() => deleteStaff(s.id)} style={{ background:'rgba(255,77,77,0.1)', border:'none', padding:7, borderRadius:8, color:'#ff4d4d', cursor:'pointer' }}><X size={13}/></button>
+                          <button onClick={() => deleteStaff(s.id)} style={{ background:'rgba(255,77,77,0.1)', border:'none', padding:7, borderRadius:8, color:'#C5D1CC', cursor:'pointer' }}><X size={13}/></button>
                        </div>
                     </div>
 
@@ -779,14 +791,14 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                        </div>
                        {advance > 0 && (
                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
-                            <span style={{ color:'#FFD600' }}>Anticipo pendiente</span>
-                            <span style={{ color:'#FFD600', fontWeight:800 }}>-${advance.toLocaleString()}</span>
+                            <span style={{ color:'#C5D1CC' }}>Anticipo pendiente</span>
+                            <span style={{ color:'#C5D1CC', fontWeight:800 }}>-${advance.toLocaleString()}</span>
                          </div>
                        )}
                        {loanDeduction > 0 && (
                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
-                            <span style={{ color:'#ff4d4d' }}>Cuota préstamo ({activeLoans.length})</span>
-                            <span style={{ color:'#ff4d4d', fontWeight:800 }}>-${loanDeduction.toLocaleString()}</span>
+                            <span style={{ color:'#C5D1CC' }}>Cuota préstamo ({activeLoans.length})</span>
+                            <span style={{ color:'#C5D1CC', fontWeight:800 }}>-${loanDeduction.toLocaleString()}</span>
                          </div>
                        )}
                        <div style={{ borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:6, display:'flex', justifyContent:'space-between', fontSize:13 }}>
@@ -799,13 +811,13 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                     <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
                        <button
                           onClick={() => { setAdvanceTarget(s); setAdvanceAmount(0); setShowAdvanceModal(true); }}
-                          style={{ padding:'8px 0', borderRadius:8, background:'rgba(255,214,0,0.08)', border:'1px solid rgba(255,214,0,0.2)', color:'#FFD600', fontSize:11, fontWeight:800, cursor:'pointer' }}
+                          style={{ padding:'8px 0', borderRadius:8, background:'rgba(255,214,0,0.08)', border:'1px solid rgba(255,214,0,0.2)', color:'#C5D1CC', fontSize:11, fontWeight:800, cursor:'pointer' }}
                        >
                           + Anticipo
                        </button>
                        <button
                           onClick={() => { setLoanTarget(s); setLoanForm({ total:0, installment:0, description:'' }); setShowLoanModal(true); }}
-                          style={{ padding:'8px 0', borderRadius:8, background:'rgba(255,77,77,0.08)', border:'1px solid rgba(255,77,77,0.2)', color:'#ff4d4d', fontSize:11, fontWeight:800, cursor:'pointer' }}
+                          style={{ padding:'8px 0', borderRadius:8, background:'rgba(255,77,77,0.08)', border:'1px solid rgba(255,77,77,0.2)', color:'#C5D1CC', fontSize:11, fontWeight:800, cursor:'pointer' }}
                        >
                           + Préstamo
                        </button>
@@ -817,10 +829,10 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                         {activeLoans.map(l => (
                           <div key={l.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 10px', background:'rgba(255,77,77,0.04)', borderRadius:8, marginTop:4, fontSize:10 }}>
                             <div>
-                              <div style={{ fontWeight:800, color:'#ff4d4d' }}>{l.description}</div>
+                              <div style={{ fontWeight:800, color:'#C5D1CC' }}>{l.description}</div>
                               <div style={{ color:'var(--text-muted)' }}>Saldo: ${l.remaining.toLocaleString()} | Cuota: ${l.installment.toLocaleString()}</div>
                             </div>
-                            <button onClick={() => deleteStaffLoan(l.id)} style={{ background:'none', border:'none', color:'#ff4d4d', opacity:0.5, cursor:'pointer' }}><X size={12}/></button>
+                            <button onClick={() => deleteStaffLoan(l.id)} style={{ background:'none', border:'none', color:'#C5D1CC', opacity:0.5, cursor:'pointer' }}><X size={12}/></button>
                           </div>
                         ))}
                       </div>
@@ -830,9 +842,9 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
               })}
            </div>
 
-           <div className="glass-card" style={{ padding:20, background:'rgba(0,229,255,0.05)', border:'1px solid #00E5FF30' }}>
-              <p style={{ fontSize:11, color:'#00E5FF', fontWeight:800 }}>
-                 <span style={{ fontWeight:950 }}>ASISTENTE FUXION:</span> Al hacer clic en "Generar Nómina", el sistema detecta a tus empleados activos y crea automáticamente las facturas de pago en la pestaña de OBLIGACIONES.
+           <div className="glass-card" style={{ padding:20, background:'rgba(0,229,255,0.05)', border:'1px solid #00FF8830' }}>
+              <p style={{ fontSize:11, color:'#00FF88', fontWeight:800 }}>
+                 Al generar la nómina se arma el pago de cada empleado activo. Si tiene préstamo, se resta solo la cuota de ese periodo, no toda la deuda. Si no le hiciste préstamo, cobra el salario completo.
               </p>
            </div>
         </div>
@@ -843,7 +855,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                  <h3 style={{ fontSize:18, fontWeight:950 }}>OMNI_AQUA: CONTROL_DE_AHORRO</h3>
                  <p style={{ fontSize:10, color:'var(--text-muted)', fontWeight:800 }}>REPOSICIÓN DE PACAS (50 UND) Y UTILIDAD NETA</p>
               </div>
-              <div className="glass-card" style={{ padding:'8px 16px', background:'rgba(0,229,255,0.05)', border:'1px solid #00E5FF30', color:'#00E5FF', fontWeight:950, fontSize:11 }}>
+              <div className="glass-card" style={{ padding:'8px 16px', background:'rgba(0,229,255,0.05)', border:'1px solid #00FF8830', color:'#00FF88', fontWeight:950, fontSize:11 }}>
                  META ACTIVA: AHORRO AGUA
               </div>
            </div>
@@ -888,12 +900,12 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
               </div>
 
               <div className="glass-card" style={{ padding:32 }}>
-                 <div style={{ fontSize:10, fontWeight:950, color:'#ff4d4d', marginBottom:20 }}>RETIRO DE EMERGENCIA</div>
+                 <div style={{ fontSize:10, fontWeight:950, color:'#C5D1CC', marginBottom:20 }}>RETIRO DE EMERGENCIA</div>
                  <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
                     <input 
                       type="number" placeholder="Monto a retirar..." 
                       value={withdrawAmount || ''} onChange={e => setWithdrawAmount(Number(e.target.value))}
-                      style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#ff4d4d', fontWeight:950 }} 
+                      style={{ width:'100%', padding:12, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#C5D1CC', fontWeight:950 }} 
                     />
                     <input 
                       type="text" placeholder="Motivo del retiro..." 
@@ -905,7 +917,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                           <PenTool size={14}/> {waterEvidence ? 'FACTURA LISTA ✓' : 'SUBIR FACTURA'}
                           <input type="file" style={{ display: 'none' }} onChange={() => setWaterEvidence('factura_cargada.jpg')} />
                        </label>
-                       <button onClick={handleWaterWithdraw} style={{ flex:1, padding:12, borderRadius:12, background:'#ff4d4d', color:'#fff', border:'none', fontWeight:950, cursor:'pointer' }}>CONFIRMAR</button>
+                       <button onClick={handleWaterWithdraw} style={{ flex:1, padding:12, borderRadius:12, background:'#C5D1CC', color:'#fff', border:'none', fontWeight:950, cursor:'pointer' }}>CONFIRMAR</button>
                     </div>
                  </div>
               </div>
@@ -918,7 +930,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                     <div key={t.id} style={{ borderRadius:12, border:'1px solid rgba(255,255,255,0.05)', overflow:'hidden', background:'rgba(0,0,0,0.2)', position:'relative' }}>
                        <button 
                          onClick={() => { alert('Para eliminar, usa el historial general de transacciones'); }}
-                         style={{ position:'absolute', top:8, right:8, background:'rgba(255,77,77,0.2)', border:'none', color:'#ff4d4d', borderRadius:6, padding:4, cursor:'pointer', zIndex:10 }}
+                         style={{ position:'absolute', top:8, right:8, background:'rgba(255,77,77,0.2)', border:'none', color:'#C5D1CC', borderRadius:6, padding:4, cursor:'pointer', zIndex:10 }}
                        >
                          <X size={12}/>
                        </button>
@@ -928,7 +940,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                        </div>
                        <div style={{ padding:10 }}>
                           <div style={{ fontSize:10, fontWeight:800 }}>{t.description}</div>
-                          <div style={{ fontSize:11, color:'#ff4d4d', fontWeight:950 }}>-${t.amount.toLocaleString()}</div>
+                          <div style={{ fontSize:11, color:'#C5D1CC', fontWeight:950 }}>-${t.amount.toLocaleString()}</div>
                           <div style={{ fontSize:9, color:'var(--text-muted)', marginTop:4 }}>{t.date}</div>
                        </div>
                     </div>
@@ -951,7 +963,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
              <div key={g.id} className="glass-card" style={{ padding:24, position:'relative' }}>
                 <div style={{ position:'absolute', top:14, right:14, display:'flex', gap:8 }}>
                    <button onClick={() => { setEditingGoal(g); setGoalForm({ name:g.name, target:g.target, category:g.category }); setShowGoalModal(true); }} style={{ background:'none', border:'none', color:'var(--text-muted)', cursor:'pointer' }}><PenTool size={14}/></button>
-                   <button onClick={() => deleteGoal(g.id)} style={{ background:'none', border:'none', color:'#ff4d4d', cursor:'pointer' }}><X size={14}/></button>
+                   <button onClick={() => deleteGoal(g.id)} style={{ background:'none', border:'none', color:'#C5D1CC', cursor:'pointer' }}><X size={14}/></button>
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
                    <div style={{ color:'var(--neon-green)' }}>{g.category === 'payroll' ? <Users size={18}/> : <Zap size={18}/>}</div>
@@ -995,8 +1007,8 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
 
       {showObModal && (
         <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center', padding:16 }}>
-           <div className="glass-card" style={{ width:'100%', maxWidth:460, padding:32, border:'1px solid #ff4d4d50' }}>
-              <h3 style={{ fontSize:22, fontWeight:950, color:'#ff4d4d', marginBottom:24 }}>{editingOb ? 'EDITAR OBLIGACIÓN' : 'NUEVA OBLIGACIÓN'}</h3>
+           <div className="glass-card" style={{ width:'100%', maxWidth:460, padding:32, border:'1px solid #C5D1CC50' }}>
+              <h3 style={{ fontSize:22, fontWeight:950, color:'#C5D1CC', marginBottom:24 }}>{editingOb ? 'EDITAR OBLIGACIÓN' : 'NUEVA OBLIGACIÓN'}</h3>
               <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
                  <div>
                     <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Concepto</label>
@@ -1013,16 +1025,16 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                     </div>
                     <div>
                        <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Monto ($)</label>
-                       <input type="number" placeholder="0" value={obForm.amount} onChange={e => setObForm({...obForm, amount: Number(e.target.value)})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#ff4d4d', fontWeight:950, fontSize:16 }} />
+                       <input type="number" placeholder="0" value={obForm.amount} onChange={e => setObForm({...obForm, amount: Number(e.target.value)})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#C5D1CC', fontWeight:950, fontSize:16 }} />
                     </div>
                  </div>
                  <div>
                     <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:10, display:'block' }}>Período</label>
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10, marginBottom:12 }}>
                        {[
-                         { val: 'complete', label: 'Mes Completo', color: '#00E5FF' },
+                         { val: 'complete', label: 'Mes Completo', color: '#00FF88' },
                          { val: 'q1',       label: '1ra Quincena', color: 'var(--neon-green)' },
-                         { val: 'q2',       label: '2da Quincena', color: '#FFD600' },
+                         { val: 'q2',       label: '2da Quincena', color: '#C5D1CC' },
                        ].map(opt => (
                          <button
                            key={opt.val}
@@ -1059,7 +1071,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                           addObligation({...obForm, name: finalName, status:'pending'});
                         }
                         setShowObModal(false);
-                    }} style={{ flex:1, padding:16, borderRadius:12, background:'#ff4d4d', border:'none', color:'#fff', fontWeight:950, fontSize:14, cursor:'pointer' }}>{editingOb ? 'GUARDAR' : 'REGISTRAR'}</button>
+                    }} style={{ flex:1, padding:16, borderRadius:12, background:'#C5D1CC', border:'none', color:'#fff', fontWeight:950, fontSize:14, cursor:'pointer' }}>{editingOb ? 'GUARDAR' : 'REGISTRAR'}</button>
                  </div>
               </div>
            </div>
@@ -1072,7 +1084,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
       {showAdvanceModal && advanceTarget && (
         <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center', padding:16 }}>
           <div className="glass-card" style={{ width:'100%', maxWidth:400, padding:32, border:'1px solid rgba(255,214,0,0.3)' }}>
-            <h3 style={{ fontSize:20, fontWeight:950, color:'#FFD600', marginBottom:6 }}>ANTICIPO</h3>
+            <h3 style={{ fontSize:20, fontWeight:950, color:'#C5D1CC', marginBottom:6 }}>ANTICIPO</h3>
             <p style={{ fontSize:13, color:'var(--text-muted)', marginBottom:24 }}>Se descontará del próximo pago de <strong style={{ color:'#fff' }}>{advanceTarget.name}</strong></p>
             <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
               <div>
@@ -1080,17 +1092,17 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                 <input
                   type="number" placeholder="0" value={advanceAmount || ''}
                   onChange={e => setAdvanceAmount(Number(e.target.value))}
-                  style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,214,0,0.3)', color:'#FFD600', fontWeight:950, fontSize:18 }}
+                  style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,214,0,0.3)', color:'#C5D1CC', fontWeight:950, fontSize:18 }}
                   autoFocus
                 />
               </div>
-              <div style={{ padding:12, background:'rgba(255,214,0,0.05)', borderRadius:10, fontSize:12, color:'#FFD600' }}>
+              <div style={{ padding:12, background:'rgba(255,214,0,0.05)', borderRadius:10, fontSize:12, color:'#C5D1CC' }}>
                 Anticipo actual: <strong>${(advanceTarget.advances || 0).toLocaleString()}</strong>
                 {advanceAmount > 0 && <> → Nuevo total: <strong>${((advanceTarget.advances || 0) + advanceAmount).toLocaleString()}</strong></>}
               </div>
               <div style={{ display:'flex', gap:10 }}>
                 <button onClick={() => setShowAdvanceModal(false)} style={{ flex:1, padding:14, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer' }}>CANCELAR</button>
-                <button onClick={() => { if (advanceAmount > 0) { addStaffAdvance(advanceTarget.id, advanceAmount); setShowAdvanceModal(false); } }} style={{ flex:1, padding:14, borderRadius:12, background:'#FFD600', border:'none', color:'#000', fontWeight:950, fontSize:14, cursor:'pointer' }}>REGISTRAR</button>
+                <button onClick={() => { if (advanceAmount > 0) { addStaffAdvance(advanceTarget.id, advanceAmount); setShowAdvanceModal(false); } }} style={{ flex:1, padding:14, borderRadius:12, background:'#C5D1CC', border:'none', color:'#000', fontWeight:950, fontSize:14, cursor:'pointer' }}>REGISTRAR</button>
               </div>
             </div>
           </div>
@@ -1101,7 +1113,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
       {showLoanModal && loanTarget && (
         <div style={{ position:'fixed', inset:0, zIndex:10000, background:'rgba(0,0,0,0.85)', backdropFilter:'blur(10px)', display:'flex', justifyContent:'center', alignItems:'center', padding:16 }}>
           <div className="glass-card" style={{ width:'100%', maxWidth:420, padding:32, border:'1px solid rgba(255,77,77,0.3)' }}>
-            <h3 style={{ fontSize:20, fontWeight:950, color:'#ff4d4d', marginBottom:6 }}>PRÉSTAMO A EMPLEADO</h3>
+            <h3 style={{ fontSize:20, fontWeight:950, color:'#C5D1CC', marginBottom:6 }}>PRÉSTAMO A EMPLEADO</h3>
             <p style={{ fontSize:13, color:'var(--text-muted)', marginBottom:24 }}>Registrar préstamo para <strong style={{ color:'#fff' }}>{loanTarget.name}</strong></p>
             <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
               <div>
@@ -1118,7 +1130,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                   <input
                     type="number" placeholder="0" value={loanForm.total || ''}
                     onChange={e => setLoanForm({...loanForm, total: Number(e.target.value)})}
-                    style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,77,77,0.3)', color:'#ff4d4d', fontWeight:950, fontSize:16 }}
+                    style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,77,77,0.3)', color:'#C5D1CC', fontWeight:950, fontSize:16 }}
                   />
                 </div>
                 <div>
@@ -1126,12 +1138,12 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                   <input
                     type="number" placeholder="0" value={loanForm.installment || ''}
                     onChange={e => setLoanForm({...loanForm, installment: Number(e.target.value)})}
-                    style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,77,77,0.2)', color:'#FFD600', fontWeight:950, fontSize:16 }}
+                    style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,77,77,0.2)', color:'#C5D1CC', fontWeight:950, fontSize:16 }}
                   />
                 </div>
               </div>
               {loanForm.total > 0 && loanForm.installment > 0 && (
-                <div style={{ padding:12, background:'rgba(255,77,77,0.05)', borderRadius:10, fontSize:12, color:'#ff4d4d' }}>
+                <div style={{ padding:12, background:'rgba(255,77,77,0.05)', borderRadius:10, fontSize:12, color:'#C5D1CC' }}>
                   Cuotas estimadas: <strong>{Math.ceil(loanForm.total / loanForm.installment)}</strong> períodos
                 </div>
               )}
@@ -1142,7 +1154,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                     addStaffLoan({ staffId: loanTarget.id, staffName: loanTarget.name, total: loanForm.total, remaining: loanForm.total, installment: loanForm.installment, date: new Date().toISOString().split('T')[0], description: loanForm.description });
                     setShowLoanModal(false);
                   }
-                }} style={{ flex:1, padding:14, borderRadius:12, background:'#ff4d4d', border:'none', color:'#fff', fontWeight:950, fontSize:14, cursor:'pointer' }}>REGISTRAR PRÉSTAMO</button>
+                }} style={{ flex:1, padding:14, borderRadius:12, background:'#C5D1CC', border:'none', color:'#fff', fontWeight:950, fontSize:14, cursor:'pointer' }}>REGISTRAR PRÉSTAMO</button>
               </div>
             </div>
           </div>
@@ -1160,8 +1172,13 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                     <input className="input-field" value={staffForm.name} onChange={e => setStaffForm({...staffForm, name: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:15 }} />
                  </div>
                  <div>
-                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Cargo / Función</label>
-                    <input className="input-field" value={staffForm.role} onChange={e => setStaffForm({...staffForm, role: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:15 }} />
+                    <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Cargo</label>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:10 }}>
+                      {['Gerencia', 'Recepción', 'Entrenador', 'Aseo'].map((cargo) => (
+                        <button key={cargo} type="button" onClick={() => setStaffForm({ ...staffForm, role: cargo })} style={{ padding:'8px 12px', borderRadius:12, cursor:'pointer', fontWeight:800, border: staffForm.role === cargo ? '1px solid var(--neon-green)' : '1px solid rgba(255,255,255,0.12)', background: staffForm.role === cargo ? 'rgba(0,255,136,0.15)' : 'transparent', color: staffForm.role === cargo ? 'var(--neon-green)' : '#fff' }}>{cargo}</button>
+                      ))}
+                    </div>
+                    <input className="input-field" placeholder="O escribe otro cargo" value={staffForm.role} onChange={e => setStaffForm({...staffForm, role: e.target.value})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.1)', color:'#fff', fontSize:15 }} />
                  </div>
                  <div>
                     <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Salario Base ($)</label>
@@ -1185,9 +1202,9 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                     <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:10, display:'block' }}>Período de Pago</label>
                     <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10 }}>
                        {[
-                         { val: 'complete', label: 'Mes Completo', color: '#00E5FF' },
+                         { val: 'complete', label: 'Mes Completo', color: '#00FF88' },
                          { val: 'q1',       label: '1ra Quincena', color: 'var(--neon-green)' },
-                         { val: 'q2',       label: '2da Quincena', color: '#FFD600' },
+                         { val: 'q2',       label: '2da Quincena', color: '#C5D1CC' },
                        ].map(opt => (
                          <button
                            key={opt.val}
@@ -1209,11 +1226,11 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                  <div style={{ display:'flex', gap:10, marginTop:10 }}>
                     <button onClick={() => setShowStaffModal(false)} style={{ flex:1, padding:16, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer' }}>CANCELAR</button>
                     <button onClick={() => {
+                        if (!staffForm.name.trim()) return;
                         if (editingStaff) updateStaff(editingStaff.id, staffForm);
                         else addStaff(staffForm);
-                        setShowStaffModal(true);
                         setShowStaffModal(false);
-                    }} style={{ flex:1, padding:16, borderRadius:12, background:'var(--neon-green)', border:'none', color:'#000', fontWeight:950, fontSize:14, cursor:'pointer' }}>GUARDAR STAFF</button>
+                    }} style={{ flex:1, padding:16, borderRadius:12, background:'var(--neon-green)', border:'none', color:'#000', fontWeight:950, fontSize:14, cursor:'pointer' }}>Guardar empleado</button>
                  </div>
               </div>
            </div>
@@ -1232,7 +1249,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                  </div>
                  <div>
                     <label style={{ fontSize:13, fontWeight:700, color:'var(--text-muted)', marginBottom:6, display:'block' }}>Monto ($)</label>
-                    <input type="number" className="input-field" value={txForm.amount} onChange={e => setTxForm({...txForm, amount: Number(e.target.value)})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,77,77,0.3)', color:'#ff4d4d', fontWeight:950, fontSize:16 }} />
+                    <input type="number" className="input-field" value={txForm.amount} onChange={e => setTxForm({...txForm, amount: Number(e.target.value)})} style={{ width:'100%', padding:14, borderRadius:12, background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,77,77,0.3)', color:'#C5D1CC', fontWeight:950, fontSize:16 }} />
                  </div>
                  <div style={{ display:'flex', gap:10, marginTop:10 }}>
                     <button onClick={() => setEditingTx(null)} style={{ flex:1, padding:16, borderRadius:12, background:'rgba(255,255,255,0.05)', border:'none', color:'#fff', fontWeight:800, fontSize:14, cursor:'pointer' }}>CANCELAR</button>

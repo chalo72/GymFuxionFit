@@ -66,9 +66,9 @@ export default function ClientProgress() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
         {[
           { icon: <Zap size={20} />, label: 'Sesiones Completadas', value: `${metrics.totalSessions}`, color: 'var(--neon-green)' },
-          { icon: <Clock size={20} />, label: 'Horas de Entrenamiento', value: `${metrics.totalHours}h`, color: '#A78BFA' },
-          { icon: <Flame size={20} />, label: 'Racha Actual', value: `${metrics.currentStreak}d`, color: '#FF6B35' },
-          { icon: <Apple size={20} />, label: 'Nutrición (Adherencia)', value: `${metrics.nutritionAdherence}%`, color: '#FFD600' },
+          { icon: <Clock size={20} />, label: 'Horas de Entrenamiento', value: `${metrics.totalHours}h`, color: '#C5D1CC' },
+          { icon: <Flame size={20} />, label: 'Racha Actual', value: `${metrics.currentStreak}d`, color: '#8A9C96' },
+          { icon: <Apple size={20} />, label: 'Nutrición (Adherencia)', value: `${metrics.nutritionAdherence}%`, color: '#C5D1CC' },
         ].map((stat, i) => (
           <div key={i} style={{
             padding: 20, background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',

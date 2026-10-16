@@ -34,7 +34,7 @@ class ErrorBoundary extends React.Component<
           gap: 20, padding: 40, fontFamily: 'monospace'
         }}>
           <div style={{ fontSize: 40 }}>⚠️</div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: '#ff3d57' }}>PARTE DEL AGENTE DE MANTENIMIENTO</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: '#C5D1CC' }}>PARTE DEL AGENTE DE MANTENIMIENTO</div>
           <div style={{
             background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.3)',
             borderRadius: 12, padding: 20, maxWidth: 640, width: '100%', color: '#ddd', fontSize: 13, lineHeight: 1.5

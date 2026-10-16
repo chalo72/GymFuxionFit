@@ -57,10 +57,10 @@ export default function IntegratedReports() {
 
   // Distribución de trabajo
   const workDistribution = [
-    { name: 'Entrenamiento Power', value: 35, color: '#FF6B35' },
+    { name: 'Entrenamiento Power', value: 35, color: '#8A9C96' },
     { name: 'Entrenamiento Hipertrofia', value: 25, color: 'var(--neon-green)' },
-    { name: 'Entrenamiento Funcional', value: 25, color: '#A78BFA' },
-    { name: 'Recuperación', value: 15, color: '#FFD600' },
+    { name: 'Entrenamiento Funcional', value: 25, color: '#C5D1CC' },
+    { name: 'Recuperación', value: 15, color: '#C5D1CC' },
   ];
 
   // Comparativa mes anterior
@@ -155,9 +155,9 @@ export default function IntegratedReports() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
             {[
               { label: 'Progreso General', value: `${report.summary.overallProgress}%`, color: 'var(--neon-green)' },
-              { label: 'Adherencia Nutricional', value: `${report.summary.nutritionAdherence}%`, color: '#FFD600' },
-              { label: 'Cumplimiento Entrenamiento', value: `${report.summary.trainingCompliance}%`, color: '#A78BFA' },
-              { label: 'Récords Personales', value: `+${report.summary.personalRecords}`, color: '#FF6B35' },
+              { label: 'Adherencia Nutricional', value: `${report.summary.nutritionAdherence}%`, color: '#C5D1CC' },
+              { label: 'Cumplimiento Entrenamiento', value: `${report.summary.trainingCompliance}%`, color: '#C5D1CC' },
+              { label: 'Récords Personales', value: `+${report.summary.personalRecords}`, color: '#8A9C96' },
             ].map((kpi, i) => (
               <div key={i} style={{
                 padding: 24,

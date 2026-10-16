@@ -293,7 +293,7 @@ export default function TrainerDashboard() {
               if (!member) return null;
               const isSelected = selectedClient?.id === member.id;
               const inSession = activeSessions[member.id] !== undefined;
-              const color = String(member.plan || '').toLowerCase().includes('hyrox') ? '#FF6B35' : '#00FF88';
+              const color = String(member.plan || '').toLowerCase().includes('hyrox') ? '#8A9C96' : '#00FF88';
               
               return (
                 <button

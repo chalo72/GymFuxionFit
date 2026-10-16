@@ -31,7 +31,7 @@ export default function PisoScan() {
       {data.lista.length === 0 && <p>No hay ejercicios ligados a este código. Pide al entrenador que lo revise.</p>}
       {data.lista.map((e) => (
         <div key={e.id} className="glass-card" style={{ padding: 16, marginBottom: 12 }}>
-          <div style={{ fontSize: 11, color: '#00E5FF' }}>{e.disciplina} · {e.variante}</div>
+          <div style={{ fontSize: 11, color: '#00FF88' }}>{e.disciplina} · {e.variante}</div>
           <h2 style={{ fontSize: 18, margin: '4px 0 8px' }}>{e.nombre}</h2>
           <ol style={{ paddingLeft: 18, color: '#c8c8c8', fontSize: 14, lineHeight: 1.5 }}>
             {e.como.map((c) => <li key={c}>{c}</li>)}

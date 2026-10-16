@@ -39,7 +39,7 @@ interface FeedEvent {
 ══════════════════════════════════════ */
 const trainers: TrainerStatus[] = [
   {
-    id: 1, name: 'Coach Alex', initials: 'CA', color: '#FF6B35',
+    id: 1, name: 'Coach Alex', initials: 'CA', color: '#8A9C96',
     status: 'session', currentClient: 'Alex Guerrero', sessionTimer: 2732,
     aiAssistant: 'RecoveryBot', sessionsToday: 4, sessionsTotal: 5,
     nextClient: 'Diego F.', nextTime: '16:00', rating: 4.9,
@@ -51,7 +51,7 @@ const trainers: TrainerStatus[] = [
     nextClient: 'María López', nextTime: '17:00', rating: 4.8,
   },
   {
-    id: 3, name: 'Coach Diego', initials: 'CD', color: '#A78BFA',
+    id: 3, name: 'Coach Diego', initials: 'CD', color: '#C5D1CC',
     status: 'session', currentClient: 'Sofía Castillo', sessionTimer: 1124,
     aiAssistant: 'NutriBot', sessionsToday: 2, sessionsTotal: 4,
     nextClient: 'Carlos R.', nextTime: '18:30', rating: 4.7,
@@ -105,11 +105,11 @@ const formatTimer = (s: number) => {
 const feedIcon = (type: FeedEvent['type']) => {
   const map: Record<FeedEvent['type'], React.ReactNode> = {
     checkin:  <UserCheck size={13} style={{ color: '#00E676' }} />,
-    checkout: <XCircle   size={13} style={{ color: '#FF6B35' }} />,
-    session:  <Dumbbell  size={13} style={{ color: '#A78BFA' }} />,
+    checkout: <XCircle   size={13} style={{ color: '#8A9C96' }} />,
+    session:  <Dumbbell  size={13} style={{ color: '#C5D1CC' }} />,
     payment:  <DollarSign size={13} style={{ color: '#00FF88' }} />,
-    alert:    <AlertTriangle size={13} style={{ color: '#FF3D57' }} />,
-    ai:       <Brain    size={13} style={{ color: '#FFD600' }} />,
+    alert:    <AlertTriangle size={13} style={{ color: '#C5D1CC' }} />,
+    ai:       <Brain    size={13} style={{ color: '#C5D1CC' }} />,
   };
   return map[type];
 };
@@ -126,9 +126,9 @@ const feedColor = (type: FeedEvent['type']) => {
 const aiIcons: Record<string, React.ReactNode> = {
   'RecoveryBot': <Heart size={11} style={{ color: '#00E676' }} />,
   'NutriBot':    <Apple size={11} style={{ color: '#00FF88' }} />,
-  'BiometriX':   <Activity size={11} style={{ color: '#A78BFA' }} />,
-  'MoveAI':      <Zap size={11} style={{ color: '#FF6B35' }} />,
-  'MotivAI':     <Zap size={11} style={{ color: '#FFD600' }} />,
+  'BiometriX':   <Activity size={11} style={{ color: '#C5D1CC' }} />,
+  'MoveAI':      <Zap size={11} style={{ color: '#8A9C96' }} />,
+  'MotivAI':     <Zap size={11} style={{ color: '#C5D1CC' }} />,
 };
 
 /* ══════════════════════════════════════
@@ -210,9 +210,9 @@ export default function Operations() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
         {[
           { icon: Users,        label: 'Ocupación',        value: `${liveGym}/60`,          sub: `${Math.round((liveGym/60)*100)}% Capacidad`, color: 'var(--neon-green)' },
-          { icon: Dumbbell,     label: 'Sesiones Live',    value: String(activeTrainers),   sub: `${availableTrainers} coaches libres`, color: '#FF6B35' },
+          { icon: Dumbbell,     label: 'Sesiones Live',    value: String(activeTrainers),   sub: `${availableTrainers} coaches libres`, color: '#8A9C96' },
           { icon: UserCheck,    label: 'Check-ins Hoy',    value: '47',                     sub: '+8% vs ayer',     color: '#00E676' },
-          { icon: DollarSign,   label: 'Caja Hoy',         value: `$${todayRevenue}`,       sub: '14 transacciones',color: '#A78BFA' },
+          { icon: DollarSign,   label: 'Caja Hoy',         value: `$${todayRevenue}`,       sub: '14 transacciones',color: '#C5D1CC' },
         ].map((k, i) => (
           <div key={i} style={{ position: 'relative', overflow: 'hidden', padding: '20px', borderRadius: '16px', background: 'rgba(20, 20, 25, 0.6)', border: `1px solid ${k.color}30`, backdropFilter: 'blur(10px)', transition: 'transform 0.2s', cursor: 'default' }}
                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
@@ -307,7 +307,7 @@ export default function Operations() {
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12, padding: '8px 10px', background: 'rgba(255, 214, 0, 0.05)', border: '1px solid rgba(255, 214, 0, 0.15)', borderRadius: '8px' }}>
                         {aiIcons[trainer.aiAssistant]}
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Módulo IA:</span>
-                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#FFD600', letterSpacing: '0.02em' }}>{trainer.aiAssistant}</span>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#C5D1CC', letterSpacing: '0.02em' }}>{trainer.aiAssistant}</span>
                       </div>
                     )}
                   </div>
@@ -426,7 +426,7 @@ export default function Operations() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 8, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ padding: 6, background: 'rgba(167, 139, 250, 0.1)', borderRadius: 8 }}>
-              <Activity size={18} style={{ color: '#A78BFA' }} />
+              <Activity size={18} style={{ color: '#C5D1CC' }} />
             </div>
             <h3 style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '0.02em' }}>Event Timeline</h3>
           </div>
@@ -438,11 +438,11 @@ export default function Operations() {
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 24, position: 'relative', zIndex: 1, paddingTop: 8 }}>
                 {feed.map((event, i) => {
-                  const color = event.urgent ? '#FF3D57' : 
+                  const color = event.urgent ? '#C5D1CC' : 
                                 event.type === 'checkin' ? '#00E676' : 
-                                event.type === 'checkout' ? '#FF6B35' : 
-                                event.type === 'session' ? '#A78BFA' : 
-                                event.type === 'payment' ? '#00FF88' : '#FFD600';
+                                event.type === 'checkout' ? '#8A9C96' : 
+                                event.type === 'session' ? '#C5D1CC' : 
+                                event.type === 'payment' ? '#00FF88' : '#C5D1CC';
                   return (
                     <div key={event.id} style={{ display: 'flex', gap: 16, opacity: i > 10 ? 0.5 : 1, transition: 'all 0.3s' }}>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: `${color}20`, border: `2px solid ${color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 10px ${color}40` }}>

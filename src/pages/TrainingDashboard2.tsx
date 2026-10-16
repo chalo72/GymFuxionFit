@@ -11,6 +11,9 @@ export default function TrainingDashboard() {
           Fuxion Fit Montería / Ciénaga de Oro. Elige zona o disciplina. En el gym, el QR de la pared abre lo mismo.
         </p>
       </div>
+      <Link to="/entreno" className="fit-cta" style={{ textAlign: 'center', textDecoration: 'none' }}>
+        Abrir la sesión: series, discos, descanso, foto y etiqueta
+      </Link>
       <AiAssist
         rol="socio"
         texto="Si vienes por físico: zona muscular + 1 cardio corto. Si vienes por WOD: disciplina funcional. Si vienes por HYROX: sled, farmer y remo. No mezcles todo el mismo día la primera semana."

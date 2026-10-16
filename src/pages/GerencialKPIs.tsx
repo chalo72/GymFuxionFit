@@ -17,7 +17,7 @@ import {
    SK-KPIS-001 | 2026-05-04
 ══════════════════════════════════════════ */
 
-const COLORS = ['#00FF88', '#00F0FF', '#FF6B35', '#A78BFA', '#FFD600', '#FF3D57'];
+const COLORS = ['#00FF88', '#00FF88', '#8A9C96', '#C5D1CC', '#C5D1CC', '#C5D1CC'];
 
 export default function GerencialKPIs() {
   const { members, transactions, products, obligations, staff } = useGymData();
@@ -117,7 +117,7 @@ export default function GerencialKPIs() {
           <Icon size={20} color={color} />
         </div>
         {trend !== undefined && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: trend >= 0 ? '#00FF88' : '#FF3D57' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: trend >= 0 ? '#00FF88' : '#C5D1CC' }}>
             {trend >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
             {Math.abs(trend)}%
           </div>
@@ -130,7 +130,7 @@ export default function GerencialKPIs() {
   );
 
   const healthScore = Math.round(kpis.radarData.reduce((a, r) => a + r.value, 0) / kpis.radarData.length);
-  const healthColor = healthScore >= 75 ? '#00FF88' : healthScore >= 50 ? '#FFD600' : '#FF3D57';
+  const healthColor = healthScore >= 75 ? '#00FF88' : healthScore >= 50 ? '#C5D1CC' : '#C5D1CC';
   const healthLabel = healthScore >= 75 ? 'EXCELENTE' : healthScore >= 50 ? 'ESTABLE' : 'REQUIERE ATENCIÓN';
 
   return (
@@ -154,19 +154,19 @@ export default function GerencialKPIs() {
       {/* KPI Cards Row 1 — Membresías */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14, marginBottom: 20 }}>
         <StatCard label="Miembros Activos" value={kpis.activeMembers} sub={`de ${kpis.totalMembers} totales`} icon={Users} color="#00FF88" />
-        <StatCard label="Tasa de Retención" value={`${kpis.retentionRate}%`} sub="Miembros activos/total" icon={UserCheck} color="#00F0FF" trend={kpis.retentionRate - 70} />
-        <StatCard label="Por Vencer Pronto" value={kpis.expiringMembers} sub="Requieren contacto" icon={AlertTriangle} color="#FFD600" />
-        <StatCard label="Vencidos" value={kpis.expiredMembers} sub="Sin membresía activa" icon={TrendingDown} color="#FF3D57" />
-        <StatCard label="Cartera / Deudas" value={`$${kpis.totalDebt.toLocaleString()}`} sub="Deuda total pendiente" icon={AlertTriangle} color="#FF6B35" />
+        <StatCard label="Tasa de Retención" value={`${kpis.retentionRate}%`} sub="Miembros activos/total" icon={UserCheck} color="#00FF88" trend={kpis.retentionRate - 70} />
+        <StatCard label="Por Vencer Pronto" value={kpis.expiringMembers} sub="Requieren contacto" icon={AlertTriangle} color="#C5D1CC" />
+        <StatCard label="Vencidos" value={kpis.expiredMembers} sub="Sin membresía activa" icon={TrendingDown} color="#C5D1CC" />
+        <StatCard label="Cartera / Deudas" value={`$${kpis.totalDebt.toLocaleString()}`} sub="Deuda total pendiente" icon={AlertTriangle} color="#8A9C96" />
       </div>
 
       {/* KPI Cards Row 2 — Finanzas */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14, marginBottom: 28 }}>
         <StatCard label="Ingresos del Mes" value={`$${kpis.incomeThisMonth.toLocaleString()}`} sub="Mes actual" icon={DollarSign} color="#00FF88" trend={kpis.revenueGrowth} />
-        <StatCard label="ARPU" value={`$${kpis.arpu.toLocaleString()}`} sub="Ingreso prom. por atleta" icon={Target} color="#A78BFA" />
-        <StatCard label="Utilidad Neta" value={`$${kpis.netProfit.toLocaleString()}`} sub="Ingresos - Egresos" icon={Award} color={kpis.netProfit >= 0 ? '#00FF88' : '#FF3D57'} />
-        <StatCard label="Obligaciones Pend." value={`$${kpis.pendingObligations.toLocaleString()}`} sub="Por pagar" icon={AlertTriangle} color="#FFD600" />
-        <StatCard label="Stock Crítico" value={kpis.lowStockProducts} sub="Productos bajo mínimo" icon={Package} color={kpis.lowStockProducts > 0 ? '#FF3D57' : '#00FF88'} />
+        <StatCard label="ARPU" value={`$${kpis.arpu.toLocaleString()}`} sub="Ingreso prom. por atleta" icon={Target} color="#C5D1CC" />
+        <StatCard label="Utilidad Neta" value={`$${kpis.netProfit.toLocaleString()}`} sub="Ingresos - Egresos" icon={Award} color={kpis.netProfit >= 0 ? '#00FF88' : '#C5D1CC'} />
+        <StatCard label="Obligaciones Pend." value={`$${kpis.pendingObligations.toLocaleString()}`} sub="Por pagar" icon={AlertTriangle} color="#C5D1CC" />
+        <StatCard label="Stock Crítico" value={kpis.lowStockProducts} sub="Productos bajo mínimo" icon={Package} color={kpis.lowStockProducts > 0 ? '#C5D1CC' : '#00FF88'} />
       </div>
 
       {/* Charts Grid */}
@@ -180,15 +180,15 @@ export default function GerencialKPIs() {
               <AreaChart data={kpis.monthlyChart}>
                 <defs>
                   <linearGradient id="gInc" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#00FF88" stopOpacity={0.3} /><stop offset="100%" stopColor="#00FF88" stopOpacity={0} /></linearGradient>
-                  <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#FF3D57" stopOpacity={0.2} /><stop offset="100%" stopColor="#FF3D57" stopOpacity={0} /></linearGradient>
+                  <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#C5D1CC" stopOpacity={0.2} /><stop offset="100%" stopColor="#C5D1CC" stopOpacity={0} /></linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                 <XAxis dataKey="mes" tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 11 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: 'rgba(255,255,255,0.38)', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
                 <Tooltip contentStyle={{ background: 'rgba(14,14,21,0.95)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 12, fontSize: 12 }} formatter={(value: number) => [`$${value.toLocaleString()}`, '']} />
                 <Area type="monotone" dataKey="Ingresos" stroke="#00FF88" strokeWidth={2} fill="url(#gInc)" dot={false} />
-                <Area type="monotone" dataKey="Egresos" stroke="#FF3D57" strokeWidth={2} fill="url(#gExp)" dot={false} />
-                <Area type="monotone" dataKey="Utilidad" stroke="#FFD600" strokeWidth={2} fill="none" strokeDasharray="4 4" dot={false} />
+                <Area type="monotone" dataKey="Egresos" stroke="#C5D1CC" strokeWidth={2} fill="url(#gExp)" dot={false} />
+                <Area type="monotone" dataKey="Utilidad" stroke="#C5D1CC" strokeWidth={2} fill="none" strokeDasharray="4 4" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
@@ -197,7 +197,7 @@ export default function GerencialKPIs() {
             </div>
           )}
           <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
-            {[['#00FF88', 'Ingresos'], ['#FF3D57', 'Egresos'], ['#FFD600', 'Utilidad']].map(([color, label]) => (
+            {[['#00FF88', 'Ingresos'], ['#C5D1CC', 'Egresos'], ['#C5D1CC', 'Utilidad']].map(([color, label]) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <div style={{ width: 10, height: 10, borderRadius: 3, background: color }} />
                 <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{label}</span>
@@ -260,11 +260,11 @@ export default function GerencialKPIs() {
           <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 16, color: '#fff' }}>⚡ Alertas Ejecutivas</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[
-              { cond: kpis.expiringMembers > 0, icon: AlertTriangle, color: '#FFD600', msg: `${kpis.expiringMembers} atleta(s) vencen pronto — Contactar hoy`, action: '/members' },
-              { cond: kpis.totalDebt > 50000, icon: AlertTriangle, color: '#FF6B35', msg: `Cartera alta: $${kpis.totalDebt.toLocaleString()} en deudas`, action: '/members' },
-              { cond: kpis.lowStockProducts > 0, icon: Package, color: '#FF3D57', msg: `${kpis.lowStockProducts} producto(s) con stock crítico`, action: '/inventory' },
-              { cond: kpis.pendingObligations > 0, icon: DollarSign, color: '#FFD600', msg: `Obligaciones pendientes: $${kpis.pendingObligations.toLocaleString()}`, action: '/finances' },
-              { cond: kpis.revenueGrowth < 0, icon: TrendingDown, color: '#FF3D57', msg: `Ingresos cayeron ${Math.abs(kpis.revenueGrowth)}% vs mes anterior`, action: '/analytics' },
+              { cond: kpis.expiringMembers > 0, icon: AlertTriangle, color: '#C5D1CC', msg: `${kpis.expiringMembers} atleta(s) vencen pronto — Contactar hoy`, action: '/members' },
+              { cond: kpis.totalDebt > 50000, icon: AlertTriangle, color: '#8A9C96', msg: `Cartera alta: $${kpis.totalDebt.toLocaleString()} en deudas`, action: '/members' },
+              { cond: kpis.lowStockProducts > 0, icon: Package, color: '#C5D1CC', msg: `${kpis.lowStockProducts} producto(s) con stock crítico`, action: '/inventory' },
+              { cond: kpis.pendingObligations > 0, icon: DollarSign, color: '#C5D1CC', msg: `Obligaciones pendientes: $${kpis.pendingObligations.toLocaleString()}`, action: '/finances' },
+              { cond: kpis.revenueGrowth < 0, icon: TrendingDown, color: '#C5D1CC', msg: `Ingresos cayeron ${Math.abs(kpis.revenueGrowth)}% vs mes anterior`, action: '/analytics' },
               { cond: kpis.retentionRate >= 80, icon: CheckCircle2, color: '#00FF88', msg: `Excelente retención: ${kpis.retentionRate}% de miembros activos`, action: null },
               { cond: kpis.revenueGrowth >= 10, icon: Zap, color: '#00FF88', msg: `Crecimiento sólido: +${kpis.revenueGrowth}% en ingresos`, action: null },
               { cond: kpis.netProfit > 0, icon: Award, color: '#00FF88', msg: `Operando con utilidad positiva este mes`, action: null },

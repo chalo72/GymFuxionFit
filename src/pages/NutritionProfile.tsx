@@ -41,9 +41,9 @@ export default function NutritionDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
         {[
           { label: 'Calorías', icon: '⚡', ...nutritionData.today.calories, color: 'var(--neon-green)' },
-          { label: 'Proteína', icon: '💪', ...nutritionData.today.protein, color: '#FF6B35' },
-          { label: 'Carbohidratos', icon: '🍚', ...nutritionData.today.carbs, color: '#FFD600' },
-          { label: 'Grasas', icon: '🥑', ...nutritionData.today.fats, color: '#A78BFA' },
+          { label: 'Proteína', icon: '💪', ...nutritionData.today.protein, color: '#8A9C96' },
+          { label: 'Carbohidratos', icon: '🍚', ...nutritionData.today.carbs, color: '#C5D1CC' },
+          { label: 'Grasas', icon: '🥑', ...nutritionData.today.fats, color: '#C5D1CC' },
         ].map((macro, i) => (
           <div key={i} style={{
             padding: 20, background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',

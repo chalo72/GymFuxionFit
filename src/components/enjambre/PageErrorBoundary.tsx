@@ -25,7 +25,7 @@ export default class PageErrorBoundary extends React.Component<Props, State> {
     const pantalla = typeof window !== 'undefined' ? window.location.pathname : '?';
     return (
       <div className="glass-card" style={{ margin: 20, padding: 24, border: '1px solid rgba(255,61,87,0.4)' }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: '#ff6b81', letterSpacing: 1 }}>AGENTE DE MANTENIMIENTO · PARTE</div>
+        <div style={{ fontSize: 11, fontWeight: 800, color: '#C5D1CC', letterSpacing: 1 }}>AGENTE DE MANTENIMIENTO · PARTE</div>
         <h3 style={{ margin: '8px 0 12px' }}>Esta pantalla se cayó. El informe ya quedó guardado.</h3>
         <p style={{ fontSize: 14, marginBottom: 8 }}><strong>Qué:</strong> {err?.name}: {err?.message}</p>
         <p style={{ fontSize: 14, marginBottom: 8 }}><strong>Dónde:</strong> {pantalla}</p>

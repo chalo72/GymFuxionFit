@@ -281,7 +281,7 @@ export default function ElitePlanner() {
                     if (exData) addExercise(JSON.parse(exData), 'warmup');
                   }}
                 >
-                  {renderBlock('warmup', 'Fase 1: Activación & Calentamiento', '#FFD600')}
+                  {renderBlock('warmup', 'Fase 1: Activación & Calentamiento', '#C5D1CC')}
                 </div>
                 <div 
                   onDragOver={(e) => e.preventDefault()} 
@@ -301,7 +301,7 @@ export default function ElitePlanner() {
                     if (exData) addExercise(JSON.parse(exData), 'accessory');
                   }}
                 >
-                  {renderBlock('accessory', 'Fase 3: Hipertrofia Accesoria', '#A78BFA')}
+                  {renderBlock('accessory', 'Fase 3: Hipertrofia Accesoria', '#C5D1CC')}
                 </div>
               </>
             )}
@@ -371,7 +371,7 @@ export default function ElitePlanner() {
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#fff', lineHeight: 1.2, marginBottom: 4 }}>{ex.name}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                      <div><span style={{ color: '#A78BFA', fontWeight: 600 }}>{ex.muscleGroup}</span> • {ex.equipment}</div>
+                      <div><span style={{ color: '#C5D1CC', fontWeight: 600 }}>{ex.muscleGroup}</span> • {ex.equipment}</div>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                         {ex.difficulty && (
                           <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: 4, fontSize: '0.65rem' }}>
@@ -388,9 +388,9 @@ export default function ElitePlanner() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  <button onClick={() => addExercise(ex, 'warmup')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'rgba(255,214,0,0.1)', color: '#FFD600', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }}>+ ACT</button>
+                  <button onClick={() => addExercise(ex, 'warmup')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'rgba(255,214,0,0.1)', color: '#C5D1CC', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }}>+ ACT</button>
                   <button onClick={() => addExercise(ex, 'main')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'rgba(0,255,136,0.1)', borderLeft: '1px solid rgba(0,0,0,0.2)', borderRight: '1px solid rgba(0,0,0,0.2)', color: 'var(--neon-green)', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }}>+ FUERZA</button>
-                  <button onClick={() => addExercise(ex, 'accessory')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'rgba(167,139,250,0.1)', color: '#A78BFA', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }}>+ ACCES.</button>
+                  <button onClick={() => addExercise(ex, 'accessory')} style={{ flex: 1, padding: '10px 0', border: 'none', background: 'rgba(167,139,250,0.1)', color: '#C5D1CC', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s' }}>+ ACCES.</button>
                 </div>
               </div>
             ))}

@@ -163,7 +163,7 @@ export default function Reception() {
     const existing = activeMembers.find(m => m.name === nameToUse);
     if (existing) {
       setActiveMembers(prev => prev.filter(m => m.id !== existing.id));
-      setLogs(prev => [{ id: Date.now(), name: nameToUse, action: 'SALIDA', time: new Date().toLocaleTimeString().slice(0,5), method, color: '#ff4d4d' }, ...prev]);
+      setLogs(prev => [{ id: Date.now(), name: nameToUse, action: 'SALIDA', time: new Date().toLocaleTimeString().slice(0,5), method, color: '#C5D1CC' }, ...prev]);
     } else {
       const newM: ActiveMember = {
          id: masterMember ? String(masterMember.id) : String(Date.now()),
@@ -572,8 +572,8 @@ export default function Reception() {
                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 25 }}>
                               {[
                                  { id: 'srv_mes', label: 'MENSUAL', price: 75000, color: 'var(--neon-green)', icon: <TrendingUp size={14}/> },
-                                 { id: 'srv_sem', label: 'SEMANAL', price: 25000, color: '#00E5FF', icon: <Calendar size={14}/> },
-                                 { id: 'srv_dia', label: 'PAGO DÍA', price: 5000, color: '#FFD600', icon: <Zap size={14}/> }
+                                 { id: 'srv_sem', label: 'SEMANAL', price: 25000, color: '#00FF88', icon: <Calendar size={14}/> },
+                                 { id: 'srv_dia', label: 'PAGO DÍA', price: 5000, color: '#C5D1CC', icon: <Zap size={14}/> }
                               ].map(srv => (
                                  <button key={srv.id} onClick={() => addToCart({ ...srv, name: srv.label, sellPrice: srv.price, category: 'Servicio' })} style={{ background: 'rgba(255,255,255,0.02)', border: `1px solid ${srv.color}20`, borderRadius: 16, padding: '18px 10px', color: '#fff', cursor: 'pointer', transition: '0.3s', display:'flex', flexDirection:'column', alignItems:'center', gap: 8 }}>
                                     <div style={{ color: srv.color }}>{srv.icon}</div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import BottomNav from './BottomNav';
 import Navbar from './Navbar';
 import CommandPalette from './CommandPalette';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,6 +31,7 @@ const pageTitles: Record<string, string> = {
   '/avisos': 'Avisos a socios',
   '/piso-qr': 'Piso QR',
   '/mantenimiento': 'Mantenimiento · Gerencia',
+  '/entreno': 'Sesión de entreno',
 };
 
 export default function AppLayout() {
@@ -42,7 +44,9 @@ export default function AppLayout() {
     if (saved === 'true' && isWideScreen) return true;
     return false;
   });
-  const title = pageTitles[location.pathname] || 'GymFuxionFit';
+  const title = location.pathname === '/finances' && location.search.includes('tab=personal')
+    ? 'Personal'
+    : pageTitles[location.pathname] || 'GymFuxionFit';
 
   useEffect(() => { setMobileMenuOpen(false); }, [location.pathname]);
 
@@ -87,6 +91,7 @@ export default function AppLayout() {
           </AnimatePresence>
         </div>
       </main>
+      <BottomNav onOpenMenu={() => setMobileMenuOpen(true)} />
       <CommandPalette />
     </div>
   );

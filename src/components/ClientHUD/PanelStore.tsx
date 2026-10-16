@@ -60,7 +60,7 @@ export function PanelStore({ onCartChange, athlete }: { onCartChange: (n: number
         </div>
       </div>
       <div className="glass-card" style={{ padding: 20 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: '#FFD700' }}>CUENTA ABIERTA AHORA</div>
+        <div style={{ fontSize: 11, fontWeight: 800, color: '#C5D1CC' }}>CUENTA ABIERTA AHORA</div>
         {(athlete.openTab || []).length === 0 && <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>Nada pendiente de consumo.</p>}
         {(athlete.openTab || []).map((l) => (
           <div key={l.id + l.at} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 8 }}>

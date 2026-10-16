@@ -49,7 +49,7 @@ interface Client {
 /* ══════════════════════════════════════════
    DATOS INICIALES
 ══════════════════════════════════════════ */
-const COLORS = ['#00FF88','#FF6B35','#A78BFA','#00E5FF','#FFD600','#FF4FA3','#4CAF50','#2196F3'];
+const COLORS = ['#00FF88','#8A9C96','#C5D1CC','#00FF88','#C5D1CC','#FF4FA3','#4CAF50','#2196F3'];
 
 // 🔄 Los planes ahora se gestionan dinámicamente desde useGymData
 
@@ -71,7 +71,7 @@ const emptyForm = (): Omit<Client,'id'|'visits'|'lastVisit'|'color'> => ({
 ══════════════════════════════════════════ */
 const STATUS_CFG: Record<Status,{label:string;color:string;bg:string}> = {
   active:    { label:'Activo',      color:'var(--neon-green)',  bg:'rgba(0,255,136,.1)'  },
-  expiring:  { label:'Por vencer',  color:'#FFD600',            bg:'rgba(255,214,0,.1)'  },
+  expiring:  { label:'Por vencer',  color:'#C5D1CC',            bg:'rgba(255,214,0,.1)'  },
   expired:   { label:'Vencida',     color:'var(--danger-red)',  bg:'rgba(255,61,87,.1)'  },
   suspended: { label:'Suspendido',  color:'var(--text-muted)',  bg:'rgba(100,100,100,.1)'},
 };
@@ -738,7 +738,7 @@ export default function Members() {
             style={{ 
               display:'flex', alignItems:'center', gap:8, padding:'10px 18px', 
               fontSize:12, fontWeight:700, background:'rgba(0,229,255,0.1)', 
-              border:'1px solid rgba(0,229,255,0.3)', color:'#00E5FF', cursor:'pointer' 
+              border:'1px solid rgba(0,229,255,0.3)', color:'#00FF88', cursor:'pointer' 
             }}
           >
             <RefreshCw size={16}/> SINCRONIZAR TODO
@@ -746,7 +746,7 @@ export default function Members() {
           <button
             onClick={() => setShowMassImport(true)}
             className="btn"
-            style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 18px', fontSize:12, fontWeight:700, background:'rgba(255,107,53,0.1)', border:'1px solid rgba(255,107,53,0.3)', color:'#FF6B35', cursor:'pointer' }}
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 18px', fontSize:12, fontWeight:700, background:'rgba(255,107,53,0.1)', border:'1px solid rgba(255,107,53,0.3)', color:'#8A9C96', cursor:'pointer' }}
           >
             <Upload size={16}/> IMPORTACIÓN MASIVA
           </button>
@@ -765,7 +765,7 @@ export default function Members() {
         {[
           { label:'Total Clientes',  val:stats.total,                  color:'var(--text-primary)',  icon:'👥' },
           { label:'Activos',         val:stats.active,                 color:'var(--neon-green)',    icon:'✅' },
-          { label:'Por Vencer',      val:stats.expiring,               color:'#FFD600',              icon:'⚠️' },
+          { label:'Por Vencer',      val:stats.expiring,               color:'#C5D1CC',              icon:'⚠️' },
           { label:'Vencidos',        val:stats.expired,                color:'var(--danger-red)',    icon:'❌' },
           { label:'Ingresos/mes',    val:`$${(stats.revenue/1000).toFixed(0)}K`, color:'var(--neon-green)', icon:'💰' },
         ].map(k => (
@@ -868,7 +868,7 @@ export default function Members() {
                       </div>
                     )}
                   </td>
-                  <td style={{ padding:'14px 16px', fontSize:12.5, color: c.status==='expired' ? 'var(--danger-red)' : c.status==='expiring' ? '#FFD600' : 'var(--text-secondary)' }}>{c.expiryDate || c.expiry}</td>
+                  <td style={{ padding:'14px 16px', fontSize:12.5, color: c.status==='expired' ? 'var(--danger-red)' : c.status==='expiring' ? '#C5D1CC' : 'var(--text-secondary)' }}>{c.expiryDate || c.expiry}</td>
                   <td style={{ padding:'14px 16px', fontSize:12, color:'var(--text-secondary)', textTransform:'capitalize' }}>{c.payMethod}</td>
                   <td style={{ padding:'14px 16px', fontSize:12, color:'var(--text-secondary)' }}>{c.trainer||'—'}</td>
                   <td style={{ padding:'14px 16px', fontSize:13, fontWeight:700, color:'var(--text-primary)' }}>{c.visits}</td>
@@ -891,7 +891,7 @@ export default function Members() {
                         </button>
                       )}
                       {(c.status === 'expired' || c.status === 'expiring') && (
-                        <button onClick={() => toggleStatus(c.id,'active')} title="Renovar" style={{ width:30, height:30, borderRadius:8, background:'rgba(0,229,255,.06)', border:'1px solid rgba(0,229,255,.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#00E5FF' }}>
+                        <button onClick={() => toggleStatus(c.id,'active')} title="Renovar" style={{ width:30, height:30, borderRadius:8, background:'rgba(0,229,255,.06)', border:'1px solid rgba(0,229,255,.2)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', color:'#00FF88' }}>
                           <RefreshCw size={13}/>
                         </button>
                       )}

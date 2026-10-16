@@ -49,7 +49,7 @@ export default function Mantenimiento() {
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 40 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#ff6b81', letterSpacing: 1 }}>GERENCIA</div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#C5D1CC', letterSpacing: 1 }}>GERENCIA</div>
           <h2 style={{ fontSize: 'var(--text-2xl)', fontWeight: 800, margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 10 }}>
             <Wrench size={22} /> Agente de mantenimiento
           </h2>
@@ -104,7 +104,7 @@ export default function Mantenimiento() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
-                  <strong style={{ color: mio ? 'var(--neon-green)' : '#ff6b81', fontSize: 12 }}>
+                  <strong style={{ color: mio ? 'var(--neon-green)' : '#C5D1CC', fontSize: 12 }}>
                     {m.de === 'taller' ? 'Taller Cursor' : 'Agente de mantenimiento'}
                   </strong>
                   <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{horaTxtMaint(m.t)}</span>
@@ -135,7 +135,7 @@ export default function Mantenimiento() {
           </div>
 
           <div className="glass-card" style={{ padding: 16, maxHeight: 280, overflow: 'auto' }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#00E5FF', marginBottom: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#00FF88', marginBottom: 10 }}>
               RASTRO EN VIVO (clics y pantallas)
             </div>
             {trail.length === 0 ? (

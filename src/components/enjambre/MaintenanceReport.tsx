@@ -25,7 +25,7 @@ export default function MaintenanceReport() {
     <div className="glass-card" style={{ padding: 20, border: '1px solid rgba(255,61,87,0.25)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, marginBottom: 12 }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 800, color: '#ff6b81', letterSpacing: 1 }}>AGENTE DE MANTENIMIENTO</div>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#C5D1CC', letterSpacing: 1 }}>AGENTE DE MANTENIMIENTO</div>
           <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
             Guarda errores, enlaces rotos y clics. El chat de Cursor lee esto al abrir sesión y repara.
           </div>
@@ -44,7 +44,7 @@ export default function MaintenanceReport() {
         <div style={{ maxHeight: 180, overflow: 'auto', marginBottom: 14 }}>
           {fallos.slice(0, 20).map((e) => (
             <div key={e.id} style={{ padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: 12 }}>
-              <strong style={{ color: '#ff6b81' }}>{e.tipo}</strong>
+              <strong style={{ color: '#C5D1CC' }}>{e.tipo}</strong>
               {' · '}
               <span>{hora(e.t)}</span>
               {' · pantalla '}

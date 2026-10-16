@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 type AgentId = 'Rush' | 'Bypass' | 'Deep' | 'Shield';
 
 const AGENTS: { id: AgentId; color: string; rol: string }[] = [
-  { id: 'Rush', color: '#FF6B35', rol: 'Happy path' },
-  { id: 'Bypass', color: '#A78BFA', rol: 'No bloquear' },
-  { id: 'Deep', color: '#00E5FF', rol: 'Raíz' },
+  { id: 'Rush', color: '#8A9C96', rol: 'Happy path' },
+  { id: 'Bypass', color: '#C5D1CC', rol: 'No bloquear' },
+  { id: 'Deep', color: '#00FF88', rol: 'Raíz' },
   { id: 'Shield', color: '#00FF88', rol: 'Estabilidad' },
 ];
 

@@ -173,7 +173,7 @@ export default function Accounting() {
           <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Clientes Activos</div>
-              <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: '#00F0FF' }}>{totalActive} <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>({dailyActive} vis. + {monthlyActive} planes)</span></div>
+              <div style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: '#00FF88' }}>{totalActive} <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>({dailyActive} vis. + {monthlyActive} planes)</span></div>
             </div>
             <div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)' }}>Clientes Inactivos</div>
@@ -235,15 +235,15 @@ export default function Accounting() {
         {/* 📍 MÓDULO SIMULADOR */}
         <div style={{ background: 'rgba(255,255,255,0.01)', border: '2px solid rgba(0, 240, 255, 0.2)', borderRadius: '12px', padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <Eye size={20} color="#00F0FF" />
+            <Eye size={20} color="#00FF88" />
             <h3 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: '#fff' }}>Módulo Simulador</h3>
-            <span style={{ fontSize: 'var(--text-xs)', color: '#00F0FF', marginLeft: 'auto' }}>Proyecciones</span>
+            <span style={{ fontSize: 'var(--text-xs)', color: '#00FF88', marginLeft: 'auto' }}>Proyecciones</span>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             {/* 1ra Quincena */}
             <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '16px', borderRadius: '8px' }}>
-              <div style={{ color: '#00F0FF', fontWeight: 700, marginBottom: 12, textAlign: 'center', borderBottom: '1px solid rgba(0, 240, 255, 0.1)', paddingBottom: 8 }}>1ra Quincena</div>
+              <div style={{ color: '#00FF88', fontWeight: 700, marginBottom: 12, textAlign: 'center', borderBottom: '1px solid rgba(0, 240, 255, 0.1)', paddingBottom: 8 }}>1ra Quincena</div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>Ingresos simulados</span>
@@ -263,7 +263,7 @@ export default function Accounting() {
 
             {/* 2da Quincena */}
             <div style={{ background: 'rgba(0, 240, 255, 0.02)', padding: '16px', borderRadius: '8px' }}>
-              <div style={{ color: '#00F0FF', fontWeight: 700, marginBottom: 12, textAlign: 'center', borderBottom: '1px solid rgba(0, 240, 255, 0.1)', paddingBottom: 8 }}>2da Quincena</div>
+              <div style={{ color: '#00FF88', fontWeight: 700, marginBottom: 12, textAlign: 'center', borderBottom: '1px solid rgba(0, 240, 255, 0.1)', paddingBottom: 8 }}>2da Quincena</div>
               
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ color: 'var(--text-muted)', fontSize: 'var(--text-xs)' }}>Ingresos simulados</span>

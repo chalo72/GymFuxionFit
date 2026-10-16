@@ -97,9 +97,9 @@ const routinesLibrary: Record<string, { id: string; name: string; exercises: Rou
 
 const levelConfig: Record<Level, { color: string; bg: string; icon: string }> = {
   'Principiante': { color: '#00FF88', bg: 'rgba(0,255,136,0.1)', icon: '🟢' },
-  'Intermedio': { color: '#00F0FF', bg: 'rgba(0,240,255,0.1)', icon: '🟡' },
-  'Avanzado': { color: '#FF9900', bg: 'rgba(255,153,0,0.1)', icon: '🔴' },
-  'Elite Atleta': { color: '#FF3D57', bg: 'rgba(255,61,87,0.1)', icon: '🏆' }
+  'Intermedio': { color: '#00FF88', bg: 'rgba(0,240,255,0.1)', icon: '🟡' },
+  'Avanzado': { color: '#C5D1CC', bg: 'rgba(255,153,0,0.1)', icon: '🔴' },
+  'Elite Atleta': { color: '#C5D1CC', bg: 'rgba(255,61,87,0.1)', icon: '🏆' }
 };
 
 type ClassBlock = {
@@ -110,10 +110,10 @@ type ClassBlock = {
 };
 
 const classesData: ClassBlock[] = [
-  { id: 1, name: 'HYROX Challenge', subtitulo: 'Carrera + Estaciones Pro', instructor: 'Coach Alex', time: '06:00', duration: '60 min', capacity: 20, enrolled: 18, type: 'hyrox', color: '#FF6B35', image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600', nivel: 'Avanzado', description: 'Entrenamiento oficial.', beneficios: ['Fuerza'], equipo: ['Trineo'] },
-  { id: 2, name: 'Fuerza: Push Day', subtitulo: 'Hipertrofia de Empuje', instructor: 'Coach María', time: '08:00', duration: '50 min', capacity: 12, enrolled: 9, type: 'strength', color: '#00F0FF', image: 'https://images.unsplash.com/photo-1541534741688-6078c65b5a33?q=80&w=600', nivel: 'Intermedio', description: 'Powerlifting y más.', beneficios: ['Masa Muscular'], equipo: ['Rack'] },
+  { id: 1, name: 'HYROX Challenge', subtitulo: 'Carrera + Estaciones Pro', instructor: 'Coach Alex', time: '06:00', duration: '60 min', capacity: 20, enrolled: 18, type: 'hyrox', color: '#8A9C96', image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600', nivel: 'Avanzado', description: 'Entrenamiento oficial.', beneficios: ['Fuerza'], equipo: ['Trineo'] },
+  { id: 2, name: 'Fuerza: Push Day', subtitulo: 'Hipertrofia de Empuje', instructor: 'Coach María', time: '08:00', duration: '50 min', capacity: 12, enrolled: 9, type: 'strength', color: '#00FF88', image: 'https://images.unsplash.com/photo-1541534741688-6078c65b5a33?q=80&w=600', nivel: 'Intermedio', description: 'Powerlifting y más.', beneficios: ['Masa Muscular'], equipo: ['Rack'] },
   { id: 3, name: 'Animal Flow', subtitulo: 'Movilidad Primitiva', instructor: 'Coach Diego', time: '10:00', duration: '45 min', capacity: 15, enrolled: 7, type: 'cardio', color: '#00E676', image: 'https://images.unsplash.com/photo-1599058917233-35f91f1c7e7e?q=80&w=600', nivel: 'Intermedio', description: 'Control corporal total.', beneficios: ['Flexibilidad'], equipo: ['Mat'] },
-  { id: 4, name: 'Yoga Restore', subtitulo: 'Recuperación Muscular', instructor: 'Coach Sofía', time: '17:00', duration: '60 min', capacity: 20, enrolled: 12, type: 'yoga', color: '#A78BFA', image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600', nivel: 'Principiante', description: 'Relajación profunda.', beneficios: ['Zen'], equipo: ['Blocks'] },
+  { id: 4, name: 'Yoga Restore', subtitulo: 'Recuperación Muscular', instructor: 'Coach Sofía', time: '17:00', duration: '60 min', capacity: 20, enrolled: 12, type: 'yoga', color: '#C5D1CC', image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=600', nivel: 'Principiante', description: 'Relajación profunda.', beneficios: ['Zen'], equipo: ['Blocks'] },
 ];
 
 const typeLabels: Record<string, string> = { hyrox: 'HYROX', strength: 'FUERZA', cardio: 'CARDIO', yoga: 'YOGA' };
@@ -250,7 +250,7 @@ function CreateClassModal({ onClose, onAdd }: { onClose: () => void, onAdd: (c: 
       duration: '60 min',
       instructor: 'Por Asignar',
       intensity: 'Alta',
-      color: type === 'hyrox' ? '#FF3D57' : '#00FF88',
+      color: type === 'hyrox' ? '#C5D1CC' : '#00FF88',
       image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=400',
       description: 'Clase recién creada.'
     });

@@ -110,14 +110,14 @@ export default function Inventory() {
             <div style={{ fontSize: 8, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8 }}>{inventoryStats.label}</div>
             <div style={{ fontSize: 24, fontWeight: 950, color: 'var(--neon-green)' }}>{inventoryStats.health}</div>
          </div>
-         <div className="glass-card" style={{ padding: 16, border: inventoryStats.alerts > 0 ? '1px solid #ff4d4d30' : 'none' }}>
+         <div className="glass-card" style={{ padding: 16, border: inventoryStats.alerts > 0 ? '1px solid #C5D1CC30' : 'none' }}>
             <div style={{ fontSize: 8, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8 }}>{activeTab==='assets' ? 'PEND_MANTENIMIENTO' : 'STOCK_CRITICO'}</div>
-            <div style={{ fontSize: 24, fontWeight: 950, color: inventoryStats.alerts > 0 ? '#ff4d4d' : 'var(--neon-green)' }}>{inventoryStats.alerts}</div>
+            <div style={{ fontSize: 24, fontWeight: 950, color: inventoryStats.alerts > 0 ? '#C5D1CC' : 'var(--neon-green)' }}>{inventoryStats.alerts}</div>
          </div>
          {activeTab === 'products' ? (
            <div className="glass-card" style={{ padding: 16 }}>
               <div style={{ fontSize: 8, fontWeight: 950, color: 'var(--text-muted)', marginBottom: 8 }}>POTENCIAL_GANANCIA</div>
-              <div style={{ fontSize: 24, fontWeight: 950, color: '#00E5FF' }}>+35% AVG</div>
+              <div style={{ fontSize: 24, fontWeight: 950, color: '#00FF88' }}>+35% AVG</div>
            </div>
          ) : (
            <div className="glass-card" style={{ padding: 16 }}>
@@ -174,7 +174,7 @@ export default function Inventory() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
                {(filteredItems as GymAsset[]).map(asset => (
                   <div key={asset.id} className="glass-card" style={{ padding: 24, border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow:'hidden' }}>
-                     <div style={{ position:'absolute', top:0, left:0, height:2, width:`${asset.health}%`, background: asset.health > 80 ? 'var(--neon-green)' : asset.health > 40 ? '#FFD600' : '#ff4d4d' }} />
+                     <div style={{ position:'absolute', top:0, left:0, height:2, width:`${asset.health}%`, background: asset.health > 80 ? 'var(--neon-green)' : asset.health > 40 ? '#C5D1CC' : '#C5D1CC' }} />
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
                         <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(0,255,136,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-green)' }}>
                            {asset.category === 'machine' ? <Settings size={22}/> : <Dumbbell size={22}/>}
@@ -185,7 +185,7 @@ export default function Inventory() {
                      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                         <div style={{ display:'flex', justifyContent:'space-between', fontSize:9, fontWeight:900 }}>
                            <span style={{ color: 'var(--text-muted)' }}>ESTADO</span>
-                           <span style={{ color: asset.status==='OPERATIONAL' ? 'var(--neon-green)' : '#ff4d4d' }}>{asset.status}</span>
+                           <span style={{ color: asset.status==='OPERATIONAL' ? 'var(--neon-green)' : '#C5D1CC' }}>{asset.status}</span>
                         </div>
                      </div>
                   </div>
@@ -218,21 +218,21 @@ export default function Inventory() {
                           </td>
                           <td style={{ padding: '16px 24px' }}>
                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <span style={{ fontSize: 16, fontWeight: 950, color: product.stock <= product.minStock ? '#ff4d4d' : '#fff' }}>{product.stock}</span>
-                                {product.stock <= product.minStock && <AlertCircle size={14} style={{ color: '#ff4d4d' }} />}
+                                <span style={{ fontSize: 16, fontWeight: 950, color: product.stock <= product.minStock ? '#C5D1CC' : '#fff' }}>{product.stock}</span>
+                                {product.stock <= product.minStock && <AlertCircle size={14} style={{ color: '#C5D1CC' }} />}
                              </div>
                           </td>
                           <td style={{ padding: '16px 24px', fontSize: 12, color:'rgba(255,255,255,0.3)', fontWeight: 800 }}>{product.minStock}</td>
                           <td style={{ padding: '16px 24px', fontSize: 12, fontWeight: 900 }}>${roundPrice(product.buyPrice || 0).toLocaleString()}</td>
                           <td style={{ padding: '16px 24px', fontSize: 14, fontWeight: 950, color: 'var(--neon-green)' }}>${roundPrice(product.sellPrice || 0).toLocaleString()}</td>
                           <td style={{ padding: '16px 24px' }}>
-                             <div style={{ fontSize: 13, fontWeight: 950, color: '#00E5FF' }}>+${roundPrice(product.sellPrice - product.buyPrice).toLocaleString()}</div>
+                             <div style={{ fontSize: 13, fontWeight: 950, color: '#00FF88' }}>+${roundPrice(product.sellPrice - product.buyPrice).toLocaleString()}</div>
                              <div style={{ fontSize: 8, color: 'rgba(0,229,255,0.5)', fontWeight: 800 }}>MARGEN NETA</div>
                           </td>
                           <td style={{ padding: '16px 24px' }}>
                              <div style={{ display: 'flex', gap: 8 }}>
                                 <button onClick={() => { setEditingProduct(product); setProductForm({...product}); setShowProductModal(true); }} style={{ background:'rgba(255,255,255,0.05)', border:'none', borderRadius:6, padding:8, cursor:'pointer', color:'#fff' }}><Edit3 size={14}/></button>
-                                <button onClick={() => { if(window.confirm(`¿ELIMINAR ${(product.name || 'PRODUCTO').toUpperCase()}?`)) deleteProduct(product.id); }} style={{ background:'rgba(255,77,77,0.1)', border:'none', borderRadius:6, padding:8, cursor:'pointer', color:'#ff4d4d' }}><X size={14}/></button>
+                                <button onClick={() => { if(window.confirm(`¿ELIMINAR ${(product.name || 'PRODUCTO').toUpperCase()}?`)) deleteProduct(product.id); }} style={{ background:'rgba(255,77,77,0.1)', border:'none', borderRadius:6, padding:8, cursor:'pointer', color:'#C5D1CC' }}><X size={14}/></button>
                              </div>
                           </td>
                        </tr>
@@ -243,11 +243,11 @@ export default function Inventory() {
          )}
       </div>
 
-      <div className="glass-card" style={{ padding: 20, background: 'rgba(255,214,0,0.05)', border: '1px solid #FFD60020' }}>
+      <div className="glass-card" style={{ padding: 20, background: 'rgba(255,214,0,0.05)', border: '1px solid #C5D1CC20' }}>
          <div style={{ display:'flex', gap:15, alignItems:'center' }}>
-            <AlertCircle size={20} style={{ color: '#FFD600' }} />
+            <AlertCircle size={20} style={{ color: '#C5D1CC' }} />
             <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
-               <span style={{ color: '#FFD600', fontWeight: 950 }}>PROTOCOLO_OMNI_STOCK:</span> El inventario se sincroniza en tiempo real con la recepción (POS) y el libro mayor. Cada venta de suplemento decrementa automáticamente el stock y registra la utilidad neta.
+               <span style={{ color: '#C5D1CC', fontWeight: 950 }}>PROTOCOLO_OMNI_STOCK:</span> El inventario se sincroniza en tiempo real con la recepción (POS) y el libro mayor. Cada venta de suplemento decrementa automáticamente el stock y registra la utilidad neta.
             </p>
          </div>
       </div>

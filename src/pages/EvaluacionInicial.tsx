@@ -11,10 +11,10 @@ import { User, Activity, Target, ChevronRight, ChevronLeft, CheckCircle2, Save, 
 
 const STEPS = [
   { id: 1, title: 'Datos Básicos', icon: User, color: '#00FF88' },
-  { id: 2, title: 'Medidas del Cuerpo', icon: Weight, color: '#00F0FF' },
-  { id: 3, title: 'Cómo se mueve', icon: Activity, color: '#FFD600' },
-  { id: 4, title: 'Pruebas de Fuerza', icon: Zap, color: '#FF6B35' },
-  { id: 5, title: 'Objetivo y Plan', icon: Target, color: '#A78BFA' },
+  { id: 2, title: 'Medidas del Cuerpo', icon: Weight, color: '#00FF88' },
+  { id: 3, title: 'Cómo se mueve', icon: Activity, color: '#C5D1CC' },
+  { id: 4, title: 'Pruebas de Fuerza', icon: Zap, color: '#8A9C96' },
+  { id: 5, title: 'Objetivo y Plan', icon: Target, color: '#C5D1CC' },
 ];
 
 const OBJECTIVES = [
@@ -227,7 +227,7 @@ export default function EvaluacionInicial() {
             </div>
             {imc && (
               <div style={{ padding: 16, borderRadius: 12, background: Number(imc) < 25 ? 'rgba(0,255,136,0.05)' : 'rgba(255,107,53,0.08)', border: `1px solid ${Number(imc) < 25 ? 'rgba(0,255,136,0.2)' : 'rgba(255,107,53,0.3)'}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ fontSize: 32, fontWeight: 900, color: Number(imc) < 25 ? '#00FF88' : '#FF6B35' }}>{imc}</div>
+                <div style={{ fontSize: 32, fontWeight: 900, color: Number(imc) < 25 ? '#00FF88' : '#8A9C96' }}>{imc}</div>
                 <div>
                   <div style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>Índice de Masa Corporal</div>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{imcLabel}</div>
@@ -293,10 +293,10 @@ export default function EvaluacionInicial() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 4 }}>Realiza los tests físicos con el atleta y registra los resultados para establecer su punto de partida.</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-              <Field label="Flexiones máximas (reps)" value={data.pushups} onChange={v => update('pushups', v)} type="number" placeholder="0" icon={<Zap size={14} color="#FF6B35" />} />
-              <Field label="Sentadillas máximas (reps)" value={data.squats} onChange={v => update('squats', v)} type="number" placeholder="0" icon={<Zap size={14} color="#FF6B35" />} />
-              <Field label="Plancha (segundos)" value={data.plankTime} onChange={v => update('plankTime', v)} type="number" placeholder="0" icon={<Activity size={14} color="#FF6B35" />} />
-              <Field label="VO2 max estimado (opcional)" value={data.vo2est} onChange={v => update('vo2est', v)} placeholder="35 ml/kg/min" icon={<Heart size={14} color="#FF6B35" />} />
+              <Field label="Flexiones máximas (reps)" value={data.pushups} onChange={v => update('pushups', v)} type="number" placeholder="0" icon={<Zap size={14} color="#8A9C96" />} />
+              <Field label="Sentadillas máximas (reps)" value={data.squats} onChange={v => update('squats', v)} type="number" placeholder="0" icon={<Zap size={14} color="#8A9C96" />} />
+              <Field label="Plancha (segundos)" value={data.plankTime} onChange={v => update('plankTime', v)} type="number" placeholder="0" icon={<Activity size={14} color="#8A9C96" />} />
+              <Field label="VO2 max estimado (opcional)" value={data.vo2est} onChange={v => update('vo2est', v)} placeholder="35 ml/kg/min" icon={<Heart size={14} color="#8A9C96" />} />
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 6 }}>Lesiones o condiciones médicas actuales</label>
@@ -316,9 +316,9 @@ export default function EvaluacionInicial() {
               <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: 12 }}>Objetivo Principal del Atleta</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                 {OBJECTIVES.map(obj => (
-                  <button key={obj.id} onClick={() => update('objective', obj.id)} style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${data.objective === obj.id ? '#A78BFA' : 'rgba(255,255,255,0.08)'}`, background: data.objective === obj.id ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s', boxShadow: data.objective === obj.id ? '0 0 20px rgba(167,139,250,0.2)' : 'none' }}>
+                  <button key={obj.id} onClick={() => update('objective', obj.id)} style={{ padding: '14px 10px', borderRadius: 14, border: `2px solid ${data.objective === obj.id ? '#C5D1CC' : 'rgba(255,255,255,0.08)'}`, background: data.objective === obj.id ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s', boxShadow: data.objective === obj.id ? '0 0 20px rgba(167,139,250,0.2)' : 'none' }}>
                     <div style={{ fontSize: 24, marginBottom: 6 }}>{obj.emoji}</div>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: data.objective === obj.id ? '#A78BFA' : '#fff' }}>{obj.label}</div>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: data.objective === obj.id ? '#C5D1CC' : '#fff' }}>{obj.label}</div>
                     <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>{obj.desc}</div>
                   </button>
                 ))}
@@ -348,7 +348,7 @@ export default function EvaluacionInicial() {
 
             {/* Resumen */}
             <div style={{ padding: 16, borderRadius: 14, background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.2)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#A78BFA', marginBottom: 10 }}>📋 RESUMEN DE EVALUACIÓN</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#C5D1CC', marginBottom: 10 }}>📋 RESUMEN DE EVALUACIÓN</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13 }}>
                 {[
                   { k: 'Atleta', v: data.name || '—' },

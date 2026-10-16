@@ -1,8 +1,10 @@
 import { Save, Bell, Shield, Palette, Globe, Database, Wifi, DollarSign, KeyRound } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useGymData } from '../hooks/useGymData';
 import { useAuth } from '../contexts/AuthContext';
 import { loadUsers, type UserRole } from '../lib/localUsers';
+import { diasMoratoria, guardarMoratoria } from '../lib/accessGate';
 
 const sections = [
   { id: 'general', icon: Globe, title: 'General', description: 'Nombre del gimnasio, zona horaria y preferencias regionales' },
@@ -78,13 +80,9 @@ function AccesosPanel() {
 }
 
 export default function Settings() {
-  const [gymName, setGymName] = useState('GymFuxionFit Montería');
-  const [timezone, setTimezone] = useState('America/Bogota');
-  const [faceAuth, setFaceAuth] = useState(true);
-  const [antiTailgating, setAntiTailgating] = useState(true);
-  const [emailNotif, setEmailNotif] = useState(true);
-  const [pushNotif, setPushNotif] = useState(true);
-  const [activeTab, setActiveTab] = useState('general');
+  const [params] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(params.get('tab') || 'general');
+  const [moratoria, setMoratoria] = useState(String(diasMoratoria()));
 
   const { plansConfig, updatePlansConfig } = useGymData();
   const [localPlans, setLocalPlans] = useState(() => {
@@ -109,7 +107,8 @@ export default function Settings() {
       mes_pro: Number(localPlans.mes_pro),
       mes_hyrox: Number(localPlans.mes_hyrox)
     });
-    alert("Configuración guardada exitosamente");
+    guardarMoratoria(Number(moratoria));
+    alert('Precios guardados. Recepción ya cobra estos valores. Moratoria: ' + Number(moratoria) + ' días.');
   };
 
   return (
@@ -147,33 +146,43 @@ export default function Settings() {
           {activeTab === 'accesos' && <AccesosPanel />}
           {activeTab === 'pricing' && (
             <div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <DollarSign size={20} color="var(--neon-green)" /> Precios y Planes
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <DollarSign size={20} color="var(--neon-green)" /> Precios del gym
               </h3>
+              <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>
+                Aquí subes o bajas el día y la mensualidad. Escribe el valor en pesos, sin puntos, y toca Guardar cambios arriba. Recepción cobra lo que quede guardado.
+              </p>
               <div className="plans-price-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <div className="input-group">
-                  <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>VALOR DÍA</label>
+                  <label style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, display: 'block' }}>Pago del día</label>
                   <input className="input-field" type="number" value={localPlans.dia} onChange={(e) => setLocalPlans({...localPlans, dia: e.target.value})} />
                 </div>
                 <div className="input-group">
-                  <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>VALOR SEMANA</label>
+                  <label style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, display: 'block' }}>Semana</label>
                   <input className="input-field" type="number" value={localPlans.semana} onChange={(e) => setLocalPlans({...localPlans, semana: e.target.value})} />
                 </div>
                 <div className="input-group">
-                  <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>VALOR QUINCENA</label>
+                  <label style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, display: 'block' }}>Quincena</label>
                   <input className="input-field" type="number" value={localPlans.quincena || ''} onChange={(e) => setLocalPlans({...localPlans, quincena: e.target.value})} />
                 </div>
                 <div className="input-group">
-                  <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MENSUALIDAD BÁSICA</label>
+                  <label style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, display: 'block' }}>Mensualidad básica</label>
                   <input className="input-field" type="number" value={localPlans.mes_basico} onChange={(e) => setLocalPlans({...localPlans, mes_basico: e.target.value})} />
                 </div>
                 <div className="input-group">
-                  <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MENSUALIDAD PRO</label>
+                  <label style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, display: 'block' }}>Mensualidad Pro</label>
                   <input className="input-field" type="number" value={localPlans.mes_pro} onChange={(e) => setLocalPlans({...localPlans, mes_pro: e.target.value})} />
                 </div>
                 <div className="input-group" style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>MENSUALIDAD HYROX</label>
+                  <label style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, display: 'block' }}>Mensualidad HYROX</label>
                   <input className="input-field" type="number" value={localPlans.mes_hyrox} onChange={(e) => setLocalPlans({...localPlans, mes_hyrox: e.target.value})} />
+                </div>
+                <div className="input-group" style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: 14, fontWeight: 800, marginBottom: 8, display: 'block' }}>Moratoria al vencer (días)</label>
+                  <input className="input-field" type="number" min={0} max={30} value={moratoria} onChange={(e) => setMoratoria(e.target.value)} />
+                  <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 8 }}>
+                    Después de que se acaba el plan, el socio todavía puede entrar estos días. Recepción lo ve como moratoria. Si se pasa, ya no entra hasta que renueve.
+                  </p>
                 </div>
               </div>
             </div>

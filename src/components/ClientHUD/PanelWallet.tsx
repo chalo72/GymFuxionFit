@@ -42,11 +42,11 @@ export function PanelWallet({ user }: { user: Member | null }) {
         </div>
         <AiAssist rol="pagos" texto="Mora de plan y consumo del piso (agua, etc.) son cosas distintas. El consumo se paga al salir. La mora se arregla en recepción." />
         <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>CRÉDITO PRODUCTOS</div>
-        <div style={{ fontSize: 28, fontWeight: 950, color: '#A78BFA' }}>${(f?.creditoProductos || 0).toLocaleString('es-CO')}</div>
+        <div style={{ fontSize: 28, fontWeight: 950, color: '#C5D1CC' }}>${(f?.creditoProductos || 0).toLocaleString('es-CO')}</div>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 12 }}>CRÉDITO MENSUALIDAD</div>
         <div style={{ fontSize: 28, fontWeight: 950, color: f && f.creditoMembresia > 0 ? 'var(--danger-red)' : 'var(--neon-green)' }}>${(f?.creditoMembresia || 0).toLocaleString('es-CO')}</div>
         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 16 }}>CONSUMO EN EL GYM HOY</div>
-        <div style={{ fontSize: 28, fontWeight: 950, color: '#FFD700' }}>${tabTotal(user.openTab).toLocaleString('es-CO')}</div>
+        <div style={{ fontSize: 28, fontWeight: 950, color: '#C5D1CC' }}>${tabTotal(user.openTab).toLocaleString('es-CO')}</div>
         {(user.openTab || []).map((l) => (
           <div key={l.id} style={{ fontSize: 13, marginTop: 6 }}>{l.qty}× {l.name}</div>
         ))}

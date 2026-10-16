@@ -121,7 +121,7 @@ export default function Catalogs() {
             {sup.imageUrl && <div style={{ height: 100, margin: '-16px -16px 16px -16px', background: `url(${sup.imageUrl}) center/cover` }} />}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <div style={{ fontWeight: 800, fontSize: 16 }}>{sup.name}</div>
-              <span style={{ fontSize: 10, background: 'rgba(167,139,250,0.1)', color: '#A78BFA', padding: '2px 8px', borderRadius: 12 }}>{sup.type}</span>
+              <span style={{ fontSize: 10, background: 'rgba(167,139,250,0.1)', color: '#C5D1CC', padding: '2px 8px', borderRadius: 12 }}>{sup.type}</span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>🌿 {sup.naturalLevel}</div>
             <div style={{ fontSize: 13, marginBottom: 8 }}><strong>Beneficios:</strong> <span style={{ color: 'var(--text-secondary)' }}>{sup.benefits.length > 60 ? sup.benefits.substring(0,60)+'...' : sup.benefits}</span></div>
@@ -140,14 +140,14 @@ export default function Catalogs() {
             {nut.imageUrl && <div style={{ height: 120, margin: '-16px -16px 16px -16px', background: `url(${nut.imageUrl}) center/cover` }} />}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
               <div style={{ fontWeight: 800, fontSize: 16 }}>{nut.name}</div>
-              <span style={{ fontSize: 10, background: 'rgba(255,214,0,0.1)', color: '#FFD600', padding: '2px 8px', borderRadius: 12 }}>{nut.category}</span>
+              <span style={{ fontSize: 10, background: 'rgba(255,214,0,0.1)', color: '#C5D1CC', padding: '2px 8px', borderRadius: 12 }}>{nut.category}</span>
             </div>
             <div style={{ fontSize: 12, marginBottom: 12, color: 'var(--text-secondary)' }}>{nut.description}</div>
             <div style={{ display: 'flex', gap: 12, background: 'rgba(0,0,0,0.2)', padding: 8, borderRadius: 8 }}>
               <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 14, fontWeight: 900, color: '#fff' }}>{nut.macros.calories}</div><div style={{ fontSize: 9, color: 'var(--text-muted)' }}>KCAL</div></div>
               <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 14, fontWeight: 900, color: 'var(--neon-green)' }}>{nut.macros.protein}g</div><div style={{ fontSize: 9, color: 'var(--text-muted)' }}>PRO</div></div>
-              <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 14, fontWeight: 900, color: '#FFD600' }}>{nut.macros.carbs}g</div><div style={{ fontSize: 9, color: 'var(--text-muted)' }}>CARB</div></div>
-              <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 14, fontWeight: 900, color: '#FF6B35' }}>{nut.macros.fats}g</div><div style={{ fontSize: 9, color: 'var(--text-muted)' }}>FAT</div></div>
+              <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 14, fontWeight: 900, color: '#C5D1CC' }}>{nut.macros.carbs}g</div><div style={{ fontSize: 9, color: 'var(--text-muted)' }}>CARB</div></div>
+              <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 14, fontWeight: 900, color: '#8A9C96' }}>{nut.macros.fats}g</div><div style={{ fontSize: 9, color: 'var(--text-muted)' }}>FAT</div></div>
             </div>
           </div>
         ))}
@@ -174,10 +174,10 @@ export default function Catalogs() {
         <button onClick={() => setActiveTab('functional')} style={{ padding: '12px 24px', borderRadius: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer', background: activeTab === 'functional' ? 'var(--danger-red)' : 'rgba(255,255,255,0.05)', color: activeTab === 'functional' ? '#fff' : '#fff', transition: '0.2s' }}>
           <Activity size={18} /> WODs & Funcional ({(catalogs.functional || []).length})
         </button>
-        <button onClick={() => setActiveTab('supplements')} style={{ padding: '12px 24px', borderRadius: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer', background: activeTab === 'supplements' ? '#A78BFA' : 'rgba(255,255,255,0.05)', color: activeTab === 'supplements' ? '#000' : '#fff', transition: '0.2s' }}>
+        <button onClick={() => setActiveTab('supplements')} style={{ padding: '12px 24px', borderRadius: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer', background: activeTab === 'supplements' ? '#C5D1CC' : 'rgba(255,255,255,0.05)', color: activeTab === 'supplements' ? '#000' : '#fff', transition: '0.2s' }}>
           <Pill size={18} /> Suplementación ({catalogs.supplements.length})
         </button>
-        <button onClick={() => setActiveTab('nutrition')} style={{ padding: '12px 24px', borderRadius: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer', background: activeTab === 'nutrition' ? '#FFD600' : 'rgba(255,255,255,0.05)', color: activeTab === 'nutrition' ? '#000' : '#fff', transition: '0.2s' }}>
+        <button onClick={() => setActiveTab('nutrition')} style={{ padding: '12px 24px', borderRadius: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer', background: activeTab === 'nutrition' ? '#C5D1CC' : 'rgba(255,255,255,0.05)', color: activeTab === 'nutrition' ? '#000' : '#fff', transition: '0.2s' }}>
           <Utensils size={18} /> Nutrición ({catalogs.nutrition.length})
         </button>
       </div>
@@ -199,7 +199,7 @@ export default function Catalogs() {
       ════════════════════════════════════════════════════ */}
       {selectedItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div className="glass-card" style={{ width: '100%', maxWidth: 800, maxHeight: '90vh', overflowY: 'auto', background: 'var(--space-dark)', borderRadius: 24, padding: 0, border: `1px solid ${itemType === 'exercises' ? 'var(--neon-green)' : itemType === 'functional' ? 'var(--danger-red)' : itemType === 'supplements' ? '#A78BFA' : '#FFD600'}` }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: 800, maxHeight: '90vh', overflowY: 'auto', background: 'var(--space-dark)', borderRadius: 24, padding: 0, border: `1px solid ${itemType === 'exercises' ? 'var(--neon-green)' : itemType === 'functional' ? 'var(--danger-red)' : itemType === 'supplements' ? '#C5D1CC' : '#C5D1CC'}` }}>
             
             {/* Header del Modal */}
             <div style={{ height: (selectedItem.imageUrl || formData.imageUrl) && !isEditing ? 350 : 150, position: 'relative', background: (selectedItem.imageUrl || formData.imageUrl) && !isEditing ? `url(${selectedItem.imageUrl || formData.imageUrl}) center/cover` : (itemType === 'exercises' ? 'linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,0,0,0.8))' : itemType === 'functional' ? 'linear-gradient(135deg, rgba(255,61,87,0.1), rgba(0,0,0,0.8))' : itemType === 'supplements' ? 'linear-gradient(135deg, rgba(167,139,250,0.1), rgba(0,0,0,0.8))' : 'linear-gradient(135deg, rgba(255,214,0,0.1), rgba(0,0,0,0.8))'), display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -219,8 +219,8 @@ export default function Catalogs() {
                 <div style={{ textAlign: 'center', opacity: 0.8, position: 'relative', zIndex: 5 }}>
                   {itemType === 'exercises' && <Dumbbell size={60} color="var(--neon-green)" />}
                   {itemType === 'functional' && <Activity size={60} color="var(--danger-red)" />}
-                  {itemType === 'supplements' && <Pill size={60} color="#A78BFA" />}
-                  {itemType === 'nutrition' && <Utensils size={60} color="#FFD600" />}
+                  {itemType === 'supplements' && <Pill size={60} color="#C5D1CC" />}
+                  {itemType === 'nutrition' && <Utensils size={60} color="#C5D1CC" />}
                 </div>
               )}
 
@@ -411,17 +411,17 @@ export default function Catalogs() {
                     <>
                       <h2 style={{ fontSize: 28, fontWeight: 900, marginBottom: 8 }}>{selectedItem.name}</h2>
                       <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-                        <span style={{ fontSize: 12, background: 'rgba(167,139,250,0.1)', color: '#A78BFA', padding: '4px 12px', borderRadius: 20, fontWeight: 700 }}>Tipo: {selectedItem.type}</span>
+                        <span style={{ fontSize: 12, background: 'rgba(167,139,250,0.1)', color: '#C5D1CC', padding: '4px 12px', borderRadius: 20, fontWeight: 700 }}>Tipo: {selectedItem.type}</span>
                         <span style={{ fontSize: 12, background: 'rgba(255,255,255,0.05)', padding: '4px 12px', borderRadius: 20 }}>Origen: {selectedItem.naturalLevel}</span>
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 16 }}><h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 12, color: '#A78BFA' }}>Beneficios Clínicos</h3><p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>{selectedItem.benefits}</p></div>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 16 }}><h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 12, color: '#A78BFA' }}>Dosificación</h3><p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>{selectedItem.dosage}</p></div>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 16 }}><h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 12, color: '#C5D1CC' }}>Beneficios Clínicos</h3><p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>{selectedItem.benefits}</p></div>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: 20, borderRadius: 16 }}><h3 style={{ fontSize: 14, fontWeight: 800, marginBottom: 12, color: '#C5D1CC' }}>Dosificación</h3><p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>{selectedItem.dosage}</p></div>
                       </div>
 
                       <div style={{ marginTop: 24, padding: 16, background: 'rgba(167,139,250,0.05)', borderRadius: 12, border: '1px solid rgba(167,139,250,0.2)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <CheckCircle2 size={24} color="#A78BFA" />
+                        <CheckCircle2 size={24} color="#C5D1CC" />
                         <div>
                           <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>Aprobado por el Ecosistema Antigravity</div>
                           <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Este suplemento cuenta con respaldo científico y es seguro para el rendimiento deportivo de alto nivel.</div>
@@ -432,7 +432,7 @@ export default function Catalogs() {
                   {itemType === 'nutrition' && (
                     <>
                       <h2 style={{ fontSize: 28, fontWeight: 900, marginBottom: 8 }}>{selectedItem.name}</h2>
-                      <span style={{ fontSize: 12, background: 'rgba(255,214,0,0.1)', color: '#FFD600', padding: '4px 12px', borderRadius: 20, fontWeight: 700, display: 'inline-block', marginBottom: 20 }}>{selectedItem.category}</span>
+                      <span style={{ fontSize: 12, background: 'rgba(255,214,0,0.1)', color: '#C5D1CC', padding: '4px 12px', borderRadius: 20, fontWeight: 700, display: 'inline-block', marginBottom: 20 }}>{selectedItem.category}</span>
                       <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.6, marginBottom: 24 }}>{selectedItem.description}</p>
                       
                       <div style={{ display: 'flex', gap: 16, background: 'rgba(0,0,0,0.3)', padding: 20, borderRadius: 16, marginBottom: 30 }}>
@@ -440,16 +440,16 @@ export default function Catalogs() {
                         <div style={{ width: 1, background: 'rgba(255,255,255,0.1)' }} />
                         <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 24, fontWeight: 900, color: 'var(--neon-green)' }}>{selectedItem.macros?.protein || 0}g</div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>PROTEÍNA</div></div>
                         <div style={{ width: 1, background: 'rgba(255,255,255,0.1)' }} />
-                        <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 24, fontWeight: 900, color: '#FFD600' }}>{selectedItem.macros?.carbs || 0}g</div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>CARBOS</div></div>
+                        <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 24, fontWeight: 900, color: '#C5D1CC' }}>{selectedItem.macros?.carbs || 0}g</div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>CARBOS</div></div>
                         <div style={{ width: 1, background: 'rgba(255,255,255,0.1)' }} />
-                        <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 24, fontWeight: 900, color: '#FF6B35' }}>{selectedItem.macros?.fats || 0}g</div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>GRASAS</div></div>
+                        <div style={{ textAlign: 'center', flex: 1 }}><div style={{ fontSize: 24, fontWeight: 900, color: '#8A9C96' }}>{selectedItem.macros?.fats || 0}g</div><div style={{ fontSize: 11, color: 'var(--text-muted)' }}>GRASAS</div></div>
                       </div>
 
-                      <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16, color: '#FFD600' }}>Ingredientes Recomendados</h3>
+                      <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16, color: '#C5D1CC' }}>Ingredientes Recomendados</h3>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                         {selectedItem.ingredients?.map((ing: string, i: number) => (
                           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,0.02)', padding: '10px 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFD600' }} /><span style={{ fontSize: 14, color: '#fff' }}>{ing}</span>
+                            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#C5D1CC' }} /><span style={{ fontSize: 14, color: '#fff' }}>{ing}</span>
                           </div>
                         ))}
                       </div>

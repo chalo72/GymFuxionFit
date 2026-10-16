@@ -20,27 +20,34 @@ type Vista =
   | 'libros';
 
 const ATAJOS: { id: Vista; label: string; hint: string; icon: typeof Banknote }[] = [
-  { id: 'caja', label: 'Caja principal', hint: 'Lo que entró y salió hoy', icon: Banknote },
-  { id: 'cuadre', label: 'Cuadre de caja', hint: 'Contar efectivo y cerrar', icon: Scale },
-  { id: 'creditos', label: 'Créditos', hint: 'Lo que los socios deben', icon: HandCoins },
+  { id: 'caja', label: 'Caja principal', hint: 'Abrir turno y ver el cajón', icon: Banknote },
+  { id: 'cuadre', label: 'Cuadre de caja', hint: 'Contar billetes y cerrar', icon: Scale },
+  { id: 'nomina', label: 'Personal', hint: 'Empleados, nómina y préstamos', icon: Users },
   { id: 'cobros', label: 'Cobros', hint: 'Registrar un pago', icon: Wallet },
 ];
 
 const RESTO: { id: Vista; label: string; icon: typeof Banknote }[] = [
-  { id: 'pasados', label: 'Cuadres del pasado', icon: Archive },
+  { id: 'pasados', label: 'Turnos cerrados', icon: Archive },
   { id: 'boveda', label: 'Bóveda', icon: Archive },
   { id: 'prestamos', label: 'Préstamos del personal', icon: Users },
   { id: 'asistencia', label: 'Asistencia del personal', icon: ClipboardCheck },
   { id: 'ventas', label: 'Ventas e inventario', icon: Package },
   { id: 'nomina', label: 'Nómina y gastos', icon: BadgeDollarSign },
+  { id: 'creditos', label: 'Créditos de socios', icon: HandCoins },
   { id: 'libros', label: 'Libros', icon: BookOpen },
 ];
 
+const VISTAS: Vista[] = ['caja', 'cuadre', 'pasados', 'boveda', 'creditos', 'prestamos', 'asistencia', 'ventas', 'cobros', 'nomina', 'libros'];
+
+function vistaDeUrl(tab: string | null): Vista {
+  if (tab === 'personal' || tab === 'nomina') return 'nomina';
+  return VISTAS.includes(tab as Vista) ? (tab as Vista) : 'caja';
+}
+
 export default function MoneyHub() {
-  const [params] = useSearchParams();
-  const desdeUrl = params.get('tab');
-  const inicial: Vista = desdeUrl === 'cobros' || desdeUrl === 'libros' ? desdeUrl : 'caja';
-  const [vista, setVista] = useState<Vista>(inicial);
+  const [params, setParams] = useSearchParams();
+  const vista = vistaDeUrl(params.get('tab'));
+  const ir = (v: Vista) => setParams(v === 'caja' ? {} : { tab: v === 'nomina' ? 'personal' : v }, { replace: true });
   const [nominaModo, setNominaModo] = useState<'payroll' | 'expense'>('payroll');
   const [bovedaModo, setBovedaModo] = useState<'goals' | 'agua'>('goals');
 
@@ -48,7 +55,7 @@ export default function MoneyHub() {
     <div className="finanzas-hub">
       <AiAssist
         rol="finanzas"
-        texto="Empieza por Caja o Cuadre. El efectivo del cajón y Nequi van separados. Créditos es lo que deben; Cobros es cuando pagan. Nómina descuenta préstamos del personal."
+        texto="Personal es donde agregas al equipo: aseo, recepción, entrenador y gerencia. El préstamo no se crea solo: lo registras si quieres. En la nómina se descuenta la cuota, no toda la deuda."
       />
 
       <div className="fin-atajos">
@@ -56,7 +63,7 @@ export default function MoneyHub() {
           const Icon = t.icon;
           const on = vista === t.id;
           return (
-            <button key={t.id} type="button" className={on ? 'fin-atajo on' : 'fin-atajo'} onClick={() => setVista(t.id)}>
+            <button key={t.id} type="button" className={on ? 'fin-atajo on' : 'fin-atajo'} onClick={() => ir(t.id)}>
               <Icon size={22} />
               <span>
                 <strong>{t.label}</strong>
@@ -72,7 +79,7 @@ export default function MoneyHub() {
           const Icon = t.icon;
           const on = vista === t.id;
           return (
-            <button key={t.id} type="button" className={on ? 'fin-pill on' : 'fin-pill'} onClick={() => setVista(t.id)}>
+            <button key={t.id} type="button" className={on ? 'fin-pill on' : 'fin-pill'} onClick={() => ir(t.id)}>
               <Icon size={16} />
               {t.label}
             </button>
@@ -81,7 +88,7 @@ export default function MoneyHub() {
       </div>
 
       <div className="fin-cuerpo">
-        {vista === 'caja' && <CajaHoy />}
+        {vista === 'caja' && <CajaHoy onCuadre={() => ir('cuadre')} />}
         {vista === 'cuadre' && <CuadreCaja />}
         {vista === 'pasados' && <CuadresPasados />}
         {vista === 'creditos' && <ListaCreditos />}

@@ -44,8 +44,8 @@ export default function EliteRecovery() {
 
   const getStatusColor = (score: number) => {
     if (score >= 80) return '#00FF88';
-    if (score >= 60) return '#FFD600';
-    return '#FF3D57';
+    if (score >= 60) return '#C5D1CC';
+    return '#C5D1CC';
   };
 
   return (
@@ -71,7 +71,7 @@ export default function EliteRecovery() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div className="glass-card" style={{ padding: 32, border: '1px solid rgba(255,61,87,0.1)' }}>
             <h2 style={{ fontSize: 20, fontWeight: 900, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Battery color="#FF3D57" /> Nivel de Estrés y Cansancio
+              <Battery color="#C5D1CC" /> Nivel de Estrés y Cansancio
             </h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -81,7 +81,7 @@ export default function EliteRecovery() {
                   <span>Estrés Externo (Trabajo/Personal)</span>
                   <span style={{ color: '#fff' }}>{recovery.externalStress}/10</span>
                 </label>
-                <input type="range" min="1" max="10" value={recovery.externalStress} onChange={(e) => setRecovery({...recovery, externalStress: Number(e.target.value)})} style={{ width: '100%', accentColor: '#FF3D57' }} />
+                <input type="range" min="1" max="10" value={recovery.externalStress} onChange={(e) => setRecovery({...recovery, externalStress: Number(e.target.value)})} style={{ width: '100%', accentColor: '#C5D1CC' }} />
               </div>
 
               {/* Calidad de Sueño */}
@@ -90,7 +90,7 @@ export default function EliteRecovery() {
                   <span>Calidad y Horas de Sueño</span>
                   <span style={{ color: '#fff' }}>{recovery.sleepQuality}/10</span>
                 </label>
-                <input type="range" min="1" max="10" value={recovery.sleepQuality} onChange={(e) => setRecovery({...recovery, sleepQuality: Number(e.target.value)})} style={{ width: '100%', accentColor: '#A78BFA' }} />
+                <input type="range" min="1" max="10" value={recovery.sleepQuality} onChange={(e) => setRecovery({...recovery, sleepQuality: Number(e.target.value)})} style={{ width: '100%', accentColor: '#C5D1CC' }} />
               </div>
 
               {/* Hidratación */}
@@ -99,7 +99,7 @@ export default function EliteRecovery() {
                   <span>Hidratación Diaria (Litros)</span>
                   <span style={{ color: '#fff' }}>{recovery.hydration}L</span>
                 </label>
-                <input type="range" min="1" max="6" step="0.5" value={recovery.hydration} onChange={(e) => setRecovery({...recovery, hydration: Number(e.target.value)})} style={{ width: '100%', accentColor: '#00F0FF' }} />
+                <input type="range" min="1" max="6" step="0.5" value={recovery.hydration} onChange={(e) => setRecovery({...recovery, hydration: Number(e.target.value)})} style={{ width: '100%', accentColor: '#00FF88' }} />
               </div>
 
               {/* NEAT / Pasos */}
@@ -108,14 +108,14 @@ export default function EliteRecovery() {
                   <span>NEAT (Pasos Diarios)</span>
                   <span style={{ color: '#fff' }}>{recovery.neatSteps.toLocaleString()} pasos</span>
                 </label>
-                <input type="range" min="2000" max="15000" step="500" value={recovery.neatSteps} onChange={(e) => setRecovery({...recovery, neatSteps: Number(e.target.value)})} style={{ width: '100%', accentColor: '#FFD600' }} />
+                <input type="range" min="2000" max="15000" step="500" value={recovery.neatSteps} onChange={(e) => setRecovery({...recovery, neatSteps: Number(e.target.value)})} style={{ width: '100%', accentColor: '#C5D1CC' }} />
               </div>
 
               {/* Nutrición */}
               <div style={{ padding: 20, background: 'rgba(167,139,250,0.05)', borderRadius: 16, border: '1px solid rgba(167,139,250,0.1)' }}>
-                <h3 style={{ fontSize: 14, fontWeight: 800, color: '#A78BFA', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Utensils size={16} /> Alimentación Sugerida</h3>
+                <h3 style={{ fontSize: 14, fontWeight: 800, color: '#C5D1CC', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}><Utensils size={16} /> Alimentación Sugerida</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <button onClick={() => setActiveDiet('deficit')}  style={{ padding: 12, borderRadius: 12, border: activeDiet === 'deficit' ? '1px solid #FF3D57' : '1px solid rgba(255,255,255,0.1)', background: activeDiet === 'deficit' ? 'rgba(255,61,87,0.1)' : 'rgba(255,255,255,0.03)', color: activeDiet === 'deficit' ? '#FF3D57' : '#fff', fontSize: 12, fontWeight: 700, transition: 'all 0.2s' }}>Déficit Agresivo</button>
+                  <button onClick={() => setActiveDiet('deficit')}  style={{ padding: 12, borderRadius: 12, border: activeDiet === 'deficit' ? '1px solid #C5D1CC' : '1px solid rgba(255,255,255,0.1)', background: activeDiet === 'deficit' ? 'rgba(255,61,87,0.1)' : 'rgba(255,255,255,0.03)', color: activeDiet === 'deficit' ? '#C5D1CC' : '#fff', fontSize: 12, fontWeight: 700, transition: 'all 0.2s' }}>Déficit Agresivo</button>
                   <button onClick={() => setActiveDiet('superavit')}  style={{ padding: 12, borderRadius: 12, border: activeDiet === 'superavit' ? '1px solid var(--neon-green)' : '1px solid rgba(255,255,255,0.1)', background: activeDiet === 'superavit' ? 'rgba(0,255,136,0.1)' : 'rgba(255,255,255,0.03)', color: activeDiet === 'superavit' ? 'var(--neon-green)' : '#fff', fontSize: 12, fontWeight: 700, transition: 'all 0.2s' }}>Superávit Controlado</button>
                 </div>
               </div>
@@ -151,13 +151,13 @@ export default function EliteRecovery() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {recovery.sleepQuality < 7 && (
                 <div style={{ padding: 14, borderRadius: 12, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.2)', display: 'flex', gap: 12 }}>
-                  <Moon size={18} color="#A78BFA" />
+                  <Moon size={18} color="#C5D1CC" />
                   <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Sueño insuficiente. Reducir volumen de entrenamiento un 20% para evitar fatiga residual.</p>
                 </div>
               )}
               {alostaticLoad > 7 && (
                 <div style={{ padding: 14, borderRadius: 12, background: 'rgba(255,61,87,0.1)', border: '1px solid rgba(255,61,87,0.2)', display: 'flex', gap: 12 }}>
-                  <AlertTriangle size={18} color="#FF3D57" />
+                  <AlertTriangle size={18} color="#C5D1CC" />
                   <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Carga Alostática crítica. El estrés externo está drenando tu capacidad de adaptación.</p>
                 </div>
               )}

@@ -12,7 +12,8 @@ import {
 } from 'lucide-react';
 import { useGymData, Member, roundPrice } from '../hooks/useGymData';
 import { initials } from '../lib/safeText';
-import { canEnterGym, memberFromQr, memberQrPayload } from '../lib/accessGate';
+import { canEnterGym, diasMoratoria, memberFromQr, memberQrPayload } from '../lib/accessGate';
+import { asignarNumeros, leerPasos, registrarPaso, type PasoPuerta } from '../lib/puerta';
 import { aplicarAbono, fichaCuenta, mergeTab, sumarCredito, tabTotal } from '../lib/cuentaPiso';
 import { useGymConfig, DEFAULT_PRODUCTS } from '../contexts/GymConfigContext';
 import { AiAssist } from '../components/AiAssist';
@@ -71,6 +72,13 @@ export default function Reception() {
   }, [transactions, todayStr]);
 
   const enSala = useMemo(() => members.filter((m) => m.presence?.inGym), [members]);
+  const numeros = useMemo(() => asignarNumeros(members.map((m) => m.id)), [members]);
+  const [pasos, setPasos] = useState<PasoPuerta[]>(() => leerPasos());
+  const entraronHoy = useMemo(() => {
+    const ids = new Set(pasos.filter((p) => p.date === todayStr && p.action === 'ENTRADA').map((p) => p.memberId));
+    members.forEach((m) => { if (String(m.lastVisit || '').startsWith(todayStr)) ids.add(m.id); });
+    return ids.size;
+  }, [pasos, members, todayStr]);
   const [logs, setLogs] = useState<any[]>([]);
   const [tick, setTick] = useState(0);
   const [search, setSearch] = useState('');
@@ -130,12 +138,17 @@ export default function Reception() {
     if (activeTab !== 'manual') { setSuggestions([]); return; }
     const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const q = norm(search);
+    const digits = search.replace(/\D/g, '');
     const filtered = [...members]
-      .filter((m) => !q || (m.name && norm(m.name).includes(q)))
+      .filter((m) => {
+        if (!q) return true;
+        const num = numeros[m.id] || '';
+        return (m.name && norm(m.name).includes(q)) || (!!digits && (num === digits.padStart(3, '0') || num.endsWith(digits) || num.includes(digits)));
+      })
       .sort((a, b) => Number(!!b.presence?.inGym) - Number(!!a.presence?.inGym) || (a.name || '').localeCompare(b.name || ''))
       .slice(0, 40);
     setSuggestions(filtered);
-  }, [search, members, activeTab]);
+  }, [search, members, activeTab, numeros]);
 
   const startScanning = async (type: CheckInMethod) => {
     setActiveTab(type);
@@ -155,7 +168,11 @@ export default function Reception() {
   const handleSuccess = async (nameOrMember: string | Member, method: CheckInMethod) => {
     let masterMember: Member | undefined;
     if (typeof nameOrMember === 'string') {
-      masterMember = members.find(m => m.name && nameOrMember && m.name.toLowerCase() === nameOrMember.toLowerCase());
+      const digits = nameOrMember.replace(/\D/g, '');
+      masterMember = digits
+        ? members.find((m) => numeros[m.id] === digits.padStart(3, '0') || numeros[m.id] === digits)
+        : undefined;
+      if (!masterMember) masterMember = members.find(m => m.name && nameOrMember && m.name.toLowerCase() === nameOrMember.toLowerCase());
       if (!masterMember && method === 'manual') {
         setStatus('error');
         setTimeout(() => setStatus('idle'), 2000);
@@ -184,21 +201,29 @@ export default function Reception() {
         setTimeout(() => { setStatus('idle'); stopCamera(); }, 1000);
         return;
       }
+      if (gate.moratoria) {
+        showToast(`Entra en moratoria: lleva ${gate.diasVencido} día(s) vencido. Cortesía de ${diasMoratoria()} días.`);
+      }
     }
 
     const nameToUse = masterMember.name;
+    const hora = new Date().toLocaleTimeString().slice(0, 5);
+    const fecha = new Date().toISOString().slice(0, 10);
+    const numero = numeros[masterMember.id] || '—';
     if (yaDentro) {
       await updateMemberStatus(masterMember.id, {
         presence: { inGym: false, enteredAt: live.presence?.enteredAt || Date.now(), method, doing: undefined },
       });
-      setLogs((prev) => [{ id: Date.now(), name: nameToUse, action: 'SALIDA', time: new Date().toLocaleTimeString().slice(0, 5), method, color: '#ff4d4d' }, ...prev]);
+      setPasos(registrarPaso({ memberId: masterMember.id, name: nameToUse, numero, action: 'SALIDA', time: hora, date: fecha, method }));
+      setLogs((prev) => [{ id: Date.now(), name: nameToUse, action: 'SALIDA', time: hora, method, color: '#C5D1CC' }, ...prev]);
     } else {
       await updateMemberStatus(masterMember.id, {
         presence: { inGym: true, enteredAt: Date.now(), method, doing: live.sessionLive ? 'Sesión con entrenador' : 'En sala' },
         lastVisit: new Date().toISOString(),
         visits: (live.visits || 0) + 1,
       });
-      setLogs((prev) => [{ id: Date.now(), name: nameToUse, action: 'ENTRADA', time: new Date().toLocaleTimeString().slice(0, 5), method, color: 'var(--neon-green)' }, ...prev]);
+      setPasos(registrarPaso({ memberId: masterMember.id, name: nameToUse, numero, action: 'ENTRADA', time: hora, date: fecha, method }));
+      setLogs((prev) => [{ id: Date.now(), name: nameToUse, action: 'ENTRADA', time: hora, method, color: 'var(--neon-green)' }, ...prev]);
     }
 
     setStatus('complete');
@@ -332,7 +357,7 @@ export default function Reception() {
       await updateMemberStatus(selectedMember.id, {
         openTab: mergeTab(live.openTab, productos.map((i) => ({ id: i.id, name: i.name, qty: i.qty, price: i.price }))),
       });
-      setLogs((prev) => [{ id: Date.now(), name: selectedMember.name, action: 'CUENTA PISO', time: new Date().toLocaleTimeString().slice(0, 5), method: 'Recepción', color: '#FFD700' }, ...prev]);
+      setLogs((prev) => [{ id: Date.now(), name: selectedMember.name, action: 'CUENTA PISO', time: new Date().toLocaleTimeString().slice(0, 5), method: 'Recepción', color: '#C5D1CC' }, ...prev]);
       setCart([]);
       showToast('Cargado a la cuenta. Paga al salir. El socio lo ve en su app.');
     } catch (e) {
@@ -510,6 +535,25 @@ export default function Reception() {
         rol="recepción"
         texto="Busca al atleta en la lista. En su ficha, productos y mensualidad van separados. Si no tiene plata: Déjar en crédito. Si trae un abono, regístralo ahí: primero baja productos y después la mensualidad. Efectivo y Nequi entran a caja; el crédito no."
       />
+      <div className="puerta-rapida">
+        <div className="puerta-conteo">
+          <strong>{enSala.length}</strong>
+          <span>en sala ahora</span>
+        </div>
+        <div className="puerta-conteo">
+          <strong>{entraronHoy}</strong>
+          <span>entraron hoy</span>
+        </div>
+        <div className="puerta-conteo">
+          <strong>{members.length}</strong>
+          <span>socios en total</span>
+        </div>
+        <p>
+          Misma puerta para gerencia y recepción. Escribe el número (001) o el nombre y toca Entrar.
+          Cámara y QR siguen aparte. Día ${Number(plans.find((p) => p.id === 'dia')?.price || 0).toLocaleString('es-CO')} · mes básico ${Number(plans.find((p) => p.id === 'mes_basico')?.price || 0).toLocaleString('es-CO')}.
+          Moratoria {diasMoratoria()} días después de vencer.
+        </p>
+      </div>
       <Link to="/avisos" style={{ fontSize: 13, color: 'var(--neon-green)', fontWeight: 700, marginTop: -12 }}>Lista de avisos WhatsApp (mora / por vencer) →</Link>
 
       {/* ── TOAST GLOBAL ── */}
@@ -619,12 +663,19 @@ export default function Reception() {
                           style={{ width: '100%', textAlign: 'left', marginBottom: 8, padding: '12px 14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.25)', color: '#fff', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
                         >
                           <span>
-                            <span style={{ fontWeight: 800 }}>{m.name}</span>
+                            <span style={{ fontWeight: 800 }}>#{numeros[m.id] || '—'} {m.name}</span>
                             <span style={{ display: 'block', fontSize: 11, color: m.presence?.inGym ? 'var(--neon-green)' : 'var(--text-muted)' }}>
                               {m.presence?.inGym ? 'En sala' : 'Afuera'} · {m.plan || 'Sin plan'}
                             </span>
                           </span>
-                          {(m.debt || 0) > 0 && <span style={{ fontSize: 11, color: 'var(--danger-red)', fontWeight: 800 }}>Debe ${(m.debt || 0).toLocaleString('es-CO')}</span>}
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {(m.debt || 0) > 0 && <span style={{ fontSize: 11, color: 'var(--danger-red)', fontWeight: 800 }}>Debe ${(m.debt || 0).toLocaleString('es-CO')}</span>}
+                            <span
+                              role="button"
+                              onClick={(e) => { e.stopPropagation(); handleSuccess(m, 'manual'); }}
+                              style={{ background: m.presence?.inGym ? 'rgba(255,61,87,0.15)' : 'var(--neon-green)', color: m.presence?.inGym ? '#C5D1CC' : '#04140c', fontWeight: 900, fontSize: 12, padding: '10px 14px', borderRadius: 12 }}
+                            >{m.presence?.inGym ? 'Salir' : 'Entrar'}</span>
+                          </span>
                         </button>
                       ))}
                       {suggestions.length === 0 && <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>No hay atletas con ese nombre.</div>}
@@ -731,7 +782,7 @@ export default function Reception() {
                      ))}
                   </div>
                   <button onClick={handleFinalizeSale} disabled={cart.length === 0 || isProcessing} style={{ width:'100%', padding:20, borderRadius:20, background: cart.length > 0 && !isProcessing ? 'var(--neon-green)' : 'rgba(255,255,255,0.05)', color:'#000', fontWeight:950, cursor: isProcessing ? 'wait' : 'pointer', transition: '0.4s', boxShadow: cart.length > 0 ? '0 10px 30px rgba(0,255,136,0.3)' : 'none', letterSpacing: 1 }}>{isProcessing ? 'PROCESANDO...' : 'CONFIRMAR Y COBRAR'}</button>
-                  <button type="button" onClick={handleCargarCuenta} disabled={cart.length === 0 || isProcessing} style={{ width:'100%', marginTop: 8, padding:14, borderRadius:16, background: 'transparent', color:'#FFD700', border: '1px solid rgba(255,215,0,0.4)', fontWeight:800, cursor: 'pointer', fontSize: 12 }}>CARGAR A CUENTA (paga al salir)</button>
+                  <button type="button" onClick={handleCargarCuenta} disabled={cart.length === 0 || isProcessing} style={{ width:'100%', marginTop: 8, padding:14, borderRadius:16, background: 'transparent', color:'#C5D1CC', border: '1px solid rgba(255,215,0,0.4)', fontWeight:800, cursor: 'pointer', fontSize: 12 }}>CARGAR A CUENTA (paga al salir)</button>
                </div>
             )}
          </div>
@@ -756,7 +807,7 @@ export default function Reception() {
                     <div style={{ display: 'flex', gap: 18, alignItems: 'center' }}>
                        <div style={{ width: 50, height: 50, borderRadius: 16, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(0,255,136,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--neon-green)', fontWeight: 950, fontSize: 18 }}>{initials(m.name)}</div>
                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 16, fontWeight: 950, color: '#fff' }}>{m.name}</div>
+                          <div style={{ fontSize: 16, fontWeight: 950, color: '#fff' }}>#{numeros[m.id] || '—'} {m.name}</div>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 800 }}>{m.plan || 'Sin plan'} · {f.plan}</div>
                        </div>
                     </div>
@@ -764,7 +815,7 @@ export default function Reception() {
                       Entró {m.presence?.method === 'geo' ? 'por GPS' : (m.presence?.method || 'recepción')} · {f.haciendo || 'En sala'}{f.trainer ? ` · ${f.trainer}` : ''}
                     </div>
                     {(m.openTab || []).length > 0 && (
-                      <div style={{ marginTop: 10, fontSize: 12, color: '#FFD700' }}>
+                      <div style={{ marginTop: 10, fontSize: 12, color: '#C5D1CC' }}>
                         Consumo: {(m.openTab || []).map((l) => `${l.qty}× ${l.name}`).join(', ')} = ${f.consumo.toLocaleString('es-CO')}
                       </div>
                     )}
@@ -774,7 +825,7 @@ export default function Reception() {
                        <div style={{ fontSize: 12, color: 'var(--neon-green)', fontWeight: 950, display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14}/> {fmtTime(Math.floor((Date.now() - (m.presence?.enteredAt || Date.now())) / 1000))}</div>
                        <div style={{ display: 'flex', gap: 6 }}>
                          {f.consumo > 0 && (
-                           <button type="button" onClick={(e) => { e.stopPropagation(); handleCobrarTab(m); }} style={{ background: 'rgba(255,215,0,0.15)', border: 'none', color: '#FFD700', padding: '6px 10px', borderRadius: 10, fontSize: 10, fontWeight: 950, cursor: 'pointer' }}>COBRAR CONSUMO</button>
+                           <button type="button" onClick={(e) => { e.stopPropagation(); handleCobrarTab(m); }} style={{ background: 'rgba(255,215,0,0.15)', border: 'none', color: '#C5D1CC', padding: '6px 10px', borderRadius: 10, fontSize: 10, fontWeight: 950, cursor: 'pointer' }}>COBRAR CONSUMO</button>
                          )}
                          <button type="button" onClick={(e) => { e.stopPropagation(); updateMemberStatus(m.id, { presence: { inGym: false, enteredAt: m.presence?.enteredAt || Date.now(), method: m.presence?.method || 'manual' } }); }} style={{ background: 'rgba(255,61,87,0.1)', border: 'none', color: 'var(--danger-red)', padding: '6px 14px', borderRadius: 10, fontSize: 11, fontWeight: 950, cursor: 'pointer' }}>SALIDA</button>
                        </div>
@@ -907,7 +958,7 @@ export default function Reception() {
 
                         {/* ── Consumo del piso (tab abierto) ── */}
                         <div style={{ marginBottom: 20 }}>
-                          <div style={{ fontSize: 10, fontWeight: 950, color: '#FFD700', letterSpacing: 2, marginBottom: 12 }}>
+                          <div style={{ fontSize: 10, fontWeight: 950, color: '#C5D1CC', letterSpacing: 2, marginBottom: 12 }}>
                             🛒 CONSUMO DEL PISO {tabItems.length === 0 && <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>— Aún no ha pedido nada</span>}
                           </div>
                           {tabItems.length > 0 && (
@@ -915,15 +966,15 @@ export default function Reception() {
                               {tabItems.map((l) => (
                                 <div key={l.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                                   <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                                    <span style={{ background: 'rgba(255,215,0,0.15)', color: '#FFD700', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 950 }}>{l.qty}×</span>
+                                    <span style={{ background: 'rgba(255,215,0,0.15)', color: '#C5D1CC', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 950 }}>{l.qty}×</span>
                                     <span style={{ color: '#fff', fontWeight: 700, fontSize: 14 }}>{l.name}</span>
                                   </div>
-                                  <span style={{ color: '#FFD700', fontWeight: 950, fontSize: 15 }}>${(l.qty * l.price).toLocaleString('es-CO')}</span>
+                                  <span style={{ color: '#C5D1CC', fontWeight: 950, fontSize: 15 }}>${(l.qty * l.price).toLocaleString('es-CO')}</span>
                                 </div>
                               ))}
                               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 20px', background: 'rgba(255,215,0,0.06)', borderTop: '1px solid rgba(255,215,0,0.2)' }}>
-                                <span style={{ color: '#FFD700', fontWeight: 950, fontSize: 12, letterSpacing: 1 }}>SUBTOTAL CONSUMO</span>
-                                <span style={{ color: '#FFD700', fontWeight: 950, fontSize: 20 }}>${f.consumo.toLocaleString('es-CO')}</span>
+                                <span style={{ color: '#C5D1CC', fontWeight: 950, fontSize: 12, letterSpacing: 1 }}>SUBTOTAL CONSUMO</span>
+                                <span style={{ color: '#C5D1CC', fontWeight: 950, fontSize: 20 }}>${f.consumo.toLocaleString('es-CO')}</span>
                               </div>
                             </div>
                           )}
@@ -972,11 +1023,11 @@ export default function Reception() {
                             {/* Productos comprados ahora */}
                             {cart.filter(c => c.category !== 'Servicio').length > 0 && (
                               <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                <div style={{ fontSize: 9, color: '#A78BFA', fontWeight: 950, letterSpacing: 1.5, marginBottom: 6 }}>📦 PRODUCTOS (cobro directo)</div>
+                                <div style={{ fontSize: 9, color: '#C5D1CC', fontWeight: 950, letterSpacing: 1.5, marginBottom: 6 }}>📦 PRODUCTOS (cobro directo)</div>
                                 {cart.filter(c => c.category !== 'Servicio').map(c => (
                                   <div key={c.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                                     <span style={{ color: '#ccc' }}>{c.qty}× {c.name}</span>
-                                    <span style={{ color: '#A78BFA', fontWeight: 800 }}>${(c.price * c.qty).toLocaleString('es-CO')}</span>
+                                    <span style={{ color: '#C5D1CC', fontWeight: 800 }}>${(c.price * c.qty).toLocaleString('es-CO')}</span>
                                   </div>
                                 ))}
                               </div>
@@ -984,10 +1035,10 @@ export default function Reception() {
                             {/* Consumo piso (tab) */}
                             {f.consumo > 0 && (
                               <div style={{ background: 'rgba(255,215,0,0.04)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(255,215,0,0.12)' }}>
-                                <div style={{ fontSize: 9, color: '#FFD700', fontWeight: 950, letterSpacing: 1.5, marginBottom: 6 }}>🥤 CONSUMO DEL PISO (tab)</div>
+                                <div style={{ fontSize: 9, color: '#C5D1CC', fontWeight: 950, letterSpacing: 1.5, marginBottom: 6 }}>🥤 CONSUMO DEL PISO (tab)</div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                                   <span style={{ color: '#ccc' }}>{tabItems.map(l => `${l.qty}×${l.name}`).join(', ')}</span>
-                                  <span style={{ color: '#FFD700', fontWeight: 800 }}>${f.consumo.toLocaleString('es-CO')}</span>
+                                  <span style={{ color: '#C5D1CC', fontWeight: 800 }}>${f.consumo.toLocaleString('es-CO')}</span>
                                 </div>
                               </div>
                             )}
@@ -996,7 +1047,7 @@ export default function Reception() {
                                 <div style={{ fontSize: 9, color: 'var(--danger-red)', fontWeight: 950, letterSpacing: 1.5, marginBottom: 6 }}>CRÉDITO QUE YA TENÍA (no entra en este cobro)</div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                                   <span style={{ color: '#ccc' }}>Productos fiados</span>
-                                  <span style={{ color: '#A78BFA', fontWeight: 800 }}>${f.creditoProductos.toLocaleString('es-CO')}</span>
+                                  <span style={{ color: '#C5D1CC', fontWeight: 800 }}>${f.creditoProductos.toLocaleString('es-CO')}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 4 }}>
                                   <span style={{ color: '#ccc' }}>Mensualidad / rutina</span>

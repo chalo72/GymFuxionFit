@@ -13,7 +13,7 @@ export default function MemberAttendance() {
   }, [members, today]);
 
   const data = [
-    { name: 'Visitaron hoy', value: visited, color: '#00F0FF' },
+    { name: 'Visitaron hoy', value: visited, color: '#00FF88' },
     { name: 'Sin visita hoy', value: rest || 1, color: '#1C1C28' },
   ];
 

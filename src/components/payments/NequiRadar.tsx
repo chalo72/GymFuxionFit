@@ -183,14 +183,14 @@ export default function NequiRadar({ onLinkPayment, isExpecting, expectedMemberN
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
             style={{ 
-              background: 'rgba(255, 77, 77, 0.1)', border: '1px solid #ff4d4d40', 
+              background: 'rgba(255, 77, 77, 0.1)', border: '1px solid #C5D1CC40', 
               padding: 16, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 12,
               boxShadow: '0 10px 30px rgba(255, 77, 77, 0.1)'
             }}
           >
              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <AlertCircle size={20} color="#ff4d4d" />
-                <div style={{ fontSize: 11, fontWeight: 950, color: '#ff4d4d' }}>TRANSACCIÓN NO DETECTADA</div>
+                <AlertCircle size={20} color="#C5D1CC" />
+                <div style={{ fontSize: 11, fontWeight: 950, color: '#C5D1CC' }}>TRANSACCIÓN NO DETECTADA</div>
              </div>
              <p style={{ fontSize: 10, color: 'var(--text-secondary)', lineHeight: 1.4 }}>
                 La notificación de Nequi no llegó a tiempo. Por favor, solicita al cliente 
@@ -206,7 +206,7 @@ export default function NequiRadar({ onLinkPayment, isExpecting, expectedMemberN
                 </button>
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  style={{ flex: 1, padding: 8, borderRadius: 8, background: '#ff4d4d', border: 'none', color: '#fff', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
+                  style={{ flex: 1, padding: 8, borderRadius: 8, background: '#C5D1CC', border: 'none', color: '#fff', fontSize: 9, fontWeight: 950, cursor: 'pointer' }}
                 >
                   ESCANEAR AHORA
                 </button>

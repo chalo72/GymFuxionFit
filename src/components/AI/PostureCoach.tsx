@@ -80,7 +80,7 @@ export function PostureCoach() {
     
     if (results.poseLandmarks) {
       drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#00FF88', lineWidth: 4 });
-      drawLandmarks(canvasCtx, results.poseLandmarks, { color: '#FF3D57', lineWidth: 2, radius: 4 });
+      drawLandmarks(canvasCtx, results.poseLandmarks, { color: '#C5D1CC', lineWidth: 2, radius: 4 });
 
       // Lógica de Sentadillas (Squats) - Traducida de FitFusion
       // Hombro (11, 12), Cadera (23, 24), Rodilla (25, 26), Tobillo (27, 28)
@@ -138,7 +138,7 @@ export function PostureCoach() {
 
         // HUD Visual - Mostrar Ángulo
         canvasCtx.font = '24px "Space Grotesk"';
-        canvasCtx.fillStyle = formQuality === 'perfect' ? '#00FF88' : '#FF3D57';
+        canvasCtx.fillStyle = formQuality === 'perfect' ? '#00FF88' : '#C5D1CC';
         canvasCtx.fillText(`${Math.round(kneeAngle)}°`, knee.x * videoWidth + 20, knee.y * videoHeight);
       } else {
         setFeedback('Alejate un poco. Necesito ver tu cuerpo completo.');

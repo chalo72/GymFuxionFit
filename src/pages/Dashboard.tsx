@@ -117,7 +117,7 @@ export default function Dashboard() {
               {members.filter(m => m.biometricStatus !== 'completed').length > 0 ? (
                 <div style={{ padding: '14px 16px', background: 'rgba(255,214,0,0.08)', borderRadius: 12, border: '1px solid rgba(255,214,0,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Perfiles incompletos (Biometría)</span>
-                   <span style={{ fontSize: 14, fontWeight: 900, color: '#FFD600' }}>{members.filter(m => m.biometricStatus !== 'completed').length} atletas</span>
+                   <span style={{ fontSize: 14, fontWeight: 900, color: '#C5D1CC' }}>{members.filter(m => m.biometricStatus !== 'completed').length} atletas</span>
                 </div>
               ) : (
                 <div style={{ padding: '14px 16px', background: 'rgba(0,255,136,0.05)', borderRadius: 12, border: '1px solid rgba(0,255,136,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

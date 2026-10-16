@@ -26,12 +26,14 @@ const adminNav = [
     { to: '/piso-qr',     icon: QrCode,          label: 'Piso QR' },
   ]},
   { section: 'Entrenar', items: [
+    { to: '/entreno',     icon: Dumbbell,        label: 'Sesión' },
     { to: '/evaluacion',  icon: ClipboardList,   label: 'Entrevista' },
     { to: '/elite-plan',  icon: BrainCircuit,    label: 'Plan' },
     { to: '/ai-coach',    icon: Brain,           label: 'AI Coach' },
   ]},
   { section: 'Negocio', items: [
     { to: '/finances',    icon: TrendingUp,      label: 'Dinero' },
+    { to: '/finances?tab=personal', icon: Users, label: 'Personal' },
     { to: '/avisos',      icon: MessageCircle,   label: 'Avisos WhatsApp' },
     { to: '/crm',         icon: Kanban,          label: 'CRM' },
     { to: '/inventory',   icon: Package,        label: 'Inventario' },
@@ -40,6 +42,7 @@ const adminNav = [
   { section: 'Sistema', items: [
     { to: '/client-app',  icon: Smartphone,     label: 'App cliente' },
     { to: '/mantenimiento', icon: Wrench,       label: 'Mantenimiento' },
+    { to: '/settings?tab=pricing', icon: Settings, label: 'Precios' },
     { to: '/settings',    icon: Settings,       label: 'Configuración' },
   ]}
 ];
@@ -49,6 +52,7 @@ const trainerNav = [
     { to: '/', icon: LayoutDashboard, label: 'Hoy' },
     { to: '/trainer', icon: Zap, label: 'Mis atletas' },
     { to: '/evaluacion', icon: ClipboardList, label: 'Entrevista' },
+    { to: '/entreno', icon: Dumbbell, label: 'Sesión' },
     { to: '/elite-plan', icon: BrainCircuit, label: 'Plan' },
     { to: '/schedule', icon: CalendarRange, label: 'Agenda' },
     { to: '/classes', icon: CalendarDays, label: 'Clases' },
@@ -61,16 +65,19 @@ const trainerNav = [
 ];
 
 const receptionNav = [
-  { section: 'Operación', items: [
+  { section: 'Recepción', items: [
     { to: '/', icon: LayoutDashboard, label: 'Hoy' },
     { to: '/reception', icon: UserCheck, label: 'Recepción' },
-    { to: '/avisos', icon: MessageCircle, label: 'Avisos WhatsApp' },
-    { to: '/members', icon: Users, label: 'Miembros' },
+    { to: '/avisos', icon: MessageCircle, label: 'Avisos' },
+  ]},
+  { section: 'Sala', items: [
+    { to: '/members', icon: Users, label: 'Gente' },
     { to: '/schedule', icon: CalendarRange, label: 'Horarios' },
     { to: '/classes', icon: CalendarDays, label: 'Clases' },
   ]},
-  { section: 'Caja', items: [
-    { to: '/finances', icon: TrendingUp, label: 'Dinero' },
+  { section: 'Dinero', items: [
+    { to: '/finances', icon: TrendingUp, label: 'Caja' },
+    { to: '/finances?tab=personal', icon: Users, label: 'Personal' },
     { to: '/inventory', icon: Package, label: 'Inventario' },
     { to: '/crm', icon: Kanban, label: 'CRM' },
   ]},
@@ -81,6 +88,7 @@ const clientNav = [
     { to: '/sala', icon: QrCode, label: 'Sala y QR' },
     { to: '/client/progress', icon: TrendingUp, label: 'Mi Progreso' },
     { to: '/client/nutrition',icon: Apple,      label: 'Nutrición' },
+    { to: '/entreno', icon: Dumbbell, label: 'Sesión' },
     { to: '/client/training', icon: Dumbbell,   label: 'Entrenamiento' },
     { to: '/reports',         icon: BarChart3,  label: 'Mis Reportes' },
   ]},
@@ -96,10 +104,10 @@ export const roleNavMap: Record<string, any> = {
 
 const roleColors: Record<string, string> = {
   admin: '#00FF88',
-  trainer: '#FF6B35',
-  receptionist: '#A78BFA',
-  client: '#00d0ff',
-  athlete: '#00d0ff',
+  trainer: '#8A9C96',
+  receptionist: '#C5D1CC',
+  client: '#00FF88',
+  athlete: '#00FF88',
 };
 
 const roleLabels: Record<string, string> = {
@@ -109,6 +117,15 @@ const roleLabels: Record<string, string> = {
   client: 'Cliente',
   athlete: 'Atleta',
 };
+
+function navActivo(to: string, pathname: string, search: string) {
+  const [path, query] = to.split('?');
+  if (pathname !== path) return false;
+  if (query) return search.includes(query);
+  if (path === '/finances') return !search.includes('tab=personal');
+  if (path === '/settings') return !search.includes('tab=pricing');
+  return true;
+}
 
 export default function Sidebar({ 
   isOpen, 
@@ -128,6 +145,9 @@ export default function Sidebar({
     'Inicio': true,
     'Supervisión': true,
     'Operación': true,
+    'Recepción': true,
+    'Sala': true,
+    'Dinero': true,
     'Mi espacio': true,
     'Mi Área Personal': true
   });
@@ -182,7 +202,7 @@ export default function Sidebar({
       {/* ─── NAVIGATION ─── */}
       <nav className="sidebar-nav">
         {navGroups.map((group: any) => {
-          const isOpen = openSections[group.section] || false;
+          const isOpen = openSections[group.section] !== false;
 
           return (
             <div key={group.section} style={{ marginBottom: '16px', padding: '0 8px' }}>
@@ -223,7 +243,7 @@ export default function Sidebar({
                         <NavLink
                           key={`${group.section}__${item.to}`}
                           to={item.to}
-                          className={`sidebar-item ${location.pathname === item.to ? 'active' : ''}`}
+                          className={`sidebar-item ${navActivo(item.to, location.pathname, location.search) ? 'active' : ''}`}
                           style={{ borderRadius: '8px' }}
                         >
                           <item.icon />

@@ -17,7 +17,7 @@ const workoutPlans = [
     level: 'Elite',
     duration: '75 min',
     calories: 680,
-    color: '#FF6B35',
+    color: '#8A9C96',
     ai_score: 97,
     exercises: [
       { name: 'SkiErg', sets: 1, reps: '1000m', weight: 'Máx Resistencia' },
@@ -50,7 +50,7 @@ const workoutPlans = [
     level: 'Básico',
     duration: '30 min',
     calories: 280,
-    color: '#A78BFA',
+    color: '#C5D1CC',
     ai_score: 85,
     exercises: [
       { name: 'Salto de Cuerda', sets: 3, reps: '3 min', weight: 'Corporal' },
@@ -483,12 +483,12 @@ export default function AICoach() {
                       <stop offset="100%" stopColor="#00FF88" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="cardioGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF6B35" stopOpacity={0.2} />
-                      <stop offset="100%" stopColor="#FF6B35" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#8A9C96" stopOpacity={0.2} />
+                      <stop offset="100%" stopColor="#8A9C96" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="hyroxGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#A78BFA" stopOpacity={0.2} />
-                      <stop offset="100%" stopColor="#A78BFA" stopOpacity={0} />
+                      <stop offset="0%" stopColor="#C5D1CC" stopOpacity={0.2} />
+                      <stop offset="100%" stopColor="#C5D1CC" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
@@ -498,13 +498,13 @@ export default function AICoach() {
                     contentStyle={{ background: 'rgba(14,18,14,0.95)', border: '1px solid rgba(0,255,136,0.2)', borderRadius: 12, fontSize: 12 }}
                   />
                   <Area type="monotone" dataKey="strength" name="Fuerza" stroke="#00FF88" strokeWidth={2} fill="url(#strengthGrad)" dot={false} />
-                  <Area type="monotone" dataKey="cardio" name="Cardio" stroke="#FF6B35" strokeWidth={2} fill="url(#cardioGrad)" dot={false} />
-                  <Area type="monotone" dataKey="hyrox" name="HYROX" stroke="#A78BFA" strokeWidth={2} fill="url(#hyroxGrad)" dot={false} />
+                  <Area type="monotone" dataKey="cardio" name="Cardio" stroke="#8A9C96" strokeWidth={2} fill="url(#cardioGrad)" dot={false} />
+                  <Area type="monotone" dataKey="hyrox" name="HYROX" stroke="#C5D1CC" strokeWidth={2} fill="url(#hyroxGrad)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
             <div style={{ display: 'flex', gap: 20, marginTop: 12 }}>
-              {[{ label: 'Fuerza', color: '#00FF88' }, { label: 'Cardio', color: '#FF6B35' }, { label: 'HYROX', color: '#A78BFA' }].map((l, i) => (
+              {[{ label: 'Fuerza', color: '#00FF88' }, { label: 'Cardio', color: '#8A9C96' }, { label: 'HYROX', color: '#C5D1CC' }].map((l, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ width: 10, height: 10, borderRadius: 3, background: l.color, display: 'inline-block' }} />
                   <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>{l.label}</span>

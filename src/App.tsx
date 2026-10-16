@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Members from './pages/Members';
 import TrainerDashboard from './pages/TrainerDashboard';
 import TrainingDashboard2 from './pages/TrainingDashboard2';
+import EntrenoStudio from './pages/EntrenoStudio';
 import ClientProgress from './pages/ClientProgress';
 import Nutrition from './pages/Nutrition';
 import NutritionProfile from './pages/NutritionProfile';
@@ -84,6 +85,7 @@ function App() {
         <Route path="/client/progress" element={<ClientProgress />} />
         <Route path="/client/nutrition" element={<NutritionProfile />} />
         <Route path="/client/training" element={<TrainingDashboard2 />} />
+        <Route path="/entreno" element={<EntrenoStudio />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
       </Route>
