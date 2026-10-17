@@ -29,6 +29,10 @@ export type CruceDia = {
   cubiertos: Grupo;
   nequiPesos: number;
   efectivoPesos: number;
+  salieron: number;
+  pesosMensualidad: number;
+  pesosDia: number;
+  pesosAgua: number;
 };
 
 const CAMS = 'fuxion_camaras';
@@ -93,6 +97,7 @@ export function armarCruce(members: Member[], transactions: Transaction[], fecha
   const dias = fechasHoy();
   const delDia = transactions.filter((t) => dias.has(t.date));
   const entradas = leerPasos().filter((p) => p.action === 'ENTRADA' && (p.date === fecha || dias.has(p.date)));
+  const salieron = leerPasos().filter((p) => p.action === 'SALIDA' && (p.date === fecha || dias.has(p.date))).length;
   const ids = new Set(entradas.map((p) => p.memberId));
   members.forEach((m) => { if (dias.has(String(m.lastVisit || '').slice(0, 10))) ids.add(m.id); });
   const llegaron = members.filter((m) => ids.has(m.id));
@@ -148,5 +153,12 @@ export function armarCruce(members: Member[], transactions: Transaction[], fecha
     pagaronEfectivo, pagaronNequi, credito, sinPago, cubiertos,
     nequiPesos: suma(delDia, (t) => t.type === 'income' && esNequi(t.method)),
     efectivoPesos: suma(delDia, (t) => t.type === 'income' && esEfectivo(t.method)),
+    salieron,
+    pesosMensualidad: suma(delDia, (t) => t.type === 'income' && t.category === 'membership'),
+    pesosDia: suma(delDia, (t) => t.type === 'income' && t.category === 'daypass'),
+    pesosAgua: suma(delDia, (t) => {
+      const d = (t.description || '').toLowerCase();
+      return t.type === 'income' && t.category === 'product' && d.includes('agua') && !d.includes('gaseosa');
+    }),
   };
 }

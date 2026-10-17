@@ -268,6 +268,21 @@ export function CuadreCaja() {
       diferencia: dif,
       nota: nota.trim(),
       bodega: quedaron,
+      cruce: {
+        entraron: dia.appEntraron,
+        salieron: dia.salieron,
+        camara: dia.camaraEntrada,
+        efectivo: dia.pagaronEfectivo.n,
+        nequi: dia.pagaronNequi.n,
+        fiado: dia.credito.n,
+        cubiertos: dia.cubiertos.n,
+        sinPago: dia.sinPago.n,
+        pesosMensual: dia.pesosMensualidad,
+        pesosDia: dia.pesosDia,
+        pesosAgua: dia.pesosAgua,
+        pesosEfectivo: dia.efectivoPesos,
+        pesosNequi: dia.nequiPesos,
+      },
     };
     guardar(lista.map((t) => (t.id === abierto.id ? cerrado : t)));
     setConteo({});
@@ -290,6 +305,8 @@ export function CuadreCaja() {
   }
 
   const ventas = resumen.efectivoEntro + resumen.nequi;
+  const explicadas = dia.pagaronEfectivo.n + dia.pagaronNequi.n + dia.credito.n + dia.cubiertos.n + dia.sinPago.n;
+  const hueco = dia.appEntraron - explicadas;
 
   return (
     <div className="turno-wrap">
@@ -302,8 +319,31 @@ export function CuadreCaja() {
         </div>
         <strong className="turno-esperado">{pesos(resumen.esperado)}</strong>
       </section>
-      <p className="turno-leyenda">Para cerrar solo escribes dos cosas. Las ventas, el Nequi y los créditos ya entraron en Recepción: no se vuelven a escribir.</p>
-      <p className="turno-leyenda">En el cajón debe haber {pesos(resumen.esperado)}. Eso es la base más el efectivo, menos lo que salió.</p>
+      <section className="turno-escribir">
+        <h3>Cruce del día</h3>
+        <div className="turno-kpis">
+          <Kpi titulo="Entraron, app" valor={String(dia.appEntraron)} />
+          <Kpi titulo="Salieron" valor={String(dia.salieron)} />
+          <Kpi titulo="Cámara" valor={dia.camaraEntrada === null ? '—' : String(dia.camaraEntrada)} />
+          <Kpi titulo="Cámara contra app" valor={dia.diferencia === null ? 'Falta conteo' : dia.diferencia === 0 ? 'Igual' : dia.diferencia > 0 ? `+${dia.diferencia} cámara` : `${dia.diferencia} app`} />
+        </div>
+        <div className="turno-kpis">
+          <Kpi titulo="Efectivo" valor={`${dia.pagaronEfectivo.n} · ${pesos(dia.efectivoPesos)}`} />
+          <Kpi titulo="Nequi" valor={`${dia.pagaronNequi.n} · ${pesos(dia.nequiPesos)}`} />
+          <Kpi titulo="Fiado" valor={String(dia.credito.n)} />
+          <Kpi titulo="Ya tenían pago" valor={String(dia.cubiertos.n)} />
+          <Kpi titulo="Sin pago" valor={String(dia.sinPago.n)} />
+          <Kpi titulo="Mensualidad" valor={pesos(dia.pesosMensualidad)} />
+          <Kpi titulo="Día" valor={pesos(dia.pesosDia)} />
+          <Kpi titulo="Aguas vendidas" valor={pesos(dia.pesosAgua)} />
+        </div>
+        <p className={`turno-resultado ${hueco === 0 ? 'ok' : 'falta'}`}>
+          {hueco === 0
+            ? `${explicadas} personas explicadas. No queda nadie por fuera.`
+            : `Entraron ${dia.appEntraron} y solo ${explicadas} están explicadas. Faltan ${Math.abs(hueco)}.`}
+        </p>
+      </section>
+      <p className="turno-leyenda">En el cajón debe haber {pesos(resumen.esperado)}. El Nequi y el fiado no van ahí. Las ventas ya se cobraron en Recepción.</p>
 
       <section className="turno-escribir">
         <h3>1. Aquí metes la plata que quedó en el cajón</h3>
@@ -409,6 +449,11 @@ export function CuadresPasados() {
             <p className={t.diferencia === 0 ? 'ok' : 'alerta'}>
               {t.diferencia === 0 ? 'Cuadró' : t.diferencia > 0 ? `Sobró ${pesos(t.diferencia)}` : `Faltó ${pesos(Math.abs(t.diferencia))}`}
               {t.nota ? ` · ${t.nota}` : ''}
+            </p>
+          )}
+          {t.cruce && (
+            <p>
+              Entraron {t.cruce.entraron} · salieron {t.cruce.salieron} · cámara {t.cruce.camara ?? '—'} · efectivo {t.cruce.efectivo} · Nequi {t.cruce.nequi} · fiado {t.cruce.fiado} · ya pagados {t.cruce.cubiertos} · mensualidad {pesos(t.cruce.pesosMensual)} · día {pesos(t.cruce.pesosDia)} · aguas {pesos(t.cruce.pesosAgua)}
             </p>
           )}
           {t.bodega && (t.bodega.agua !== undefined || t.bodega.gaseosa !== undefined || t.bodega.electrolito !== undefined) && (

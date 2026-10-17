@@ -25,6 +25,21 @@ export type TurnoCaja = {
   diferencia: number;
   nota: string;
   bodega?: { agua?: number; gaseosa?: number; electrolito?: number };
+  cruce?: {
+    entraron: number;
+    salieron: number;
+    camara: number | null;
+    efectivo: number;
+    nequi: number;
+    fiado: number;
+    cubiertos: number;
+    sinPago: number;
+    pesosMensual: number;
+    pesosDia: number;
+    pesosAgua: number;
+    pesosEfectivo: number;
+    pesosNequi: number;
+  };
 };
 
 const KEY = 'fuxion_turnos';
