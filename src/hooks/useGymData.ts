@@ -379,9 +379,7 @@ function useGymDataInternal() {
     };
     window.addEventListener('storage', handleStorageChange);
 
-    // 3. Suscripción Realtime Universal
-    // ⚠️ IMPORTANTE: callbacks reemplazan estado directamente (sin merge local).
-    // Supabase es la fuente de verdad — si un ítem se borró en la nube, no reaparece.
+    // Una lista vacía de la nube o de IndexedDB no reemplaza los clientes guardados.
     const unsubMembers = syncManager.subscribeToCollection<any>('members', (items) => {
       setSyncStatus('live');
       const mapped = items.map(m => ({
