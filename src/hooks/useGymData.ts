@@ -6,6 +6,7 @@ import { syncManager } from '../services/syncManager';
 import { backupService } from '../lib/backupService';
 import { DEFAULT_PLANS, ensurePlanes } from '../data/planesGym';
 import { creditoDe } from '../lib/cuentaPiso';
+import { fusionarClientes, guardarRespaldo, leerClientesGuardados } from '../lib/protegerClientes';
 
 /* ══════════════════════════════════════════
    GLOBAL_SYNC_SERVICE V.1.1
@@ -172,8 +173,7 @@ function useGymDataInternal() {
   const [assets, setAssets] = useState<GymAsset[]>([]);
   const [members, setMembers] = useState<Member[]>(() => {
     try {
-      const s = localStorage.getItem('fuxion_members');
-      return s ? JSON.parse(s) : [];
+      return leerClientesGuardados();
     } catch { return []; }
   });
   const [products, setProducts] = useState<Product[]>(() => {
@@ -259,6 +259,7 @@ function useGymDataInternal() {
         const savedGoals = localStorage.getItem('fuxion_goals');
 
         let currentMembers: Member[] = savedMembers ? JSON.parse(savedMembers) : [];
+        if (!currentMembers.length) currentMembers = leerClientesGuardados();
         let currentTx: Transaction[] = savedTx ? JSON.parse(savedTx) : [];
         let currentProducts: Product[] = savedProducts ? JSON.parse(savedProducts) : [];
         let currentObligations: Obligation[] = savedObligations ? JSON.parse(savedObligations) : [];
@@ -284,11 +285,12 @@ function useGymDataInternal() {
         try {
           const cloudMembers = await gymDatabase.getCollection<any>('members');
           if (cloudMembers && cloudMembers.length > 0) {
-            currentMembers = cloudMembers.map(m => ({
+            const mappedCloud = cloudMembers.map(m => ({
               ...m,
               expiryDate: m.expiry_date || m.expiry || m.expiryDate,
               biometricStatus: m.biometric_status || m.biometricStatus
             }));
+            currentMembers = fusionarClientes(currentMembers, mappedCloud);
             setMembers(currentMembers);
             localStorage.setItem('fuxion_members', JSON.stringify(currentMembers));
           }
@@ -340,7 +342,7 @@ function useGymDataInternal() {
     // 🔗 BROADCAST CHANNEL: Sincronización inter-pestañas
     syncManager.onBroadcast((type, data) => {
       // 🧠 Recibimos mensajes de otras pestañas para actualizar la UI local sin peticiones extra.
-      if (type === 'MEMBERS_UPDATE') setMembers(data);
+      if (type === 'MEMBERS_UPDATE') setMembers((prev) => fusionarClientes(prev, Array.isArray(data) ? data : []));
       if (type === 'PRODUCTS_UPDATE') setProducts(data);
       if (type === 'TX_UPDATE') setTransactions(data);
       if (type === 'GOALS_UPDATE') setGoals(data);
@@ -358,7 +360,10 @@ function useGymDataInternal() {
     // 📡 SINCRONIZACIÓN DE DISCO DURO ENTRE PESTAÑAS (Evita Amnesia de Datos)
     const handleStorageChange = (e: StorageEvent) => {
       try {
-        if (e.key === 'fuxion_members' && e.newValue) setMembers(JSON.parse(e.newValue));
+        if (e.key === 'fuxion_members' && e.newValue) {
+          const next = JSON.parse(e.newValue);
+          setMembers((prev) => fusionarClientes(prev, Array.isArray(next) ? next : []));
+        }
         if (e.key === 'fuxion_tx' && e.newValue) setTransactions(JSON.parse(e.newValue));
         if (e.key === 'fuxion_products' && e.newValue) setProducts(JSON.parse(e.newValue));
         if (e.key === 'fuxion_custom_plans' && e.newValue) {
@@ -384,8 +389,11 @@ function useGymDataInternal() {
         expiryDate: m.expiry_date || m.expiry || m.expiryDate,
         biometricStatus: m.biometric_status || m.biometricStatus
       }));
-      setMembers(mapped);
-      syncManager.broadcast('MEMBERS_UPDATE', mapped);
+      setMembers((prev) => {
+        const next = fusionarClientes(prev, mapped);
+        syncManager.broadcast('MEMBERS_UPDATE', next);
+        return next;
+      });
     });
 
     const unsubProducts = syncManager.subscribeToCollection<any>('products', (items) => {
@@ -451,9 +459,15 @@ function useGymDataInternal() {
   // 💾 PERSISTENCIA INDIVIDUAL: Evita que el cambio en un módulo sobreescriba todo el disco
   useEffect(() => {
     if (!isLoaded) return;
-    const prev = localStorage.getItem('fuxion_members');
-    if (members.length === 0 && prev && prev !== '[]') return;
+    if (members.length === 0) {
+      const guardados = leerClientesGuardados();
+      if (guardados.length) {
+        setMembers(guardados);
+        return;
+      }
+    }
     localStorage.setItem('fuxion_members', JSON.stringify(members));
+    guardarRespaldo(members);
   }, [isLoaded, members]);
   useEffect(() => {
     if (!isLoaded) return;
@@ -576,8 +590,11 @@ function useGymDataInternal() {
       const cloudTx = await gymDatabase.getCollection<any>('transactions');
       
       if (cloudMembers.length > 0) {
-        setMembers(cloudMembers);
-        localStorage.setItem('fuxion_members', JSON.stringify(cloudMembers));
+        setMembers((prev) => {
+          const next = fusionarClientes(prev, cloudMembers);
+          localStorage.setItem('fuxion_members', JSON.stringify(next));
+          return next;
+        });
       }
       
       if (cloudTx.length > 0) {
@@ -979,7 +996,12 @@ function useGymDataInternal() {
       return newMember;
     },
     deleteMember: async (id: string) => {
-      setMembers(prev => prev.filter(m => m.id !== id));
+      setMembers(prev => {
+        const next = prev.filter(m => m.id !== id);
+        if (next.length === 0) return prev;
+        guardarRespaldo(next);
+        return next;
+      });
       triggerBackup('delete_member');
       await syncManager.delete('members', id);
     },

@@ -159,7 +159,7 @@ export default function Home() {
               </button>
               <button type="button" onClick={() => navigate('/members')}>
                 <strong>{stats.active.length}</strong>
-                <span>socios activos</span>
+                <span>clientes activos</span>
               </button>
             </div>
             <div className="hoy-chips">
