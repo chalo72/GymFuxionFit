@@ -103,6 +103,9 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
   
   const [goalForm, setGoalForm] = useState({ name: '', target: 0, category: 'savings' as any });
   const [obForm, setObForm] = useState({ name:'', amount:0, dueDate:'', category:'utilities' as any });
+  const [pagoDe, setPagoDe] = useState<'Efectivo' | 'Bóveda'>('Efectivo');
+  const [pagoQue, setPagoQue] = useState('');
+  const [pagoCuanto, setPagoCuanto] = useState('');
   const [obPeriod, setObPeriod] = useState<'complete' | 'q1' | 'q2'>('complete');
   const [payrollPeriod, setPayrollPeriod] = useState<'complete' | 'q1' | 'q2'>(() => {
     const day = new Date().getDate();
@@ -283,6 +286,22 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handlePagarGasto = async () => {
+    const valor = Number(String(pagoCuanto).replace(/\D/g, '')) || 0;
+    if (!pagoQue.trim() || valor <= 0) return;
+    await injectTransaction({
+      date: new Date().toISOString().split('T')[0],
+      time: new Date().toLocaleTimeString().slice(0, 5),
+      description: pagoQue.trim(),
+      category: 'other',
+      type: 'expense',
+      amount: valor,
+      method: pagoDe,
+    });
+    setPagoQue('');
+    setPagoCuanto('');
   };
 
   const handleWaterWithdraw = () => {
@@ -641,6 +660,17 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
             </div>
          </div>
       ) : activeTab === 'expense' ? (
+        <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+        <section className="glass-card" style={{ padding:20 }}>
+          <h3 style={{ margin:'0 0 12px', fontSize:22 }}>¿De dónde sale la plata?</h3>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:12 }}>
+            <button type="button" className={pagoDe === 'Efectivo' ? 'btn btn-glow' : 'btn btn-ghost'} onClick={() => setPagoDe('Efectivo')}>Caja del día</button>
+            <button type="button" className={pagoDe === 'Bóveda' ? 'btn btn-glow' : 'btn btn-ghost'} onClick={() => setPagoDe('Bóveda')}>Bóveda</button>
+          </div>
+          <input className="input-field" value={pagoQue} onChange={(e) => setPagoQue(e.target.value)} placeholder="Qué se pagó" style={{ marginBottom:8 }} />
+          <input className="input-field" inputMode="numeric" value={pagoCuanto} onChange={(e) => setPagoCuanto(e.target.value.replace(/\D/g, ''))} placeholder="Cuánto" style={{ marginBottom:12 }} />
+          <button type="button" className="btn btn-glow" onClick={handlePagarGasto}>Pagar</button>
+        </section>
         <div className="finances-income-grid" style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:24, flex:1 }}>
            <div className="glass-card" style={{ padding:32, border: '1px solid rgba(255,255,255,0.1)' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
@@ -670,7 +700,10 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                        <div style={{ textAlign:'right', display:'flex', alignItems:'center', gap:20 }}>
                           <div style={{ fontSize:15, fontWeight:950 }}>${ob.amount.toLocaleString()}</div>
                           {ob.status === 'pending' ? (
-                             <button onClick={() => payObligation(ob.id)} style={{ padding:'8px 14px', borderRadius:10, background:'#C5D1CC', color:'#fff', border:'none', fontSize:10, fontWeight:950, cursor:'pointer' }}>PAGAR_AHORA</button>
+                             <>
+                             <button onClick={() => payObligation(ob.id, 'Efectivo')} style={{ padding:'8px 14px', borderRadius:10, background:'#C8F542', color:'#111', border:'none', fontSize:11, fontWeight:900, cursor:'pointer' }}>Del día</button>
+                             <button onClick={() => payObligation(ob.id, 'Bóveda')} style={{ padding:'8px 14px', borderRadius:10, background:'transparent', color:'#fff', border:'1px solid rgba(255,255,255,.2)', fontSize:11, fontWeight:900, cursor:'pointer' }}>Bóveda</button>
+                             </>
                           ) : (
                              <span style={{ fontSize:10, fontWeight:950, color:'var(--neon-green)' }}>PAGADO ✓</span>
                           )}
@@ -705,6 +738,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
                 ))}
               </div>
            </div>
+        </div>
         </div>
       ) : activeTab === 'payroll' ? (
         <div style={{ display:'flex', flexDirection:'column', gap:24 }}>

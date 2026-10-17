@@ -5,7 +5,7 @@ import { useGymData } from '../../hooks/useGymData';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   BILLETES, MONEDAS, duracion, fechaClave, horaCorta, leerTurnos, guardarTurnos,
-  nombreCaja, pesos, resumirTurno, turnoAbierto, turnoSugerido, type NombreTurno, type TipoCaja, type TurnoCaja,
+  pesos, resumirTurno, turnoAbierto, turnoSugerido, type NombreTurno, type TurnoCaja,
 } from '../../lib/turnosCaja';
 import { armarCruce } from '../../lib/cruceDia';
 
@@ -32,8 +32,8 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
   const { transactions, staff, injectTransaction } = useGymData();
   const { user } = useAuth();
   const { abierto, guardar, lista } = useTurnos();
-  const [tipo, setTipo] = useState<TipoCaja>('principal');
   const [nombre, setNombre] = useState<NombreTurno>(turnoSugerido());
+  const [saleDe, setSaleDe] = useState<'dia' | 'boveda'>('dia');
   const [fondo, setFondo] = useState('');
   const [quien, setQuien] = useState(user?.name || '');
   const [aviso, setAviso] = useState('');
@@ -55,7 +55,6 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
     const item: TurnoCaja = {
       id: `t_${Date.now()}`,
       nombre,
-      tipo,
       estado: 'abierto',
       abiertoAt: Date.now(),
       responsable: quien.trim() || user?.name || 'Recepción',
@@ -77,17 +76,17 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
     await injectTransaction({
       date: hoyISO(),
       time: ahora.toLocaleTimeString().slice(0, 5),
-      description: `Caja · ${mov === 'entrada' ? 'entrada' : 'salida'}: ${motivo.trim() || 'efectivo'}`,
+      description: `${mov === 'entrada' ? 'Entrada' : 'Pago'}: ${motivo.trim() || 'efectivo'}`,
       category: 'other',
       type: mov === 'entrada' ? 'income' : 'expense',
       amount: valor,
-      method: 'Efectivo',
+      method: mov === 'salida' && saleDe === 'boveda' ? 'Bóveda' : 'Efectivo',
       client: abierto?.responsable,
     });
     setMonto('');
     setMotivo('');
     setMov(null);
-    setAviso(mov === 'entrada' ? 'Entrada anotada en el turno.' : 'Salida anotada en el turno.');
+    setAviso(mov === 'entrada' ? 'Entrada anotada en el turno.' : saleDe === 'boveda' ? 'Salió de la bóveda. La caja del día no se tocó.' : 'Salió de la caja del día.');
   };
 
   const cancelarVacio = () => {
@@ -106,18 +105,8 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
         <Estilos />
         <section className="turno-hero">
           <p className="turno-kicker">Abrir</p>
-          <h3>¿Cuál caja?</h3>
+          <h3>Abrir la caja del día</h3>
         </section>
-        <div className="turno-opciones">
-          <button type="button" className={tipo === 'principal' ? 'on' : ''} onClick={() => setTipo('principal')}>
-            <strong>Caja principal</strong>
-            <small>El cajón</small>
-          </button>
-          <button type="button" className={tipo === 'pos' ? 'on' : ''} onClick={() => setTipo('pos')}>
-            <strong>Caja POS</strong>
-            <small>El datáfono</small>
-          </button>
-        </div>
         <div className="turno-opciones">
           {TURNOS.map((t) => {
             const Icon = t.icon;
@@ -152,9 +141,8 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
       <Estilos />
       <section className="turno-banner">
         <div>
-          <p className="turno-kicker">Estás en</p>
-          <h3>{nombreCaja(abierto.tipo)}</h3>
-          <p>{abierto.nombre} · {abierto.responsable}</p>
+          <p className="turno-kicker">Caja del día</p>
+          <h3>{abierto.nombre} · {abierto.responsable}</h3>
           <p>Desde {horaCorta(abierto.abiertoAt)} · {duracion(abierto.abiertoAt)}</p>
         </div>
         <span className="turno-pill">En curso</span>
@@ -172,13 +160,24 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
       </div>
       <div className="turno-acciones">
         <button type="button" onClick={() => setMov(mov === 'entrada' ? null : 'entrada')}>Meter efectivo</button>
-        <button type="button" onClick={() => setMov(mov === 'salida' ? null : 'salida')}>Sacar efectivo</button>
+        <button type="button" onClick={() => setMov(mov === 'salida' ? null : 'salida')}>Pagar algo</button>
         <button type="button" className="turno-principal" onClick={onCuadre}>Cerrar: contar la plata y las bebidas que quedaron</button>
       </div>
       {mov && (
         <div className="turno-mov">
-          <strong>{mov === 'entrada' ? 'Meter plata al cajón, aparte de las ventas' : 'Sacar plata del cajón'}</strong>
-          <p>Las ventas y el Nequi no se escriben aquí. Entran solos cuando se cobran en Recepción.</p>
+          <strong>{mov === 'entrada' ? 'Meter plata al cajón' : 'Pagar'}</strong>
+          {mov === 'salida' && (
+            <div className="turno-opciones">
+              <button type="button" className={saleDe === 'dia' ? 'on' : ''} onClick={() => setSaleDe('dia')}>
+                <strong>Caja del día</strong>
+                <small>Sale del cajón</small>
+              </button>
+              <button type="button" className={saleDe === 'boveda' ? 'on' : ''} onClick={() => setSaleDe('boveda')}>
+                <strong>Bóveda</strong>
+                <small>El ahorro. El cajón no se toca</small>
+              </button>
+            </div>
+          )}
           <input value={monto} onChange={(e) => setMonto(e.target.value)} inputMode="numeric" placeholder="Cuánto" />
           <input value={motivo} onChange={(e) => setMotivo(e.target.value)} placeholder="Para qué: vueltos, agua, base..." />
           <button type="button" className="turno-principal" onClick={mover}>Anotar</button>
@@ -233,11 +232,6 @@ export function CuadreCaja() {
   const contado = [...BILLETES, ...MONEDAS].reduce((a, v) => a + (Number(conteo[v] || 0) * v), 0);
   const hayConteo = Object.values(conteo).some((n) => Number(n) > 0);
   const diferencia = resumen && hayConteo ? contado - resumen.esperado : null;
-
-  const marcar = (tipo: TipoCaja) => {
-    if (!abierto) return;
-    guardar(lista.map((t) => (t.id === abierto.id ? { ...t, tipo } : t)));
-  };
 
   const poner = (valor: number, delta: number) => {
     const actual = Number(conteo[valor] || 0);
@@ -300,20 +294,10 @@ export function CuadreCaja() {
   return (
     <div className="turno-wrap">
       <Estilos />
-      <div className="turno-opciones">
-        <button type="button" className={abierto.tipo !== 'pos' ? 'on' : ''} onClick={() => marcar('principal')}>
-          <strong>Caja principal</strong>
-          <small>El cajón</small>
-        </button>
-        <button type="button" className={abierto.tipo === 'pos' ? 'on' : ''} onClick={() => marcar('pos')}>
-          <strong>Caja POS</strong>
-          <small>El datáfono</small>
-        </button>
-      </div>
       <section className="turno-banner">
         <div>
-          <p className="turno-kicker">Estás cerrando</p>
-          <h3>{nombreCaja(abierto.tipo)}</h3>
+          <p className="turno-kicker">Cerrar la caja del día</p>
+          <h3>Así quedó el día</h3>
           <p>{abierto.nombre} · {abierto.responsable} · desde {horaCorta(abierto.abiertoAt)}</p>
         </div>
         <strong className="turno-esperado">{pesos(resumen.esperado)}</strong>
@@ -411,7 +395,7 @@ export function CuadresPasados() {
       {delDia.map((t) => (
         <article key={t.id} className="turno-card">
           <header>
-            <strong>{nombreCaja(t.tipo)} · {t.nombre} · {t.responsable}</strong>
+            <strong>{t.nombre} · {t.responsable}</strong>
             <span className={t.estado === 'abierto' ? 'abierto' : ''}>{t.estado === 'abierto' ? 'Abierto' : 'Cerrado'}</span>
           </header>
           <p>{horaCorta(t.abiertoAt)}{t.cerradoAt ? ` – ${horaCorta(t.cerradoAt)}` : ' – sigue abierto'} · {duracion(t.abiertoAt, t.cerradoAt)}</p>

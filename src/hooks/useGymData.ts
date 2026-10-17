@@ -548,7 +548,7 @@ function useGymDataInternal() {
       category: 'other',
       type: 'expense',
       amount,
-      method: 'Efectivo',
+      method: 'Bóveda',
       goalId
     });
   };
@@ -796,7 +796,7 @@ function useGymDataInternal() {
         console.warn("⚠️ Eliminación de obligación local.");
       }
     },
-    payObligation: async (id: string) => {
+    payObligation: async (id: string, desde: 'Efectivo' | 'Bóveda' = 'Efectivo') => {
       const ob = obligations.find(o => o.id === id);
       if (!ob || ob.status === 'paid') return;
       setObligations(prev => prev.map(o => o.id === id ? { ...o, status: 'paid' } : o));
@@ -807,7 +807,7 @@ function useGymDataInternal() {
         category: 'other',
         type: 'expense',
         amount: ob.amount,
-        method: 'Efectivo'
+        method: desde
       });
     },
 
