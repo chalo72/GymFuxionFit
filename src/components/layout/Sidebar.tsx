@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, CalendarDays, BarChart3, Settings,
   Dumbbell, Zap, Kanban, Apple, Brain,
   CalendarRange, UserCheck, LogOut, ShieldCheck, Smartphone,
-  TrendingUp, Package, X, ChevronLeft, ChevronRight, ClipboardList, BrainCircuit, ChevronDown, Wrench, QrCode, MessageCircle
+  TrendingUp, Package, X, ChevronLeft, ChevronRight, ClipboardList, BrainCircuit, ChevronDown, Wrench, QrCode, MessageCircle, Video
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -16,6 +16,7 @@ const adminNav = [
     { to: '/finances',    icon: TrendingUp,      label: 'La plata' },
     { to: '/reception',   icon: UserCheck,       label: 'La puerta' },
     { to: '/settings?tab=pricing', icon: Settings, label: 'Los precios' },
+    { to: '/camaras',     icon: Video,           label: 'Cámaras' },
     { to: '/members',     icon: Users,           label: 'Miembros' },
     { to: '/schedule',    icon: CalendarRange,   label: 'Calendario' },
     { to: '/classes',     icon: CalendarDays,    label: 'Clases' },
@@ -70,6 +71,7 @@ const receptionNav = [
   { section: 'Recepción', items: [
     { to: '/reception', icon: UserCheck, label: 'La entrada' },
     { to: '/finances', icon: TrendingUp, label: 'La caja' },
+    { to: '/camaras', icon: Video, label: 'Cámaras' },
     { to: '/', icon: LayoutDashboard, label: 'Hoy' },
     { to: '/avisos', icon: MessageCircle, label: 'Avisos' },
   ]},

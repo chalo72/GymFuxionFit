@@ -26,6 +26,7 @@ const pageTitles: Record<string, string> = {
   '/leaderboard': 'Ranking',
   '/trainer': 'Dashboard Entrenador',
   '/reception': 'Recepción — Control en Vivo',
+  '/camaras': 'Cámaras',
   '/operations': 'Operaciones en Vivo',
   '/client-app': 'App Cliente — Vista Móvil',
   '/inventory': 'Inventario',

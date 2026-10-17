@@ -8,7 +8,6 @@ import {
   pesos, resumirTurno, turnoAbierto, turnoSugerido, type NombreTurno, type TurnoCaja,
 } from '../../lib/turnosCaja';
 import { armarCruce } from '../../lib/cruceDia';
-import CruceDia from '../../components/finanzas/CruceDia';
 
 const TURNOS: { id: NombreTurno; icon: typeof Sun; rango: string }[] = [
   { id: 'Mañana', icon: Sun, rango: 'Hasta el mediodía' },
@@ -173,10 +172,6 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
           <button type="button" className="turno-principal" onClick={mover}>Anotar</button>
         </div>
       )}
-      <details className="turno-card">
-        <summary>Cámaras, solo si quieres compararlas después</summary>
-        <CruceDia cajaEsperada={resumen.esperado} />
-      </details>
       <div className="turno-lista">
         {resumen.delTurno.length === 0 && <p>Todavía no hay movimientos en este turno.</p>}
         {resumen.delTurno.slice().reverse().map((t) => (

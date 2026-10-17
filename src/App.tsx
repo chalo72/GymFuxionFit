@@ -37,6 +37,7 @@ import Avisos from './pages/Avisos';
 import PisoHub from './pages/PisoHub';
 import PisoScan from './pages/PisoScan';
 import SalaCliente from './pages/SalaCliente';
+import Camaras from './pages/Camaras';
 
 function App() {
   return (
@@ -78,6 +79,7 @@ function App() {
         <Route path="/accounting" element={<Navigate to="/finances?tab=libros" replace />} />
         <Route path="/inventory" element={<Inventory />} />
         <Route path="/reception" element={<Reception />} />
+        <Route path="/camaras" element={<Camaras />} />
         <Route path="/avisos" element={<Avisos />} />
         <Route path="/piso-qr" element={<PisoHub />} />
         <Route path="/client-app" element={<ClientAppView />} />
