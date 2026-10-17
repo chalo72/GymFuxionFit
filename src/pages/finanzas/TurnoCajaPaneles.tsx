@@ -496,14 +496,14 @@ function Estilos() {
   return (
     <style>{`
       .turno-wrap { display: flex; flex-direction: column; gap: 12px; }
-      .turno-kicker { margin: 0; color: var(--neon-green); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+      .turno-kicker { margin: 0; color: var(--neon-green); font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
       .turno-hero, .turno-banner, .turno-card {
         border-radius: 24px; padding: 18px 20px;
         background: #6E877F;
         border: 1px solid rgba(0,255,136,.22);
       }
-      .turno-hero h3, .turno-banner h3 { margin: 4px 0; font-size: 26px; }
-      .turno-hero p, .turno-banner p, .turno-card p { margin: 0; color: rgba(255,255,255,.72); font-size: 14px; }
+      .turno-hero h3, .turno-banner h3 { margin: 4px 0; font-size: 30px; }
+      .turno-hero p, .turno-banner p, .turno-card p { margin: 0; color: rgba(255,255,255,.82); font-size: 18px; }
       .turno-banner, .turno-card header { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
       .turno-pill, .turno-card header span {
         border-radius: 999px; padding: 8px 12px; font-size: 12px; font-weight: 900;
@@ -521,21 +521,21 @@ function Estilos() {
       .turno-opciones small { color: rgba(255,255,255,.6); margin-top: 4px; }
       .turno-equipo { display: flex; flex-wrap: wrap; gap: 8px; }
       .turno-equipo button { min-height: 44px; border-radius: 999px; padding: 8px 14px; font-weight: 800; }
-      .turno-wrap label { font-size: 13px; font-weight: 800; color: rgba(255,255,255,.7); }
+      .turno-wrap label { font-size: 16px; font-weight: 800; color: rgba(255,255,255,.82); }
       .turno-wrap input, .turno-mov input {
-        width: 100%; min-height: 52px; border-radius: 16px; border: 1px solid rgba(255,255,255,.12);
-        background: rgba(0,0,0,.35); color: #fff; font-size: 16px; padding: 12px 14px;
+        width: 100%; min-height: 56px; border-radius: 12px; border: 2px dashed rgba(197,209,204,.7);
+        background: #070b08; color: #fff; font-size: 18px; padding: 12px 14px;
       }
       .turno-principal {
-        min-height: 56px; border: none; border-radius: 16px; background: var(--neon-green); color: #04140c;
-        font-weight: 900; font-size: 16px; cursor: pointer;
+        min-height: 60px; border: 2px solid #9BCF2A; border-radius: 12px; background: var(--neon-green); color: #04140c;
+        font-weight: 900; font-size: 18px; cursor: pointer;
       }
       .turno-acciones, .turno-mov { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; }
       .turno-mov { grid-template-columns: 1fr; }
-      .turno-acciones button { min-height: 52px; border-radius: 16px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #fff; font-weight: 800; cursor: pointer; }
-      .turno-kpi { border-radius: 18px; padding: 14px; background: rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.06); }
-      .turno-kpi span { display: block; font-size: 12px; color: rgba(255,255,255,.62); }
-      .turno-kpi strong { display: block; margin-top: 4px; font-size: 22px; }
+      .turno-acciones button { min-height: 56px; border-radius: 12px; border: 2px solid #C8F542; background: rgba(255,255,255,.04); color: #fff; font-weight: 800; font-size: 17px; cursor: pointer; }
+      .turno-kpi { border-radius: 12px; padding: 16px; background: rgba(0,0,0,.28); border: 1px solid rgba(200,245,66,.35); }
+      .turno-kpi span { display: block; font-size: 15px; color: rgba(255,255,255,.78); }
+      .turno-kpi strong { display: block; margin-top: 6px; font-size: 24px; }
       .turno-kpi.fuerte strong { color: var(--neon-green); font-size: 26px; }
       .turno-kpi.rojo strong { color: #C5D1CC; }
       .turno-aparte { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -546,9 +546,9 @@ function Estilos() {
       .turno-lista .mas { color: var(--neon-green); }
       .turno-lista .menos { color: #C5D1CC; }
       .turno-esperado { font-size: 28px; color: var(--neon-green); }
-      .turno-leyenda { margin: 0; color: rgba(255,255,255,.7); font-size: 14px; }
-      .turno-escribir { display: flex; flex-direction: column; gap: 10px; border: 2px solid #C8F542; border-radius: 20px; padding: 16px; }
-      .turno-escribir h3 { margin: 0; }
+      .turno-leyenda { margin: 0; color: rgba(255,255,255,.82); font-size: 17px; }
+      .turno-escribir { display: flex; flex-direction: column; gap: 12px; border: 2px solid #C8F542; border-radius: 12px; padding: 16px; }
+      .turno-escribir h3 { margin: 0; font-size: 22px; }
       .turno-bebida { display: grid; grid-template-columns: 1fr 44px 72px 44px; gap: 8px; align-items: center; }
       .turno-bebida small { display: block; color: rgba(255,255,255,.55); font-weight: 600; }
       .turno-bebida button { min-height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: #fff; cursor: pointer; font-size: 20px; }

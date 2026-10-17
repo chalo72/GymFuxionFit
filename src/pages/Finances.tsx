@@ -744,7 +744,7 @@ export default function Finances({ vista }: { vista?: FinanceVista }) {
         <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
               <div>
-                 <h3 style={{ fontSize:22, fontWeight:950 }}>Personal del gym</h3>
+                 <h3 style={{ fontSize:26, fontWeight:950 }}>Nómina</h3>
                  <p style={{ fontSize:13, color:'var(--text-muted)', fontWeight:700 }}>Aseo, recepción, entrenadores y gerencia. El préstamo se agrega aparte, solo si tú lo decides.</p>
               </div>
               <div style={{ display:'flex', gap:12, alignItems:'center' }}>

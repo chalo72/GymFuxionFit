@@ -71,8 +71,8 @@ export default function Home() {
   ] : [
     { to: '/reception', label: 'Recepción', hint: 'Entrada y cuenta', icon: UserCheck },
     { to: '/finances', label: 'Caja', hint: 'Cobros y cuadre', icon: Wallet },
-    { to: '/finances?tab=personal', label: 'Personal', hint: 'Empleados y nómina', icon: Users },
-    { to: '/members', label: 'Socios', hint: 'Fichas', icon: Users },
+    { to: '/finances?tab=personal', label: 'Nómina', hint: 'Empleados', icon: Users },
+    { to: '/members', label: 'Clientes', hint: 'Fichas', icon: Users },
     { to: '/inventory', label: 'Inventario', hint: 'Productos', icon: Package },
     { to: '/avisos', label: 'Avisos', hint: 'WhatsApp', icon: AlertTriangle },
   ];
@@ -82,7 +82,7 @@ export default function Home() {
       <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 32 }}>
         <Empieza role={user.role} />
         <button type="button" className="btn btn-ghost" onClick={() => navigate('/sala')}>
-          El piso y los QR, cuando ya estés en la máquina
+          Sala
         </button>
       </div>
     );
@@ -92,7 +92,7 @@ export default function Home() {
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 32 }}>
       {user && <Empieza role={user.role} />}
       <details className="mejor">
-        <summary style={{ cursor: 'pointer', fontWeight: 800, marginBottom: 12 }}>Entreno y calorías, si los quieres ver</summary>
+        <summary style={{ cursor: 'pointer', fontWeight: 800, marginBottom: 12, fontSize: 18 }}>Entrenamiento y nutrición</summary>
         <ControlPeso />
         <ComidaHoy />
         <div className="mejor-grid" style={{ marginTop: 12 }}>

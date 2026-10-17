@@ -31,13 +31,13 @@ const HOY: Trabajo[] = [
   { id: 'cuadre', titulo: 'Cerrar la caja', icon: Scale },
   { id: 'gastos', titulo: 'Gastos de hoy', icon: Wallet },
   { id: 'ventas', titulo: 'Ventas', icon: Package },
-  { id: 'creditos', titulo: 'Fiados', icon: HandCoins },
+  { id: 'creditos', titulo: 'Créditos', icon: HandCoins },
 ];
 
 const MAS: Trabajo[] = [
   { id: 'cobros', titulo: 'Otro ingreso', icon: BadgeDollarSign },
   { id: 'pasados', titulo: 'Turnos cerrados', icon: Archive },
-  { id: 'nomina', titulo: 'Personal', icon: Users },
+  { id: 'nomina', titulo: 'Nómina', icon: Users },
   { id: 'prestamos', titulo: 'Préstamos', icon: Users },
   { id: 'asistencia', titulo: 'Asistencia', icon: ClipboardCheck },
   { id: 'boveda', titulo: 'Bóveda', icon: Archive },
@@ -52,13 +52,13 @@ const TITULO: Record<Vista, string> = {
   cuadre: 'Cerrar la caja',
   pasados: 'Turnos cerrados',
   boveda: 'Bóveda',
-  creditos: 'Fiados',
+  creditos: 'Créditos',
   prestamos: 'Préstamos',
   asistencia: 'Asistencia',
   ventas: 'Ventas',
   cobros: 'Otro ingreso',
   gastos: 'Gastos de hoy',
-  nomina: 'Personal',
+  nomina: 'Nómina',
   libros: 'Libros',
 };
 
@@ -148,19 +148,19 @@ export default function MoneyHub() {
 
       <style>{`
         .finanzas-hub { display: flex; flex-direction: column; gap: 14px; min-height: 0; color: #fff; }
-        .finanzas-hub h2 { margin: 0; font-size: 32px; font-weight: 900; }
+        .finanzas-hub h2 { margin: 0; font-size: 34px; font-weight: 900; }
         .finanzas-hub > input {
-          width: 100%; min-height: 52px; border-radius: 16px; border: 1px solid rgba(200,245,66,.35);
-          background: #0c120e; color: #fff; padding: 10px 14px; font-size: 18px;
+          width: 100%; min-height: 58px; border-radius: 12px; border: 2px dashed rgba(197,209,204,.7);
+          background: #070b08; color: #fff; padding: 12px 14px; font-size: 20px;
         }
         .fin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
         .fin-trabajo {
           display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 16px;
-          min-height: 132px; padding: 18px; border: none; border-radius: 22px; cursor: pointer;
+          min-height: 148px; padding: 18px; border: 2px solid #C8F542; border-radius: 12px; cursor: pointer;
           background: #0e140f; color: #fff; text-align: left;
         }
         .fin-trabajo svg { color: #C8F542; }
-        .fin-trabajo strong { font-size: 20px; line-height: 1.15; }
+        .fin-trabajo strong { font-size: 22px; line-height: 1.15; }
         .fin-volver {
           display: inline-flex; align-items: center; gap: 8px; width: fit-content;
           min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.12);
@@ -168,9 +168,9 @@ export default function MoneyHub() {
         }
         .fin-pill {
           display: inline-flex; align-items: center; gap: 8px;
-          min-height: 46px; padding: 10px 16px; border-radius: 14px; cursor: pointer;
-          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-          color: #ddd; font-weight: 800; font-size: 14px;
+          min-height: 52px; padding: 12px 16px; border-radius: 12px; cursor: pointer;
+          background: rgba(255,255,255,0.03); border: 2px solid rgba(200,245,66,.45);
+          color: #ddd; font-weight: 800; font-size: 17px;
         }
         .fin-pill.on { border-color: #C8F542; color: #111; background: #C8F542; }
         .fin-cuerpo { min-height: 0; }

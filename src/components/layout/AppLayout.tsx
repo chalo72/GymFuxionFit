@@ -42,12 +42,12 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const aviso = user?.role === 'trainer'
-    ? { texto: 'Entrenador: empieza por tus atletas.', to: '/trainer' }
+    ? { texto: 'Entrenador: atletas, sesión y nutrición.', to: '/trainer' }
     : user?.role === 'receptionist'
-      ? { texto: 'Recepción: busca el nombre o el número y toca Entrar.', to: '/reception' }
+      ? { texto: 'Recepción: busque al cliente y registre el ingreso.', to: '/reception' }
       : user?.role === 'client' || user?.role === 'athlete'
-        ? { texto: 'Empieza por tu entreno de hoy.', to: '/' }
-        : { texto: 'Gerente: empieza por la plata, la puerta o los precios.', to: '/' };
+        ? { texto: 'Cliente: entrenamiento, nutrición y progreso.', to: '/' }
+        : { texto: 'Gerencia: caja, recepción y tarifas.', to: '/' };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
@@ -56,7 +56,7 @@ export default function AppLayout() {
     return false;
   });
   const title = location.pathname === '/finances' && location.search.includes('tab=personal')
-    ? 'Personal'
+    ? 'Nómina'
     : pageTitles[location.pathname] || 'GymFuxionFit';
 
   useEffect(() => { setMobileMenuOpen(false); }, [location.pathname]);

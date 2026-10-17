@@ -52,7 +52,7 @@ export default function Navbar({
         <h1 className="navbar-title">{title}</h1>
         <div className="navbar-breadcrumb">
           <button type="button" onClick={() => navigate('/entreno')} style={{ color: '#111', fontSize: 11, fontWeight: 900, background: '#C8F542', padding: '4px 8px', borderRadius: 8, marginRight: 8, border: 'none', cursor: 'pointer' }}>
-            v{versionData.version} · Peso y calorías
+            v{versionData.version}
           </button>
           <button onClick={handleToggleCollapse} style={{ background: 'var(--green-10)', border: '1px solid var(--green-20)', color: 'var(--neon-green)', padding: '4px 10px', borderRadius: 8, fontSize: 10, fontWeight: 950, cursor: 'pointer' }}>
             {isCollapsed ? 'Ampliar menú' : 'Compactar menú'}

@@ -122,7 +122,7 @@
 
 /* ─── BASE ─── */
 html {
-  font-size: 16px;
+  font-size: 18px;
   scroll-behavior: smooth;
   overflow-x: hidden;
 }
@@ -313,10 +313,11 @@ img {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 44px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 14px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(200, 245, 66, 0.22);
+  font-size: 16px;
   font-weight: 650;
   color: rgba(255, 255, 255, 0.72);
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
@@ -2189,7 +2190,7 @@ img {
 .empieza { margin-bottom: 8px; }
 .empieza-kicker {
   margin: 0 0 6px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -2197,31 +2198,31 @@ img {
 }
 .empieza-frase {
   margin: 0 0 14px;
-  font-size: 26px;
+  font-size: 30px;
   line-height: 1.15;
   font-weight: 900;
 }
 .empieza-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 .empieza-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
-  min-height: 132px;
-  padding: 16px;
-  border: none;
-  border-radius: 18px;
+  gap: 8px;
+  min-height: 156px;
+  padding: 18px;
+  border: 2px solid #C8F542;
+  border-radius: 12px;
   background: #0e140f;
   color: #fff;
   text-align: left;
   cursor: pointer;
 }
-.empieza-card strong { font-size: 18px; }
-.empieza-card span:last-child { color: #b7c2b4; font-size: 14px; line-height: 1.35; }
+.empieza-card strong { font-size: 22px; }
+.empieza-card span:last-child { color: #b7c2b4; font-size: 17px; line-height: 1.35; }
 .empieza-n {
   width: 28px;
   height: 28px;
@@ -2357,22 +2358,25 @@ img {
     right: 0;
     bottom: 0;
     z-index: 140;
-    min-height: 68px;
-    padding: 4px 4px calc(6px + env(safe-area-inset-bottom));
+    min-height: 78px;
+    padding: 6px 6px calc(8px + env(safe-area-inset-bottom));
     background: #0c120e;
     border-top: 1px solid rgba(255,255,255,0.08);
     backdrop-filter: blur(16px);
   }
   .thumb-nav button {
     flex: 1;
-    min-height: 60px;
+    min-height: 68px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 4px;
     color: rgba(255,255,255,0.62);
-    font-size: 11px;
+    font-size: 14px;
+    border: 1px solid rgba(200, 245, 66, 0.28);
+    border-radius: 12px;
+    margin: 4px;
     font-weight: 800;
     background: transparent;
   }
@@ -2384,6 +2388,7 @@ img {
     flex: 0 0 62px;
     margin-top: -26px;
     border-radius: 50%;
+    border: none;
     background: var(--neon-green);
     color: #111;
     box-shadow: 0 10px 24px rgba(200, 245, 66, 0.45);

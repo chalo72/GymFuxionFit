@@ -12,12 +12,12 @@ import { useAuth } from '../../contexts/AuthContext';
 /* ── Elementos de navegación por rol ── */
 const adminNav = [
   { section: 'Inicio', items: [
-    { to: '/',            icon: LayoutDashboard, label: 'Por dónde' },
-    { to: '/finances',    icon: TrendingUp,      label: 'La plata' },
-    { to: '/reception',   icon: UserCheck,       label: 'La puerta' },
-    { to: '/settings?tab=pricing', icon: Settings, label: 'Los precios' },
+    { to: '/',            icon: LayoutDashboard, label: 'Inicio' },
+    { to: '/finances',    icon: TrendingUp,      label: 'Caja' },
+    { to: '/reception',   icon: UserCheck,       label: 'Recepción' },
+    { to: '/settings?tab=pricing', icon: Settings, label: 'Tarifas' },
     { to: '/camaras',     icon: Video,           label: 'Cámaras' },
-    { to: '/members',     icon: Users,           label: 'Miembros' },
+    { to: '/members',     icon: Users,           label: 'Clientes' },
     { to: '/schedule',    icon: CalendarRange,   label: 'Calendario' },
     { to: '/classes',     icon: CalendarDays,    label: 'Clases' },
   ]},
@@ -35,8 +35,8 @@ const adminNav = [
     { to: '/ai-coach',    icon: Brain,           label: 'AI Coach' },
   ]},
   { section: 'Negocio', items: [
-    { to: '/finances',    icon: TrendingUp,      label: 'Dinero' },
-    { to: '/finances?tab=personal', icon: Users, label: 'Personal' },
+    { to: '/finances',    icon: TrendingUp,      label: 'Finanzas' },
+    { to: '/finances?tab=personal', icon: Users, label: 'Nómina' },
     { to: '/avisos',      icon: MessageCircle,   label: 'Avisos WhatsApp' },
     { to: '/crm',         icon: Kanban,          label: 'CRM' },
     { to: '/inventory',   icon: Package,        label: 'Inventario' },
@@ -52,9 +52,9 @@ const adminNav = [
 
 const trainerNav = [
   { section: 'Mi espacio', items: [
-    { to: '/trainer', icon: Zap, label: 'Mis atletas' },
-    { to: '/entreno', icon: Dumbbell, label: 'La sesión' },
-    { to: '/nutrition', icon: Apple, label: 'La comida' },
+    { to: '/trainer', icon: Zap, label: 'Atletas' },
+    { to: '/entreno', icon: Dumbbell, label: 'Sesión' },
+    { to: '/nutrition', icon: Apple, label: 'Nutrición' },
     { to: '/', icon: LayoutDashboard, label: 'Hoy' },
     { to: '/evaluacion', icon: ClipboardList, label: 'Entrevista' },
     { to: '/elite-plan', icon: BrainCircuit, label: 'Plan' },
@@ -69,32 +69,32 @@ const trainerNav = [
 
 const receptionNav = [
   { section: 'Recepción', items: [
-    { to: '/reception', icon: UserCheck, label: 'La entrada' },
-    { to: '/finances', icon: TrendingUp, label: 'La caja' },
+    { to: '/reception', icon: UserCheck, label: 'Recepción' },
+    { to: '/finances', icon: TrendingUp, label: 'Caja' },
     { to: '/camaras', icon: Video, label: 'Cámaras' },
     { to: '/', icon: LayoutDashboard, label: 'Hoy' },
     { to: '/avisos', icon: MessageCircle, label: 'Avisos' },
   ]},
   { section: 'Sala', items: [
-    { to: '/members', icon: Users, label: 'Gente' },
+    { to: '/members', icon: Users, label: 'Clientes' },
     { to: '/schedule', icon: CalendarRange, label: 'Horarios' },
     { to: '/classes', icon: CalendarDays, label: 'Clases' },
   ]},
   { section: 'Dinero', items: [
     { to: '/finances', icon: TrendingUp, label: 'Caja' },
-    { to: '/finances?tab=personal', icon: Users, label: 'Personal' },
+    { to: '/finances?tab=personal', icon: Users, label: 'Nómina' },
     { to: '/inventory', icon: Package, label: 'Inventario' },
     { to: '/crm', icon: Kanban, label: 'CRM' },
   ]},
 ];
 
 const clientNav = [
-  { section: 'Mi Área Personal', items: [
-    { to: '/', icon: LayoutDashboard, label: 'Por dónde' },
-    { to: '/entreno', icon: Dumbbell, label: 'Mi entreno' },
-    { to: '/client/nutrition', icon: Apple, label: 'Lo que comí' },
-    { to: '/client/progress', icon: TrendingUp, label: 'Mi peso' },
-    { to: '/sala', icon: QrCode, label: 'El piso' },
+  { section: 'Cliente', items: [
+    { to: '/', icon: LayoutDashboard, label: 'Inicio' },
+    { to: '/entreno', icon: Dumbbell, label: 'Entrenamiento' },
+    { to: '/client/nutrition', icon: Apple, label: 'Nutrición' },
+    { to: '/client/progress', icon: TrendingUp, label: 'Progreso' },
+    { to: '/sala', icon: QrCode, label: 'Sala' },
     { to: '/client/training', icon: Dumbbell, label: 'Zonas' },
     { to: '/reports', icon: BarChart3, label: 'Mis reportes' },
   ]},
@@ -155,7 +155,7 @@ export default function Sidebar({
     'Sala': true,
     'Dinero': true,
     'Mi espacio': true,
-    'Mi Área Personal': true
+    'Cliente': true
   });
 
   const role      = user?.role ?? 'admin';

@@ -206,14 +206,14 @@ function ClientModal({
 
         {/* Tabs */}
         <div style={{ display:'flex', gap:4, padding:'12px 24px 0', borderBottom:'1px solid rgba(255,255,255,.06)', flexShrink:0 }}>
-          {([['info','Personal'],['plan','Plan & Pago'],['técnica','Ficha Técnica']] as const).map(([id,label]) => (
+          {([['info','Cliente'],['plan','Plan y pago'],['técnica','Ficha técnica']] as const).map(([id,label]) => (
             <button key={id} onClick={() => setTab(id)} style={{
               padding:'8px 16px', borderRadius:'var(--radius-md) var(--radius-md) 0 0',
               background: tab===id ? 'rgba(0,255,136,.1)' : 'transparent',
               border: tab===id ? '1px solid rgba(0,255,136,.25)' : '1px solid transparent',
               borderBottom:'none',
               color: tab===id ? 'var(--neon-green)' : 'var(--text-muted)',
-              fontSize:12.5, fontWeight:tab===id?700:500, cursor:'pointer',
+              fontSize:16, fontWeight:tab===id?700:500, cursor:'pointer', minHeight: 44,
             }}>{label}</button>
           ))}
         </div>

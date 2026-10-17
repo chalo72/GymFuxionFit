@@ -5,48 +5,48 @@ type Paso = { n: string; titulo: string; detalle: string; to: string };
 
 const PASOS: Record<UserRole, { titulo: string; frase: string; pasos: Paso[] }> = {
   admin: {
-    titulo: 'Empieza como gerente',
-    frase: 'Tres cosas. El resto está en el menú.',
+    titulo: 'Gerencia',
+    frase: 'Caja, recepción y tarifas.',
     pasos: [
-      { n: '1', titulo: 'La plata', detalle: 'Abrir la caja, ver el día y cerrar.', to: '/finances' },
-      { n: '2', titulo: 'La puerta', detalle: 'Quién entró, quién debe, quién paga.', to: '/reception' },
-      { n: '3', titulo: 'Los precios', detalle: 'Día, semana y mes.', to: '/settings?tab=pricing' },
+      { n: '1', titulo: 'Caja', detalle: 'Apertura, movimiento y cierre.', to: '/finances' },
+      { n: '2', titulo: 'Recepción', detalle: 'Ingreso, deuda y cobro.', to: '/reception' },
+      { n: '3', titulo: 'Tarifas', detalle: 'Día, semana y mes.', to: '/settings?tab=pricing' },
     ],
   },
   receptionist: {
-    titulo: 'Empieza en recepción',
-    frase: 'Busca el nombre o el número, toca Entrar, y cobra o fía en la ficha.',
+    titulo: 'Recepción',
+    frase: 'Busque al cliente, registre el ingreso y cobre.',
     pasos: [
-      { n: '1', titulo: 'La entrada', detalle: 'Estás en la puerta. Busca y deja pasar.', to: '/reception' },
-      { n: '2', titulo: 'Cobrar o fiar', detalle: 'Efectivo, Nequi o crédito, en la misma ficha.', to: '/reception' },
-      { n: '3', titulo: 'La caja', detalle: 'Ábrela al empezar y ciérrala al irte.', to: '/finances' },
+      { n: '1', titulo: 'Ingreso', detalle: 'Búsqueda por nombre o número.', to: '/reception' },
+      { n: '2', titulo: 'Cobro', detalle: 'Efectivo, Nequi o crédito.', to: '/reception' },
+      { n: '3', titulo: 'Caja', detalle: 'Apertura al iniciar y cierre al salir.', to: '/finances' },
     ],
   },
   trainer: {
-    titulo: 'Empieza como entrenador',
-    frase: 'Elige a la persona y abre su sesión.',
+    titulo: 'Entrenador',
+    frase: 'Seleccione el atleta y abra la sesión.',
     pasos: [
-      { n: '1', titulo: 'Mis atletas', detalle: 'Quién entrena hoy.', to: '/trainer' },
-      { n: '2', titulo: 'La sesión', detalle: 'Peso, reps y lo que sigue.', to: '/entreno' },
-      { n: '3', titulo: 'La comida', detalle: 'Calorías y proteína del día.', to: '/nutrition' },
+      { n: '1', titulo: 'Atletas', detalle: 'Asistencia del día.', to: '/trainer' },
+      { n: '2', titulo: 'Sesión', detalle: 'Carga, repeticiones y serie.', to: '/entreno' },
+      { n: '3', titulo: 'Nutrición', detalle: 'Calorías y proteína.', to: '/nutrition' },
     ],
   },
   client: {
-    titulo: 'Empieza tu entreno',
-    frase: 'Tres botones. No hay más que buscar.',
+    titulo: 'Cliente',
+    frase: 'Entrenamiento, nutrición y progreso.',
     pasos: [
-      { n: '1', titulo: 'Mi entreno', detalle: 'La sesión de hoy: peso y series.', to: '/entreno' },
-      { n: '2', titulo: 'Lo que comí', detalle: 'Calorías y proteína.', to: '/client/nutrition' },
-      { n: '3', titulo: 'Mi peso', detalle: 'Cómo vas.', to: '/client/progress' },
+      { n: '1', titulo: 'Entrenamiento', detalle: 'Sesión del día: carga y series.', to: '/entreno' },
+      { n: '2', titulo: 'Nutrición', detalle: 'Calorías y proteína.', to: '/client/nutrition' },
+      { n: '3', titulo: 'Progreso', detalle: 'Peso corporal.', to: '/client/progress' },
     ],
   },
   athlete: {
-    titulo: 'Empieza tu entreno',
-    frase: 'Tres botones. No hay más que buscar.',
+    titulo: 'Cliente',
+    frase: 'Entrenamiento, nutrición y progreso.',
     pasos: [
-      { n: '1', titulo: 'Mi entreno', detalle: 'La sesión de hoy: peso y series.', to: '/entreno' },
-      { n: '2', titulo: 'Lo que comí', detalle: 'Calorías y proteína.', to: '/client/nutrition' },
-      { n: '3', titulo: 'Mi peso', detalle: 'Cómo vas.', to: '/client/progress' },
+      { n: '1', titulo: 'Entrenamiento', detalle: 'Sesión del día: carga y series.', to: '/entreno' },
+      { n: '2', titulo: 'Nutrición', detalle: 'Calorías y proteína.', to: '/client/nutrition' },
+      { n: '3', titulo: 'Progreso', detalle: 'Peso corporal.', to: '/client/progress' },
     ],
   },
 };
@@ -66,7 +66,7 @@ export default function Empieza({ role }: { role: UserRole }) {
             <button key={paso.n + paso.titulo} type="button" className="empieza-card" onClick={() => navigate(paso.to)}>
               <span className="empieza-n">{paso.n}</span>
               <strong>{paso.titulo}</strong>
-              <span>{aqui ? 'Estás en este paso.' : paso.detalle}</span>
+              <span>{aqui ? 'Módulo activo.' : paso.detalle}</span>
             </button>
           );
         })}

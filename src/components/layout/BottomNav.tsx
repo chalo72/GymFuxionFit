@@ -6,30 +6,30 @@ type Item = { to: string; label: string; icon: typeof Wallet };
 
 const gerente: Item[] = [
   { to: '/', label: 'Inicio', icon: LayoutDashboard },
-  { to: '/finances', label: 'Plata', icon: Wallet },
-  { to: '/reception', label: 'Puerta', icon: UserCheck },
+  { to: '/finances', label: 'Caja', icon: Wallet },
+  { to: '/reception', label: 'Recepción', icon: UserCheck },
   { to: '/settings?tab=pricing', label: 'Precios', icon: Wallet },
 ];
 
 const recepción: Item[] = [
   { to: '/reception', label: 'Entrada', icon: UserCheck },
   { to: '/finances', label: 'Caja', icon: Wallet },
-  { to: '/members', label: 'Gente', icon: Users },
+  { to: '/members', label: 'Clientes', icon: Users },
   { to: '/', label: 'Inicio', icon: LayoutDashboard },
 ];
 
 const entrenador: Item[] = [
   { to: '/trainer', label: 'Atletas', icon: Users },
   { to: '/entreno', label: 'Sesión', icon: Dumbbell },
-  { to: '/nutrition', label: 'Comida', icon: Apple },
+  { to: '/nutrition', label: 'Nutrición', icon: Apple },
   { to: '/', label: 'Inicio', icon: LayoutDashboard },
 ];
 
 const socio: Item[] = [
   { to: '/', label: 'Inicio', icon: LayoutDashboard },
   { to: '/entreno', label: 'Entreno', icon: Dumbbell },
-  { to: '/client/nutrition', label: 'Comida', icon: Apple },
-  { to: '/client/progress', label: 'Peso', icon: LayoutDashboard },
+  { to: '/client/nutrition', label: 'Nutrición', icon: Apple },
+  { to: '/client/progress', label: 'Progreso', icon: LayoutDashboard },
 ];
 
 function activo(to: string, path: string, search: string) {
@@ -52,12 +52,12 @@ export default function BottomNav({ onOpenMenu }: { onOpenMenu: () => void }) {
         ? socio
         : recepción;
   const centro = role === 'admin'
-    ? { to: '/finances', label: 'La plata' }
+    ? { to: '/finances', label: 'Caja' }
     : role === 'trainer'
       ? { to: '/trainer', label: 'Atletas' }
       : role === 'client' || role === 'athlete'
-        ? { to: '/entreno', label: 'Mi entreno' }
-        : { to: '/reception', label: 'La entrada' };
+        ? { to: '/entreno', label: 'Entrenamiento' }
+        : { to: '/reception', label: 'Recepción' };
   const lados = items.filter((item) => item.to !== centro.to).slice(0, 3);
 
   return (
