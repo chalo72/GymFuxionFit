@@ -18,6 +18,7 @@ export type TurnoCaja = {
   contado: number;
   diferencia: number;
   nota: string;
+  bodega?: { agua?: number; gaseosa?: number; electrolito?: number };
 };
 
 const KEY = 'fuxion_turnos';

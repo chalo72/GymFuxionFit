@@ -162,7 +162,7 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
       <div className="turno-acciones">
         <button type="button" onClick={() => setMov(mov === 'entrada' ? null : 'entrada')}>Meter efectivo</button>
         <button type="button" onClick={() => setMov(mov === 'salida' ? null : 'salida')}>Sacar efectivo</button>
-        <button type="button" className="turno-principal" onClick={onCuadre}>Cerrar la caja y contar el efectivo que quedó</button>
+        <button type="button" className="turno-principal" onClick={onCuadre}>Cerrar: contar la plata y las bebidas que quedaron</button>
       </div>
       {mov && (
         <div className="turno-mov">
@@ -195,11 +195,25 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
   );
 }
 
+const BEBIDAS = [
+  { id: 'agua' as const, titulo: 'Agua' },
+  { id: 'gaseosa' as const, titulo: 'Gaseosa' },
+  { id: 'electrolito' as const, titulo: 'Electrolitos' },
+];
+
+function esBebida(nombre: string, cual: 'agua' | 'gaseosa' | 'electrolito') {
+  const n = nombre.toLowerCase();
+  if (cual === 'agua') return n.includes('agua') && !n.includes('gaseosa');
+  if (cual === 'gaseosa') return n.includes('gaseosa');
+  return n.includes('gator') || n.includes('electrol');
+}
+
 export function CuadreCaja() {
-  const { transactions, members } = useGymData();
+  const { transactions, members, products, updateProduct } = useGymData();
   const [, setParams] = useSearchParams();
   const { abierto, lista, guardar } = useTurnos();
   const [conteo, setConteo] = useState<Record<number, string>>({});
+  const [bodega, setBodega] = useState<Record<'agua' | 'gaseosa' | 'electrolito', string>>({ agua: '', gaseosa: '', electrolito: '' });
   const [nota, setNota] = useState('');
   const [aviso, setAviso] = useState('');
 
@@ -227,6 +241,14 @@ export function CuadreCaja() {
     }
     const dif = contado - resumen.esperado;
     if (dif < -5000 && !window.confirm(`Faltan ${pesos(Math.abs(dif))}. ¿Cierras el turno igual?`)) return;
+    const quedaron: NonNullable<TurnoCaja['bodega']> = {};
+    for (const b of BEBIDAS) {
+      if (bodega[b.id] === '') continue;
+      const n = Math.max(0, Number(bodega[b.id]) || 0);
+      quedaron[b.id] = n;
+      const hit = products.find((p) => esBebida(p.name, b.id));
+      if (hit) updateProduct(hit.id, { stock: n });
+    }
     const cerrado: TurnoCaja = {
       ...abierto,
       estado: 'cerrado',
@@ -239,6 +261,7 @@ export function CuadreCaja() {
       contado,
       diferencia: dif,
       nota: nota.trim(),
+      bodega: quedaron,
     };
     guardar(lista.map((t) => (t.id === abierto.id ? cerrado : t)));
     setConteo({});
@@ -273,7 +296,56 @@ export function CuadreCaja() {
         </div>
         <strong className="turno-esperado">{pesos(resumen.esperado)}</strong>
       </section>
-      <p className="turno-leyenda">Estos números ya entraron al cobrar en Recepción. Aquí no se vuelven a escribir las compras ni el Nequi.</p>
+      <p className="turno-leyenda">Para cerrar solo escribes dos cosas. Las ventas, el Nequi y los créditos ya entraron en Recepción: no se vuelven a escribir.</p>
+      <p className="turno-leyenda">En el cajón debe haber {pesos(resumen.esperado)}. Eso es la base más el efectivo, menos lo que salió.</p>
+
+      <section className="turno-escribir">
+        <h3>1. Aquí metes la plata que quedó en el cajón</h3>
+        <p className="turno-leyenda">Cuenta los billetes que tienes en la mano. El + suma uno. Esto es la plata física, no las ventas.</p>
+        <div className="turno-denoms">
+          {BILLETES.map((v) => (
+            <Denom key={v} valor={v} cant={conteo[v] || ''} onChange={(n) => setConteo({ ...conteo, [v]: n })} onStep={(d) => poner(v, d)} />
+          ))}
+          {MONEDAS.map((v) => (
+            <Denom key={v} valor={v} cant={conteo[v] || ''} onChange={(n) => setConteo({ ...conteo, [v]: n })} onStep={(d) => poner(v, d)} moneda />
+          ))}
+        </div>
+        <div className={`turno-resultado ${diferencia === 0 ? 'ok' : diferencia !== null && diferencia < 0 ? 'falta' : ''}`}>
+          <span>Plata contada {pesos(contado)} · debía haber {pesos(resumen.esperado)}</span>
+          <strong>
+            {diferencia === null ? 'Falta contar la plata' : diferencia === 0 ? 'Cuadra exacto' : diferencia > 0 ? `Sobra ${pesos(diferencia)}` : `Falta ${pesos(Math.abs(diferencia))}`}
+          </strong>
+        </div>
+      </section>
+
+      <section className="turno-escribir">
+        <h3>2. Aquí cuentas agua, gaseosa y electrolitos</h3>
+        <p className="turno-leyenda">Cuántas botellas quedaron en la nevera. No es plata. Si no las contaste, déjalas vacías.</p>
+        {BEBIDAS.map((b) => {
+          const enNevera = products.find((p) => esBebida(p.name, b.id));
+          return (
+            <div key={b.id} className="turno-bebida">
+              <span>
+                <strong>{b.titulo}</strong>
+                <small>{enNevera ? `En la app ahora: ${enNevera.stock}` : 'Se guarda en este cierre'}</small>
+              </span>
+              <button type="button" onClick={() => setBodega({ ...bodega, [b.id]: String(Math.max(0, Number(bodega[b.id] || 0) - 1)) })} aria-label={`Quitar ${b.titulo}`}>−</button>
+              <input
+                inputMode="numeric"
+                value={bodega[b.id]}
+                placeholder="0"
+                onChange={(e) => setBodega({ ...bodega, [b.id]: e.target.value.replace(/\D/g, '') })}
+              />
+              <button type="button" onClick={() => setBodega({ ...bodega, [b.id]: String(Number(bodega[b.id] || 0) + 1) })} aria-label={`Sumar ${b.titulo}`}>+</button>
+            </div>
+          );
+        })}
+      </section>
+
+      <input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Nota: vueltos, quién recibe la caja..." />
+      <button type="button" className="turno-principal" onClick={cerrar}>Cerrar la caja con esta plata y estas bebidas</button>
+
+      <h3 className="turno-dia">Solo para mirar. Esto ya se cobró</h3>
       <div className="turno-kpis">
         <Kpi titulo="Clientes que entraron" valor={String(dia.appEntraron)} />
         <Kpi titulo="Ventas cobradas" valor={pesos(ventas)} />
@@ -284,24 +356,6 @@ export function CuadreCaja() {
         <Kpi titulo="Base con la que abriste" valor={pesos(abierto.fondo)} />
         <Kpi titulo="Debe haber al cerrar" valor={pesos(resumen.esperado)} fuerte />
       </div>
-      <h3 className="turno-dia">Efectivo que quedó: cuenta los billetes</h3>
-      <p className="turno-leyenda">Pon cuántos billetes hay de cada valor. El botón + suma uno. Ese total es la plata física del cajón, no las ventas.</p>
-      <div className="turno-denoms">
-        {BILLETES.map((v) => (
-          <Denom key={v} valor={v} cant={conteo[v] || ''} onChange={(n) => setConteo({ ...conteo, [v]: n })} onStep={(d) => poner(v, d)} />
-        ))}
-        {MONEDAS.map((v) => (
-          <Denom key={v} valor={v} cant={conteo[v] || ''} onChange={(n) => setConteo({ ...conteo, [v]: n })} onStep={(d) => poner(v, d)} moneda />
-        ))}
-      </div>
-      <div className={`turno-resultado ${diferencia === 0 ? 'ok' : diferencia !== null && diferencia < 0 ? 'falta' : ''}`}>
-        <span>Efectivo contado {pesos(contado)} · debía haber {pesos(resumen.esperado)}</span>
-        <strong>
-          {diferencia === null ? 'Falta contar' : diferencia === 0 ? 'Cuadra exacto' : diferencia > 0 ? `Sobra ${pesos(diferencia)}` : `Falta ${pesos(Math.abs(diferencia))}`}
-        </strong>
-      </div>
-      <input value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Nota: vueltos, pago de agua, quién recibe..." />
-      <button type="button" className="turno-principal" onClick={cerrar}>Cerrar la caja con este efectivo</button>
       {aviso && <p className="turno-aviso">{aviso}</p>}
     </div>
   );
@@ -350,6 +404,9 @@ export function CuadresPasados() {
               {t.diferencia === 0 ? 'Cuadró' : t.diferencia > 0 ? `Sobró ${pesos(t.diferencia)}` : `Faltó ${pesos(Math.abs(t.diferencia))}`}
               {t.nota ? ` · ${t.nota}` : ''}
             </p>
+          )}
+          {t.bodega && (t.bodega.agua !== undefined || t.bodega.gaseosa !== undefined || t.bodega.electrolito !== undefined) && (
+            <p>Quedaron: agua {t.bodega.agua ?? '—'} · gaseosa {t.bodega.gaseosa ?? '—'} · electrolitos {t.bodega.electrolito ?? '—'}</p>
           )}
         </article>
       ))}
@@ -439,6 +496,11 @@ function Estilos() {
       .turno-lista .menos { color: #C5D1CC; }
       .turno-esperado { font-size: 28px; color: var(--neon-green); }
       .turno-leyenda { margin: 0; color: rgba(255,255,255,.7); font-size: 14px; }
+      .turno-escribir { display: flex; flex-direction: column; gap: 10px; border: 2px solid #C8F542; border-radius: 20px; padding: 16px; }
+      .turno-escribir h3 { margin: 0; }
+      .turno-bebida { display: grid; grid-template-columns: 1fr 44px 72px 44px; gap: 8px; align-items: center; }
+      .turno-bebida small { display: block; color: rgba(255,255,255,.55); font-weight: 600; }
+      .turno-bebida button { min-height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: #fff; cursor: pointer; font-size: 20px; }
       .turno-denoms { display: flex; flex-direction: column; gap: 8px; }
       .turno-den { display: grid; grid-template-columns: 92px 44px 72px 44px 1fr; gap: 8px; align-items: center; }
       .turno-den button { min-height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: #fff; cursor: pointer; }

@@ -21,7 +21,7 @@ type Vista =
 
 const ATAJOS: { id: Vista; label: string; hint: string; icon: typeof Banknote }[] = [
   { id: 'caja', label: 'Caja principal', hint: 'Abrir turno y ver el cajón', icon: Banknote },
-  { id: 'cuadre', label: 'Cuadre de caja', hint: 'Contar billetes y cerrar', icon: Scale },
+  { id: 'cuadre', label: 'Cuadre de caja', hint: 'Plata del cajón y bebidas que quedaron', icon: Scale },
   { id: 'nomina', label: 'Personal', hint: 'Empleados, nómina y préstamos', icon: Users },
   { id: 'cobros', label: 'Cobros', hint: 'Registrar un pago', icon: Wallet },
 ];
@@ -46,7 +46,7 @@ function vistaDeUrl(tab: string | null): Vista {
 
 const PASOS: { id: Vista; n: string; label: string; hint: string }[] = [
   { id: 'caja', n: '1', label: 'Esta es la caja', hint: 'El cajón de efectivo. Abres el turno y ves qué debe haber.' },
-  { id: 'cuadre', n: '2', label: 'Así se cierra', hint: 'Ves el día y cuentas los billetes que quedaron en el cajón.' },
+  { id: 'cuadre', n: '2', label: 'Así se cierra', hint: '1 la plata del cajón. 2 agua, gaseosa y electrolitos.' },
   { id: 'pasados', n: '3', label: 'Turnos ya cerrados', hint: 'Lo que quedó ayer o en el turno anterior. No se vuelve a contar.' },
 ];
 
