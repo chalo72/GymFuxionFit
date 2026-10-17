@@ -1,10 +1,16 @@
 import type { Transaction } from '../hooks/useGymData';
 
 export type NombreTurno = 'Mañana' | 'Tarde' | 'Noche';
+export type TipoCaja = 'principal' | 'pos';
+
+export function nombreCaja(tipo?: TipoCaja) {
+  return tipo === 'pos' ? 'Caja POS' : 'Caja principal';
+}
 
 export type TurnoCaja = {
   id: string;
   nombre: NombreTurno;
+  tipo?: TipoCaja;
   estado: 'abierto' | 'cerrado';
   abiertoAt: number;
   cerradoAt?: number;

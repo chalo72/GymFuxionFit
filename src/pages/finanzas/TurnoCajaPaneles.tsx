@@ -5,7 +5,7 @@ import { useGymData } from '../../hooks/useGymData';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   BILLETES, MONEDAS, duracion, fechaClave, horaCorta, leerTurnos, guardarTurnos,
-  pesos, resumirTurno, turnoAbierto, turnoSugerido, type NombreTurno, type TurnoCaja,
+  nombreCaja, pesos, resumirTurno, turnoAbierto, turnoSugerido, type NombreTurno, type TipoCaja, type TurnoCaja,
 } from '../../lib/turnosCaja';
 import { armarCruce } from '../../lib/cruceDia';
 
@@ -32,6 +32,7 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
   const { transactions, staff, injectTransaction } = useGymData();
   const { user } = useAuth();
   const { abierto, guardar, lista } = useTurnos();
+  const [tipo, setTipo] = useState<TipoCaja>('principal');
   const [nombre, setNombre] = useState<NombreTurno>(turnoSugerido());
   const [fondo, setFondo] = useState('');
   const [quien, setQuien] = useState(user?.name || '');
@@ -54,6 +55,7 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
     const item: TurnoCaja = {
       id: `t_${Date.now()}`,
       nombre,
+      tipo,
       estado: 'abierto',
       abiertoAt: Date.now(),
       responsable: quien.trim() || user?.name || 'Recepción',
@@ -103,10 +105,19 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
       <div className="turno-wrap">
         <Estilos />
         <section className="turno-hero">
-          <p className="turno-kicker">Caja cerrada</p>
-          <h3>Abrir turno</h3>
-          <p>Esta es la caja principal: el cajón de billetes. Paso 1: elige mañana, tarde o noche. Paso 2: escribe quién lo tiene. Paso 3: pon la base, aunque sea cero, y abre. Nequi y el fiado no van en esa base.</p>
+          <p className="turno-kicker">Abrir</p>
+          <h3>¿Cuál caja?</h3>
         </section>
+        <div className="turno-opciones">
+          <button type="button" className={tipo === 'principal' ? 'on' : ''} onClick={() => setTipo('principal')}>
+            <strong>Caja principal</strong>
+            <small>El cajón</small>
+          </button>
+          <button type="button" className={tipo === 'pos' ? 'on' : ''} onClick={() => setTipo('pos')}>
+            <strong>Caja POS</strong>
+            <small>El datáfono</small>
+          </button>
+        </div>
         <div className="turno-opciones">
           {TURNOS.map((t) => {
             const Icon = t.icon;
@@ -141,8 +152,9 @@ export function CajaHoy({ onCuadre }: { onCuadre?: () => void }) {
       <Estilos />
       <section className="turno-banner">
         <div>
-          <p className="turno-kicker">Turno abierto</p>
-          <h3>{abierto.nombre} · {abierto.responsable}</h3>
+          <p className="turno-kicker">Estás en</p>
+          <h3>{nombreCaja(abierto.tipo)}</h3>
+          <p>{abierto.nombre} · {abierto.responsable}</p>
           <p>Desde {horaCorta(abierto.abiertoAt)} · {duracion(abierto.abiertoAt)}</p>
         </div>
         <span className="turno-pill">En curso</span>
@@ -222,6 +234,11 @@ export function CuadreCaja() {
   const hayConteo = Object.values(conteo).some((n) => Number(n) > 0);
   const diferencia = resumen && hayConteo ? contado - resumen.esperado : null;
 
+  const marcar = (tipo: TipoCaja) => {
+    if (!abierto) return;
+    guardar(lista.map((t) => (t.id === abierto.id ? { ...t, tipo } : t)));
+  };
+
   const poner = (valor: number, delta: number) => {
     const actual = Number(conteo[valor] || 0);
     const next = Math.max(0, actual + delta);
@@ -283,11 +300,21 @@ export function CuadreCaja() {
   return (
     <div className="turno-wrap">
       <Estilos />
+      <div className="turno-opciones">
+        <button type="button" className={abierto.tipo !== 'pos' ? 'on' : ''} onClick={() => marcar('principal')}>
+          <strong>Caja principal</strong>
+          <small>El cajón</small>
+        </button>
+        <button type="button" className={abierto.tipo === 'pos' ? 'on' : ''} onClick={() => marcar('pos')}>
+          <strong>Caja POS</strong>
+          <small>El datáfono</small>
+        </button>
+      </div>
       <section className="turno-banner">
         <div>
-          <p className="turno-kicker">Cerrar caja · {abierto.nombre}</p>
-          <h3>Así quedó el día</h3>
-          <p>{abierto.responsable} · desde {horaCorta(abierto.abiertoAt)}</p>
+          <p className="turno-kicker">Estás cerrando</p>
+          <h3>{nombreCaja(abierto.tipo)}</h3>
+          <p>{abierto.nombre} · {abierto.responsable} · desde {horaCorta(abierto.abiertoAt)}</p>
         </div>
         <strong className="turno-esperado">{pesos(resumen.esperado)}</strong>
       </section>
@@ -384,7 +411,7 @@ export function CuadresPasados() {
       {delDia.map((t) => (
         <article key={t.id} className="turno-card">
           <header>
-            <strong>{t.nombre} · {t.responsable}</strong>
+            <strong>{nombreCaja(t.tipo)} · {t.nombre} · {t.responsable}</strong>
             <span className={t.estado === 'abierto' ? 'abierto' : ''}>{t.estado === 'abierto' ? 'Abierto' : 'Cerrado'}</span>
           </header>
           <p>{horaCorta(t.abiertoAt)}{t.cerradoAt ? ` – ${horaCorta(t.cerradoAt)}` : ' – sigue abierto'} · {duracion(t.abiertoAt, t.cerradoAt)}</p>
